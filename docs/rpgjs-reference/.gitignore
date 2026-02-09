@@ -1,0 +1,13 @@
+node_modules
+dist
+lib
+lerna-debug.log
+coverage
+packages/common/types
+docs/api/*
+docs/others/*
+!docs/api/readme.md
+!docs/others/readme.md
+cache
+packages/**/browser
+vitest.config.ts.timestamp*

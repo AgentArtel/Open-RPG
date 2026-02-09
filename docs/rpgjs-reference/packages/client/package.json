@@ -1,0 +1,56 @@
+{
+  "name": "@rpgjs/client",
+  "version": "4.3.0",
+  "description": "",
+  "main": "lib/index.js",
+  "types": "./lib/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc && tsc-esm-fix  --target='lib' && npm run build:browser",
+    "build:browser": "RPG_TYPE=rpg npx rpgjs build",
+    "watch": "tsc -w"
+  },
+  "keywords": [],
+  "typesVersions": {
+    "*": {
+      "react": [
+        "lib/Gui/React.d.ts"
+      ]
+    }
+  },
+  "exports": {
+    ".": "./lib/index.js",
+    "./react": "./lib/Gui/React.js"
+  },
+  "author": "Samuel Ronce",
+  "license": "MIT",
+  "dependencies": {
+    "@nanostores/react": "^0.7.1",
+    "@pixi/tilemap": "^4.0.0",
+    "@rpgjs/common": "^4.3.0",
+    "@rpgjs/tiled": "^4.3.0",
+    "@rpgjs/types": "^4.0.5",
+    "@types/howler": "2.2.7",
+    "howler": "2.2.3",
+    "lodash.get": "^4.4.2",
+    "lodash.merge": "4.6.2",
+    "pixi-viewport": "^5.0.2",
+    "pixi.js": "7.2.4",
+    "react-dom": "^18.2.0",
+    "rxjs": "7.8.0",
+    "simple-room-client": "^3.0.0",
+    "vue": "^3.2.47"
+  },
+  "gitHead": "5abe6ca78be96524d74a052a230f2315c900ddee",
+  "devDependencies": {
+    "@babel/types": "^7.22.11",
+    "@rpgjs/compiler": "^4.3.0",
+    "@types/css-font-loading-module": "^0.0.8",
+    "@types/node": "^18.16.0",
+    "@types/react": "^18.2.25",
+    "typescript": "^5.0.4"
+  },
+  "type": "module"
+}
