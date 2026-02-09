@@ -57,6 +57,7 @@ Every file in the repo maps to exactly one agent. When in doubt, check this file
 ## Read-Only Reference (DO NOT EDIT)
 
 - `docs/rpgjs-reference/**` — cloned RPGJS v4.3.1 source (local reference only)
+- `docs/openclaw-reference/**` — cloned OpenClaw v2026.2.9 source (pattern extraction only)
 
 ## Shared (Read by All, Written by Owner)
 
@@ -65,3 +66,4 @@ Every file in the repo maps to exactly one agent. When in doubt, check this file
 - `.ai/status.md` — all agents read; Claude Code writes
 - `.ai/boundaries.md` — all agents read; Claude Code writes
 - `docs/rpgjs-guide.md` — all agents read; Claude Code writes
+- `docs/openclaw-patterns.md` — all agents read; Claude Code writes

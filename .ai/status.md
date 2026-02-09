@@ -46,6 +46,9 @@ created (guide, Cursor rules, boundaries). Ready to scaffold from sample2.
 | — | RPGJS v4.3.1 reference cloned to docs/ | claude-code | 2026-02-09 |
 | — | Dev toolkit created (guide, Cursor rules, corrected structure) | claude-code | 2026-02-09 |
 | — | Project structure corrected to v4 autoload conventions | claude-code | 2026-02-09 |
+| — | OpenClaw v2026.2.9 reference cloned to docs/ | claude-code | 2026-02-09 |
+| — | OpenClaw patterns extraction guide created | claude-code | 2026-02-09 |
+| — | Agent system Cursor rules updated with OpenClaw references | claude-code | 2026-02-09 |
 
 ## Architecture Notes
 
@@ -55,3 +58,6 @@ created (guide, Cursor rules, boundaries). Ready to scaffold from sample2.
 - **Starter choice**: Using sample2 from RPGJS repo instead of minimal starter —
   comes with maps, tilesets, NPCs, items, spritesheets, sounds already working.
 - **RPGJS reference**: Full v4.3.1 source at `docs/rpgjs-reference/` — read-only.
+- **OpenClaw reference**: Full v2026.2.9 source at `docs/openclaw-reference/` — read-only.
+  Six patterns extracted: lane queue, agent runner, skill system, channel adapter,
+  memory system, system prompt builder. See `docs/openclaw-patterns.md`.
