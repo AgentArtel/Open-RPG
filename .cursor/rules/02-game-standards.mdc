@@ -1,10 +1,38 @@
 ---
 description: RPGJS game development standards for server and client code
-globs: src/modules/**/*.{ts,tsx}
+globs: main/**/*.{ts,tsx,vue}
 alwaysApply: false
 ---
 
 # RPGJS Game Standards
+
+## Local Reference
+
+Always consult these before writing game code:
+- `docs/rpgjs-guide.md` — RPGJS v4 cheat sheet
+- `docs/rpgjs-reference/packages/sample2/main/` — working example project
+- `docs/rpgjs-reference/docs/guide/` — full guide documentation
+
+## Autoload Structure
+
+RPGJS v4 auto-registers files by directory name. Place files in the correct
+directories under `main/` — no manual registration needed.
+
+```
+main/
+├── events/        → @EventData classes (auto-registered)
+├── maps/          → @MapData classes (auto-registered)
+├── database/      → @Item, @Weapon, etc. (auto-registered)
+├── spritesheets/  → Spritesheet definitions (auto-registered)
+├── gui/           → GUI components (auto-registered)
+├── sounds/        → Audio files (auto-registered)
+├── worlds/        → World maps + Tiled assets (.tmx, .tsx, .png)
+├── player.ts      → Player hooks
+├── server.ts      → Server hooks
+├── client.ts      → Client hooks
+├── sprite.ts      → Sprite hooks
+└── scene-map.ts   → Scene hooks
+```
 
 ## Event/NPC Classes
 
@@ -17,12 +45,13 @@ alwaysApply: false
 ```ts
 @EventData({
     name: 'EV-AGENT-NAME',
-    mode: EventMode.Shared,
-    hitbox: { width: 32, height: 32 }
+    mode: EventMode.Shared
 })
-export class AgentNpcEvent extends RpgEvent {
+export default class AgentNpcEvent extends RpgEvent {
     onInit() {
         this.setGraphic('npc-sprite')
+        this.setHitbox(16, 16)
+        this.speed = Speed.Slow
         // Register with AgentManager via bridge
     }
     async onAction(player: RpgPlayer) {
@@ -34,29 +63,41 @@ export class AgentNpcEvent extends RpgEvent {
 ## Maps
 
 - Use Tiled Map Editor for map creation
-- Map classes use `@MapData` decorator
-- Place events via Tiled object layers (name matching `@EventData.name`, type `event`)
-- Tile size: 32×32 pixels (standard)
-- Keep tileset images ≤ 4096×4096 (WebGL constraint)
+- Map classes use `@MapData` decorator with `id` and `file` properties
+- Place events via Tiled object layers (name matching `@EventData.name`)
+- Player spawn: Point object named `start` in Tiled
+- Tile size: 32x32 pixels (standard)
+- Keep tileset images ≤ 4096x4096 (WebGL constraint)
+- Map files (.tmx) live in `main/worlds/maps/`
+
+```ts
+@MapData({
+    id: 'medieval',
+    file: require('../worlds/maps/map.tmx')
+})
+export default class MedievalMap extends RpgMap { }
+```
 
 ## Player Interaction
 
 - Use `player.showText()` for NPC dialogue (with `talkWith: this` to face player)
 - Use `player.showChoices()` for player decision points
-- Set player properties in `onJoinMap` hook, not after `changeMap()`
+- Set player properties in `onJoinMap` hook, NOT after `changeMap()`
 - All GUI commands target the `player` object, not the event
 
 ## Movement
 
-- Use `moveRoutes()` for scripted paths, `moveTo()` for A* pathfinding
+- Use `moveRoutes()` for scripted paths
 - Use `infiniteMoveRoute()` for patrol behavior
 - Use `attachShape()` + `onDetectInShape` for proximity detection
-- Set `speed` and `frequency` properties for movement feel
+- Set `speed` property for movement feel (Speed.Slow, Speed.Normal, Speed.Fast)
 - Use `breakRoutes(true)` / `replayRoutes()` to pause/resume routes
 
 ## Performance
 
-- Avoid `onChanges` on maps with many events (O(n²) notification pattern)
-- Avoid `onStep` for agent logic (fires at 60 FPS)
+- NEVER use `onChanges` on maps with many events (O(n²) notification pattern)
+- NEVER use `onStep` for agent logic (fires at 60 FPS)
+- Use `onDetectInShape` for proximity detection
+- Use `setInterval` for idle tick behavior (15-second intervals)
+- Use `Components.text('{name}')` templates, not `Components.text(player.name)`
 - Minimize NPC state changes per tick to reduce schema sync overhead
-- Consider `serverFps` tuning if many NPCs are active

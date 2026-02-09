@@ -23,38 +23,53 @@ npx tsc --noEmit     # type check
 
 ## Project Structure
 
+RPGJS v4 uses **autoload by directory convention** — files placed in correctly
+named directories auto-register without explicit imports. The module root is
+`main/` (referenced in `rpg.toml`).
+
 ```
+main/                             # RPGJS game module (autoload root)
+├── events/                       # Auto-registered NPC/Event classes (@EventData)
+├── maps/                         # Auto-registered map classes (@MapData)
+├── database/                     # Auto-registered items, weapons, skills
+│   └── items/
+├── spritesheets/                 # Auto-registered spritesheets (filename = graphic ID)
+│   └── npc/
+│       ├── male.png              # setGraphic('male')
+│       └── spritesheet.ts
+├── gui/                          # Auto-registered GUI components (Vue/React)
+├── sounds/                       # Auto-registered audio files
+├── worlds/                       # World map connections + Tiled assets
+│   └── maps/
+│       ├── map.tmx               # Tiled map files
+│       ├── tileset.tsx           # Tileset definitions
+│       └── base.png              # Tileset images
+├── player.ts                     # Player lifecycle hooks (onConnected, onJoinMap, etc.)
+├── server.ts                     # Server hooks (onStart, auth)
+├── client.ts                     # Client hooks (onStart, onConnectError)
+├── sprite.ts                     # Client sprite hooks
+└── scene-map.ts                  # Scene/camera hooks
 src/
-├── modules/                  # RPGJS game modules
-│   └── main/
-│       ├── server/
-│       │   ├── maps/         # Map classes + tmx/ directory
-│       │   ├── events/       # NPC/Event classes (@EventData)
-│       │   ├── database/     # Items, weapons, skills
-│       │   └── player.ts     # Player hooks
-│       ├── client/
-│       │   ├── characters/   # Spritesheet definitions
-│       │   ├── gui/          # GUI components
-│       │   └── sounds/       # Audio assets
-│       └── index.ts          # Module entry
-├── agents/                   # AI agent system (OpenClaw-inspired)
-│   ├── core/                 # AgentRunner, LLM client, lane queue
-│   ├── skills/               # Game command tool definitions (move, look, say, etc.)
-│   ├── perception/           # PerceptionEngine — game state → text for LLM
-│   ├── memory/               # Per-agent memory (conversation buffer, persistence)
-│   └── bridge/               # GameChannelAdapter — RPGJS ↔ agent wiring
-├── config/                   # Agent personality configs (YAML)
-├── server.ts                 # Server entry point
-└── client.ts                 # Client entry point
-maps/                         # Tiled .tmx map files
-assets/
-├── sprites/                  # Character spritesheets
-└── tilesets/                 # Tileset images
-.ai/                          # Multi-agent coordination
-docs/                         # Architecture docs, ADRs, guides
-idea/                         # Project vision and research documents
-rpg.toml                      # RPGJS game configuration
+├── agents/                       # AI agent system (OpenClaw-inspired)
+│   ├── core/                     # AgentRunner, LLM client, lane queue
+│   ├── skills/                   # Game command tool definitions (move, look, say, etc.)
+│   ├── perception/               # PerceptionEngine — game state → text for LLM
+│   ├── memory/                   # Per-agent memory (conversation buffer, persistence)
+│   └── bridge/                   # GameChannelAdapter — RPGJS ↔ agent wiring
+└── config/                       # Agent personality configs (YAML)
+.ai/                              # Multi-agent coordination
+docs/                             # Architecture docs, ADRs, guides
+├── rpgjs-reference/              # RPGJS v4.3.1 source + docs (local reference)
+└── rpgjs-guide.md                # Extracted RPGJS cheat sheet
+idea/                             # Project vision and research documents
+rpg.toml                          # RPGJS game configuration
 ```
+
+> **Why this structure?** RPGJS v4 autoload expects `events/`, `maps/`,
+> `spritesheets/`, `database/`, `gui/`, `sounds/` directly under the module
+> directory — not nested under `server/` or `client/` subdirectories. The
+> `main/` directory follows the same layout as the official sample projects.
+> See `docs/rpgjs-guide.md` for full details.
 
 ## Agent Team
 
@@ -66,11 +81,9 @@ Two AI agents share this repo. The Human PM is Accountable for all decisions.
 
 **Owns**:
 - `AGENTS.md`, `CLAUDE.md`, `.ai/` — coordination files
-- `docs/` — architecture documentation, ADRs, guides
+- `docs/` — architecture documentation, ADRs, guides, RPGJS reference
 - `idea/` — project vision and research documents
 - Root configs: `package.json`, `tsconfig*.json`, `rpg.toml`
-- `src/server.ts`, `src/client.ts` — entry points
-- `src/modules/main/index.ts` — module registration
 - Database schema and agent config schema definitions
 - Cross-cutting refactors spanning agent boundaries
 
@@ -92,18 +105,18 @@ or create map/event implementations.
   - `perception/` — PerceptionEngine
   - `memory/` — AgentMemory system
   - `bridge/` — GameChannelAdapter, RPGJS integration
-- `src/modules/main/server/**` — all server-side game code:
-  - `events/` — NPC/Event classes
-  - `maps/` — map classes
-  - `database/` — game items and data
-  - `player.ts` — player hooks
-- `src/modules/main/client/**` — client-side code:
-  - `characters/` — spritesheets
+- `main/**` — all game module code (RPGJS autoload structure):
+  - `events/` — NPC/Event classes (@EventData)
+  - `maps/` — map classes (@MapData)
+  - `database/` — items, weapons, skills
+  - `spritesheets/` — spritesheet definitions + images
   - `gui/` — GUI components
-  - `sounds/` — audio
+  - `sounds/` — audio assets
+  - `worlds/` — Tiled .tmx/.tsx map files and tileset images
+  - `player.ts` — player lifecycle hooks
+  - `server.ts`, `client.ts` — module hook files
+  - `sprite.ts`, `scene-map.ts` — client hook files
 - `src/config/` — agent personality config files
-- `maps/` — Tiled map files
-- `assets/` — sprites and tilesets
 
 **Does**: Implements game logic, agent system, bridge layer, NPC behaviors,
 perception engine, skill system, memory, UI components, map design.
