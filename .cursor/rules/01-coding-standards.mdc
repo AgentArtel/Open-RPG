@@ -1,0 +1,55 @@
+---
+description: TypeScript coding standards for all source files
+globs: src/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Coding Standards
+
+## TypeScript
+
+- Strict mode enabled — avoid `any`, use `unknown` and narrow with type guards
+- Interfaces before implementations — define contracts, then implement
+- Dependency injection — no hard-coded singletons, pass dependencies via constructors
+- Named exports preferred over default exports (except RPGJS module classes)
+- Use `readonly` on properties that shouldn't change after initialization
+
+## Error Handling
+
+- ALL async operations must have try/catch or .catch()
+- Agent system errors must NEVER crash the game server
+- Return typed error results rather than throwing where possible
+- Log errors with clear agent-prefixed messages: `[Agent:name] error description`
+
+## Agent System Patterns
+
+- **Lane Queue**: One LLM call at a time per agent. Use async mutex/queue per agent ID.
+- **Perception**: Structured JSON + brief narrative. Target < 300 tokens per snapshot.
+- **Skills**: Native Anthropic tool definitions (function calling) for MVP.
+- **Memory**: In-memory conversation buffer with optional JSON persistence.
+
+## Naming Conventions
+
+- Files: kebab-case (`agent-runner.ts`, `perception-engine.ts`)
+- Classes: PascalCase (`AgentRunner`, `PerceptionEngine`)
+- Interfaces: PascalCase with `I` prefix (`IAgentSkill`, `IPerceptionEngine`)
+- Constants: SCREAMING_SNAKE_CASE (`MAX_IDLE_INTERVAL`, `DEFAULT_PERCEPTION_RADIUS`)
+- Agent configs: kebab-case YAML (`village-elder.yaml`)
+
+## Console Logging
+
+Use clear prefixes for debugging:
+```
+[AgentManager] Starting 3 agents...
+[Agent:ElderTheron] Perception: player approaching from east
+[Agent:ElderTheron] LLM call: conversation turn (Sonnet 4.5)
+[Agent:ElderTheron] Skill executed: say("Greetings, traveler!")
+[Bridge] Event EV-ELDER onAction triggered by player_01
+[LaneQueue:ElderTheron] Queued event, position 2
+```
+
+## Imports
+
+- Use path aliases where configured: `@/agents/`, `@/modules/`, `@/config/`
+- Group imports: node builtins → external packages → internal modules → types
+- RPGJS imports from `@rpgjs/server` and `@rpgjs/client`

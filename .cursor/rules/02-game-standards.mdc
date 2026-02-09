@@ -1,0 +1,62 @@
+---
+description: RPGJS game development standards for server and client code
+globs: src/modules/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# RPGJS Game Standards
+
+## Event/NPC Classes
+
+- Use `@EventData` decorator with a unique `name` property
+- Default to `EventMode.Shared` — one instance visible to all players
+- Only use `EventMode.Scenario` when per-player state is absolutely required
+- Keep NPC event classes focused — game logic in the class, AI logic in the agent system
+- AI-controlled NPCs should delegate to the agent system via the bridge layer
+
+```ts
+@EventData({
+    name: 'EV-AGENT-NAME',
+    mode: EventMode.Shared,
+    hitbox: { width: 32, height: 32 }
+})
+export class AgentNpcEvent extends RpgEvent {
+    onInit() {
+        this.setGraphic('npc-sprite')
+        // Register with AgentManager via bridge
+    }
+    async onAction(player: RpgPlayer) {
+        // Forward to GameChannelAdapter
+    }
+}
+```
+
+## Maps
+
+- Use Tiled Map Editor for map creation
+- Map classes use `@MapData` decorator
+- Place events via Tiled object layers (name matching `@EventData.name`, type `event`)
+- Tile size: 32×32 pixels (standard)
+- Keep tileset images ≤ 4096×4096 (WebGL constraint)
+
+## Player Interaction
+
+- Use `player.showText()` for NPC dialogue (with `talkWith: this` to face player)
+- Use `player.showChoices()` for player decision points
+- Set player properties in `onJoinMap` hook, not after `changeMap()`
+- All GUI commands target the `player` object, not the event
+
+## Movement
+
+- Use `moveRoutes()` for scripted paths, `moveTo()` for A* pathfinding
+- Use `infiniteMoveRoute()` for patrol behavior
+- Use `attachShape()` + `onDetectInShape` for proximity detection
+- Set `speed` and `frequency` properties for movement feel
+- Use `breakRoutes(true)` / `replayRoutes()` to pause/resume routes
+
+## Performance
+
+- Avoid `onChanges` on maps with many events (O(n²) notification pattern)
+- Avoid `onStep` for agent logic (fires at 60 FPS)
+- Minimize NPC state changes per tick to reduce schema sync overhead
+- Consider `serverFps` tuning if many NPCs are active

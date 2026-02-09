@@ -1,0 +1,52 @@
+---
+description: USE WHEN reading or writing task handoff files in .ai/tasks/
+globs:
+alwaysApply: false
+---
+
+# Task Protocol
+
+Check `.ai/tasks/` for your current assignments before starting work.
+
+## Task File Format
+
+```markdown
+## TASK-XXX: Title
+
+- **Status**: PENDING | IN_PROGRESS | REVIEW | DONE | BLOCKED
+- **Assigned**: cursor | claude-code
+- **Priority**: P0-Critical | P1-High | P2-Medium | P3-Low
+- **Phase**: [Phase from project outline: 0-6]
+- **Type**: Create | Modify | Fix | Refactor
+- **Depends on**: TASK-XXX | none
+- **Blocks**: TASK-XXX | none
+
+### Context
+What exists currently and why this task exists.
+
+### Objective
+Specific measurable goal — what "done" looks like.
+
+### Specifications
+- Requirement with specifics
+- Files/areas in scope
+
+### Acceptance Criteria
+- [ ] Testable criterion
+- [ ] Build passes, no type errors
+- [ ] Agent errors don't crash the server
+
+### Do NOT
+Explicit out-of-scope items.
+
+### Handoff Notes
+Updated by the assigned agent when status changes.
+```
+
+## Your Workflow
+
+1. Check `.ai/tasks/` for tasks assigned to `cursor` with status `PENDING`
+2. Set status to `IN_PROGRESS` before starting
+3. Implement according to acceptance criteria
+4. Set status to `REVIEW` when done
+5. Add handoff notes: what changed, decisions made, issues found

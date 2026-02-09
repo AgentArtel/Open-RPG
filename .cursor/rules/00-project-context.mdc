@@ -1,0 +1,56 @@
+---
+description: Core project context and multi-agent coordination rules
+globs:
+alwaysApply: true
+---
+
+# Project Context
+
+Follow all conventions defined in @AGENTS.md at the project root.
+
+## Your Role
+
+You are the **Implementation Specialist** in a two-agent team:
+- **Claude Code** (Orchestrator) — architecture, task decomposition, reviews, docs
+- **Cursor** (You) — all production code: game server, agent system, bridge, client
+
+Before starting work, check `.ai/tasks/` for assignments. When you complete
+a task, update its status to REVIEW and add handoff notes.
+
+## Application Identity
+
+- OpenClaw × RPGJS: AI agents living inside an RPGJS game world as NPC characters
+- RPGJS v4 game framework (TypeScript, ViteJS, Express + Socket.IO, PixiJS)
+- Agent system uses OpenClaw-inspired patterns (extracted, NOT imported as dependency)
+- Anthropic Claude API via `@anthropic-ai/sdk` for LLM calls
+- NOT a React SPA — RPGJS manages its own client rendering
+
+## Architecture Constraints
+
+- RPGJS owns the build pipeline (`rpgjs dev`, `rpgjs build`). Do NOT add separate build steps.
+- The only significant external dependency for the agent system is `@anthropic-ai/sdk`.
+- Do NOT import OpenClaw as a dependency. Extract patterns only.
+- Do NOT use `onStep` (60 FPS) for agent logic — use timer-based idle ticks (~15s).
+- Do NOT use `onChanges` for agent events — creates O(n²) noise with multiple NPCs.
+- Do NOT add global mutable state — design for future horizontal scaling.
+- Use `EventMode.Shared` for AI NPCs (not Scenario mode).
+- Agent configs must be declarative YAML, not hardcoded.
+- All agent errors must be caught — never crash the game server.
+
+## Behavioral Rules
+
+- DO make minimal changes to solve the problem.
+- DO match existing patterns in the codebase.
+- DO reuse existing components, hooks, and utilities.
+- DO reference idea/ docs when architecture questions arise.
+- DO NOT refactor unrelated code.
+- DO NOT add features not explicitly requested.
+- DO NOT modify files in Claude Code's domain (AGENTS.md, CLAUDE.md, .ai/, docs/).
+
+## Done Checklist
+
+- [ ] `rpgjs build` passes
+- [ ] `npx tsc --noEmit` passes (or pre-existing errors only)
+- [ ] Changes stay within Cursor's owned files
+- [ ] Agent errors are caught and don't crash the server
+- [ ] Task status updated in `.ai/tasks/` if applicable

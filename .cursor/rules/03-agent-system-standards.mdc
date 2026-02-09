@@ -1,0 +1,91 @@
+---
+description: Standards for the AI agent system (OpenClaw-inspired patterns)
+globs: src/agents/**/*.ts
+alwaysApply: false
+---
+
+# Agent System Standards
+
+## Architecture Overview
+
+The agent system extracts four patterns from OpenClaw:
+1. **Lane Queue** — per-agent async queue ensuring serial LLM execution
+2. **Skill System** — native Anthropic tool definitions for game commands
+3. **Memory System** — conversation buffer + JSON persistence
+4. **Channel Adapter** — bridges RPGJS events to agent runner
+
+## AgentRunner
+
+- One `AgentRunner` per NPC character
+- Manages: personality, available skills, memory, LLM client
+- System prompt: personality + available tools + current perception + recent memory
+- Tool use / function calling: parse tool calls, execute skills, return results
+- Rate limiting: prevent agent from spamming LLM calls
+- Configurable model per agent (Haiku for idle, Sonnet for conversation)
+
+## Skill Definitions
+
+- MVP: Use native Anthropic `tools` parameter (function calling)
+- Each skill maps to one RPGJS game action
+- Skills receive a `GameContext` with access to the NPC's RpgEvent instance
+- Skills validate parameters before executing
+- Skills return a result string for the LLM to see what happened
+- Handle errors gracefully — return error message, don't throw
+
+```ts
+// Skill definition pattern
+const moveSkill: IAgentSkill = {
+    name: 'move',
+    description: 'Move to a direction',
+    parameters: {
+        direction: { type: 'string', enum: ['north', 'south', 'east', 'west'] },
+        steps: { type: 'number', description: 'Number of tiles to move' }
+    },
+    execute: async (params, context) => {
+        // Call RPGJS movement API via context.npcEvent
+        return { success: true, message: 'Moved 3 tiles east' }
+    }
+}
+```
+
+## Perception Engine
+
+- Output: structured JSON + one-line narrative summary
+- Target: < 300 tokens per snapshot
+- Include: position, map name, nearby entities (capped at 5 closest), self state
+- Do NOT include raw pixel coordinates — use tile-based or relative positions
+- Generate the `summary` field as a one-line narrative anchor
+
+## Memory System
+
+- **Short-term**: Last N conversation exchanges (in-memory array)
+- **Token budget**: Trim oldest memories when context exceeds budget
+- **Per-agent isolation**: Each agent has its own memory instance
+- **MVP persistence**: JSON files per agent, reload on startup
+- **Post-MVP**: Hybrid BM25 + vector retrieval (OpenClaw pattern)
+
+## Lane Queue
+
+- Simple async mutex/queue per agent ID (~50 lines of TypeScript)
+- Default serial execution — one LLM call at a time per agent
+- Queue incoming events when agent is busy
+- Drop or merge stale events if queue grows too long
+
+## LLM Integration
+
+- Use `@anthropic-ai/sdk` directly
+- Enable prompt caching: system prompt + tool definitions are static per agent
+- Model selection per call type:
+  - Idle behavior → `claude-haiku-4-5-20251001`
+  - Conversation → `claude-sonnet-4-5-20250929`
+- Handle API errors gracefully — NPC says something generic, retries later
+- Execution feedback: if a skill fails, return error to LLM for re-planning
+
+## Bridge Layer (GameChannelAdapter)
+
+- One adapter per NPC, bound to a specific RpgEvent instance
+- Subscribes to RPGJS hooks: `onAction`, `onDetectInShape`, `onDetectOutShape`
+- Idle tick via `setInterval` (~15 seconds), NOT via RPGJS `onStep`
+- Converts RPGJS events → `AgentEvent` → enters lane queue
+- Routes agent responses → skill execution → RPGJS API calls
+- "Thinking" indicator: NPC faces player + shows "..." while LLM processes

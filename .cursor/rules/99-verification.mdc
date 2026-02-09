@@ -1,0 +1,32 @@
+---
+description: Pre-commit verification checklist
+globs:
+alwaysApply: true
+---
+
+# Pre-Commit Verification
+
+Before committing any changes, verify:
+
+## Build & Types
+- [ ] `rpgjs build` passes without errors
+- [ ] `npx tsc --noEmit` passes (or only pre-existing errors)
+
+## Agent System Safety
+- [ ] All agent system errors are caught with try/catch
+- [ ] No unhandled promise rejections in agent code
+- [ ] LLM API errors result in graceful fallback, not crashes
+- [ ] Skill execution failures return error messages to the LLM
+- [ ] No global mutable state introduced
+
+## Code Quality
+- [ ] Changes stay within your agent's owned files (see AGENTS.md)
+- [ ] No hardcoded API keys or secrets
+- [ ] No hardcoded agent personalities (use YAML configs)
+- [ ] Console logs use agent-prefixed format
+- [ ] New dependencies documented in commit message
+
+## Performance
+- [ ] No agent logic in `onStep` (60 FPS) or `onChanges`
+- [ ] Perception snapshots under 300 tokens
+- [ ] NPCs use `EventMode.Shared`, not `Scenario`
