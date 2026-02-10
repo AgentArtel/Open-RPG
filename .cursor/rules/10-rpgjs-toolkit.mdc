@@ -1,0 +1,221 @@
+---
+description: RPGJS v4 development toolkit — patterns, gotchas, and reference
+globs: "**/*.{ts,tsx,vue,toml,tmx}"
+alwaysApply: false
+---
+
+# RPGJS v4 Development Toolkit
+
+## Local Reference
+
+The full RPGJS v4.3.1 source and documentation are available locally at
+`docs/rpgjs-reference/`. Use these as your primary reference:
+
+- **Guide docs**: `docs/rpgjs-reference/docs/guide/` — tutorials and conventions
+- **API docs**: `docs/rpgjs-reference/docs/api/` — API reference
+- **Server source**: `docs/rpgjs-reference/packages/server/` — server internals
+- **Client source**: `docs/rpgjs-reference/packages/client/` — client internals
+- **Sample project**: `docs/rpgjs-reference/packages/sample2/main/` — complete working example
+- **Dev guide**: `docs/rpgjs-guide.md` — extracted cheat sheet
+
+When implementing RPGJS features, **read the relevant local docs first** before
+writing code. Do not guess at APIs — verify against the reference.
+
+## Autoload Convention (Critical)
+
+RPGJS v4 auto-discovers files by directory placement. The directory names
+matter — files in the wrong location won't be registered.
+
+### Required Directory Names (under module root)
+```
+events/         → @EventData classes auto-registered
+maps/           → @MapData classes auto-registered
+database/       → @Item, @Weapon, etc. auto-registered
+spritesheets/   → Spritesheet definitions auto-registered
+gui/            → Vue/React components auto-registered
+sounds/         → Audio files auto-registered
+worlds/         → World map files auto-registered
+```
+
+### Hook Files (flat at module root)
+```
+player.ts       → RpgPlayerHooks export
+server.ts       → RpgServerEngineHooks export
+client.ts       → RpgClientEngineHooks export
+sprite.ts       → RpgSpriteHooks export
+scene-map.ts    → RpgSceneMapHooks export
+```
+
+### Spritesheet Naming
+- The **filename** of the PNG image becomes the graphic ID
+- `spritesheets/npc/male.png` → use `setGraphic('male')`
+- One `.ts` definition file per spritesheet folder
+
+## Event Creation Pattern
+
+```ts
+import { RpgEvent, EventData, RpgPlayer, EventMode, Speed,
+         Move, Components, ShapePositioning } from '@rpgjs/server'
+
+@EventData({
+    name: 'EV-UNIQUE-NAME',         // Must match Tiled object name
+    mode: EventMode.Shared           // Default — one instance for all players
+})
+export default class MyNpcEvent extends RpgEvent {
+    onInit() {
+        this.setGraphic('sprite-id') // Matches spritesheet PNG filename
+        this.setHitbox(16, 16)
+        this.speed = Speed.Slow
+    }
+
+    async onAction(player: RpgPlayer) {
+        await player.showText('Hello!', { talkWith: this })
+    }
+}
+```
+
+### Event Placement in Tiled
+- Add an Object Layer to your .tmx map
+- Add a Point object with `name` matching the `@EventData.name` value
+- The event will spawn at that position on the map
+
+## Map Creation Pattern
+
+```ts
+import { RpgMap, MapData, RpgPlayer } from '@rpgjs/server'
+
+@MapData({
+    id: 'map-id',                            // Used in rpg.toml [start.map] and changeMap()
+    file: require('../worlds/maps/map.tmx')  // Path to .tmx file
+})
+export default class TownMap extends RpgMap {
+    onJoin(player: RpgPlayer) { }
+    onLeave(player: RpgPlayer) { super.onLeave(player) }
+}
+```
+
+## Synchronization Rules (Must Follow)
+
+### After changeMap — use onJoinMap
+```ts
+// WRONG — properties set after changeMap() are lost
+async onConnected(player) {
+    await player.changeMap('medieval')
+    player.hp = 500  // NOT SYNCED
+}
+
+// RIGHT — set properties in onJoinMap
+onJoinMap(player) {
+    player.hp = 500  // Properly synced
+}
+```
+
+### Component Templates — use placeholders
+```ts
+// WRONG — sends entire structure on every name change
+Components.text(player.name)
+
+// RIGHT — only value is sent on change
+Components.text('{name}')
+```
+
+## Performance Rules (Hard Constraints)
+
+| Rule | Reason |
+|------|--------|
+| NEVER use `onChanges` for NPC logic | Fires for every event change on the map — O(n²) noise |
+| NEVER use `onStep` for agent logic | Fires at 60 FPS — massive waste for AI ticks |
+| Use `onDetectInShape` for proximity | Efficient shape-based collision detection |
+| Use `setInterval` for idle ticks | 15-second intervals for ambient behavior |
+| Use `{property}` template syntax | Efficient incremental sync vs full re-send |
+| Keep tileset images ≤ 4096x4096 | WebGL texture size limit |
+
+## Hooks Quick Reference
+
+### Event Hooks (NPC lifecycle)
+| Hook | When | Use For |
+|------|------|---------|
+| `onInit()` | Event created on map | Setup graphics, hitbox, speed, shapes |
+| `onAction(player)` | Player presses action key on event | Dialogue, interactions |
+| `onDetectInShape(player, shape)` | Player enters attached shape | Proximity awareness |
+| `onDetectOutShape(player, shape)` | Player leaves attached shape | End proximity |
+| `onPlayerTouch(player)` | Physical collision with player | Use sparingly |
+
+### Player Hooks
+| Hook | When | Use For |
+|------|------|---------|
+| `onConnected(player)` | Player logs in | Set name, graphic, hitbox, initial map |
+| `onJoinMap(player, map)` | Player finishes map transition | Set HP, items, map-specific state |
+| `onInput(player, {input, moving})` | Player presses a key | Handle action/back/custom inputs |
+| `onDisconnect(player)` | Player disconnects | Save state |
+
+### Map Hooks
+| Hook | When | Use For |
+|------|------|---------|
+| `onInit()` | Map loaded into server | Create dynamic shapes |
+| `onJoin(player)` | Player enters map | Map-specific setup |
+| `onLeave(player)` | Player leaves map | Cleanup |
+
+## Movement Commands
+
+```ts
+import { Move, Speed } from '@rpgjs/server'
+
+event.speed = Speed.Slow           // Speed.Slow | Speed.Normal | Speed.Fast
+event.infiniteMoveRoute([Move.tileRandom()])   // Patrol
+event.moveRoutes([Move.tileUp(), Move.wait(500)])  // Scripted
+event.breakRoutes(true)            // Pause movement
+event.replayRoutes()               // Resume movement
+```
+
+## Dialogue Commands
+
+```ts
+// Text
+await player.showText('Hello!', { talkWith: this })
+
+// Choices
+const { text, index } = await player.showChoices('Pick one:', [
+    { text: 'Option A', value: 'a' },
+    { text: 'Option B', value: 'b' }
+])
+```
+
+## Database Patterns
+
+```ts
+import { Item } from '@rpgjs/database'
+
+@Item({
+    id: 'potion',        // Unique ID for addItem/getItem
+    name: 'Potion',
+    price: 200,
+    hpValue: 100,
+    consumable: true
+})
+export default class Potion { }
+
+// Usage:
+await player.addItem(Potion, 1)
+const item = player.getItem('potion')
+```
+
+## Working with the Agent System
+
+When implementing AI NPC events that connect to the agent system:
+
+1. **NPC event class** lives in `events/` — handles RPGJS lifecycle
+2. **Agent logic** lives in `src/agents/` — handles AI behavior
+3. **Bridge layer** connects them — `src/agents/bridge/`
+4. Events forward `onAction` and `onDetectInShape` to the bridge
+5. Agent skills call back into RPGJS APIs (move, showText, etc.)
+6. **Agent errors must never crash the game server** — always wrap in try/catch
+
+## Verifying Your Work
+
+Before considering a task complete:
+```bash
+rpgjs build          # Must pass
+npx tsc --noEmit     # Must pass
+rpgjs dev            # Must launch and be playable
+```
