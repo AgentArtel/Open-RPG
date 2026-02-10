@@ -15,9 +15,6 @@ dist/
 build/
 *.tsbuildinfo
 
-# RPGJS build cache
-.rpgjs/
-
 # Environment variables
 .env
 .env.local
@@ -42,6 +39,9 @@ temp/
 # OS files
 Thumbs.db
 Desktop.ini
+
+# RPGJS build cache
+.rpgjs/
 
 # Secrets
 *.pem
