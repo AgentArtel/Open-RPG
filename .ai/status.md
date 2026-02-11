@@ -4,21 +4,17 @@ Last updated: 2026-02-11
 
 ## Current Phase
 
-**Phase 3: Core Implementation** — Phase 0/1 complete. RPGJS scaffolded, dev
-server verified, TypeScript interfaces defined, test NPC working, LLM
-integration validated (Moonshot/Kimi K2). Plugin analysis complete — using
-@rpgjs/default-gui, @rpgjs/plugin-emotion-bubbles, @rpgjs/gamepad. All
-research and architecture work done. Ready for core agent system implementation.
+**Phase 3: Core Implementation — COMPLETE.** PerceptionEngine, Skill System (5 MVP skills), and AgentRunner are implemented and tested. Live in-game NPC (AgentRunnerTestNPC) runs real LLM, idle ticks, and conversation; LaneQueue and move/say/look/emote/wait skills verified. Next: Phase 4 (bridge) or AgentManager (TASK-009).
 
-## Current Sprint — Core Agent System (Phase 3)
+## Current Sprint — Core Agent System (Phase 3) — DONE
 
 | ID | Title | Agent | Priority | Status |
 |----|-------|-------|----------|--------|
-| TASK-006 | Build PerceptionEngine | cursor | P0-Critical | PENDING |
-| TASK-007 | Build Skill System (5 MVP skills) | cursor | P0-Critical | PENDING |
-| TASK-008 | Build AgentRunner (core LLM loop) | cursor | P0-Critical | PENDING |
+| TASK-006 | Build PerceptionEngine | cursor | P0-Critical | DONE |
+| TASK-007 | Build Skill System (5 MVP skills) | cursor | P0-Critical | DONE |
+| TASK-008 | Build AgentRunner (core LLM loop) | cursor | P0-Critical | DONE |
 
-Implementation order: TASK-006 → TASK-007 → TASK-008 (008 depends on both 006 and 007)
+All three implemented, unit-tested, and live-tested in game (AgentRunnerTestNPC at 450,350 on simplemap).
 
 ## Previous Sprint — Phase 0: Environment Setup (ALL DONE)
 
@@ -47,6 +43,9 @@ Implementation order: TASK-006 → TASK-007 → TASK-008 (008 depends on both 00
 
 | ID | Title | Agent | Date |
 |----|-------|-------|------|
+| TASK-008 | Build AgentRunner (core LLM loop) + live test NPC | cursor | 2026-02-11 |
+| TASK-007 | Build Skill System (5 MVP skills) | cursor | 2026-02-11 |
+| TASK-006 | Build PerceptionEngine | cursor | 2026-02-11 |
 | — | RPGJS plugin analysis (use vs build) | claude-code | 2026-02-11 |
 | — | Prior art analysis (Stanford, AI Town, Voyager) | claude-code | 2026-02-11 |
 | — | Updated architecture to Kimi K2/K2.5 + Railway + Lovable | claude-code | 2026-02-11 |

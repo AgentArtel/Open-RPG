@@ -13,9 +13,10 @@
  */
 
 import type { AgentEvent, Position, MapInfo } from '../bridge/types';
-import type { ISkillRegistry, ToolDefinition, SkillResult } from '../skills/types';
-import type { IPerceptionEngine, PerceptionSnapshot } from '../perception/types';
+import type { ISkillRegistry, ToolDefinition, SkillResult, GameContext } from '../skills/types';
+import type { IPerceptionEngine, PerceptionSnapshot, PerceptionContext } from '../perception/types';
 import type { IAgentMemory, MemoryEntry } from '../memory/types';
+import type { OpenAIToolDefinition } from '../skills/types';
 
 // Re-export AgentEvent so consumers can import everything from core/types
 export type { AgentEvent } from '../bridge/types';
@@ -138,6 +139,27 @@ export interface AgentConfig {
 }
 
 // ---------------------------------------------------------------------------
+// RunContext — provided to AgentRunner for each run (bridge supplies this)
+// ---------------------------------------------------------------------------
+
+/**
+ * Game state needed for one agent run. The bridge (Phase 4) builds this
+ * from the NPC's RpgEvent; tests pass a mock.
+ */
+export interface RunContext {
+  /** For PerceptionEngine.generateSnapshot. */
+  readonly perceptionContext: PerceptionContext;
+  /** For SkillRegistry.executeSkill. */
+  readonly gameContext: GameContext;
+}
+
+/**
+ * Called at the start of each run to get current game state.
+ * The bridge implements this; tests use a static mock.
+ */
+export type RunContextProvider = (event: AgentEvent) => Promise<RunContext>;
+
+// ---------------------------------------------------------------------------
 // LLM Client — provider-agnostic interface
 // ---------------------------------------------------------------------------
 
@@ -180,8 +202,8 @@ export interface LLMCompletionOptions {
   readonly maxTokens?: number;
   /** System prompt (identity, skills, perception, rules). */
   readonly systemPrompt?: string;
-  /** Tool definitions available for this call. */
-  readonly tools?: ReadonlyArray<ToolDefinition>;
+  /** Tool definitions (OpenAI format for Kimi K2/K2.5). */
+  readonly tools?: ReadonlyArray<OpenAIToolDefinition>;
   /** Temperature (0.0 – 1.0). Lower = more deterministic. */
   readonly temperature?: number;
 }

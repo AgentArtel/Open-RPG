@@ -7,6 +7,8 @@ import VendorEvent from './events/vendor'
 import MissionaryEvent from './events/missionary'
 import CatDadEvent from './events/cat-dad'
 import PerceptionTestNpcEvent from './events/perception-test-npc'
+import SkillTestNpcEvent from './events/skill-test-npc'
+import AgentRunnerTestNpcEvent from './events/agent-runner-test-npc'
 import { testLLMCall } from '../src/agents/core/llm-test'
 
 /**
@@ -19,6 +21,22 @@ import { testLLMCall } from '../src/agents/core/llm-test'
  * future.
  */
 const npcSpawnedOnMap: Set<string> = new Set()
+
+/**
+ * Toggle which NPCs spawn on the map. Set to false to disable and reduce clutter.
+ */
+const NPC_SPAWN_CONFIG = {
+    TestNPC: true,
+    Guard: true,
+    Artist: false,
+    Photographer: false,
+    Vendor: false,
+    Missionary: false,
+    CatDad: false,
+    PerceptionTestNPC: false,
+    SkillTestNPC: false,
+    AgentRunnerTestNPC: true,
+} as const
 
 const player: RpgPlayerHooks = {
     onConnected(player: RpgPlayer) {
@@ -53,31 +71,46 @@ const player: RpgPlayerHooks = {
         const map = player.getCurrentMap<RpgMap>()
         if (map && map.id === 'simplemap' && !npcSpawnedOnMap.has(map.id)) {
             try {
-                // Spawn all NPCs at different positions across the map
-                map.createDynamicEvent({ x: 200, y: 200, event: TestNpcEvent })
-                console.log('[TestNPC] Spawned on map:', map.id)
-
-                map.createDynamicEvent({ x: 400, y: 300, event: GuardEvent })
-                console.log('[Guard] Spawned on map:', map.id)
-
-                map.createDynamicEvent({ x: 150, y: 400, event: ArtistEvent })
-                console.log('[Artist] Spawned on map:', map.id)
-
-                map.createDynamicEvent({ x: 500, y: 200, event: PhotographerEvent })
-                console.log('[Photographer] Spawned on map:', map.id)
-
-                map.createDynamicEvent({ x: 300, y: 500, event: VendorEvent })
-                console.log('[Vendor] Spawned on map:', map.id)
-
-                map.createDynamicEvent({ x: 600, y: 400, event: MissionaryEvent })
-                console.log('[Missionary] Spawned on map:', map.id)
-
-                map.createDynamicEvent({ x: 100, y: 300, event: CatDadEvent })
-                console.log('[CatDad] Spawned on map:', map.id)
-
-                // Perception test NPC - tests PerceptionEngine in real game environment
-                map.createDynamicEvent({ x: 350, y: 350, event: PerceptionTestNpcEvent })
-                console.log('[PerceptionTestNPC] Spawned on map:', map.id)
+                if (NPC_SPAWN_CONFIG.TestNPC) {
+                    map.createDynamicEvent({ x: 200, y: 200, event: TestNpcEvent })
+                    console.log('[TestNPC] Spawned on map:', map.id)
+                }
+                if (NPC_SPAWN_CONFIG.Guard) {
+                    map.createDynamicEvent({ x: 400, y: 300, event: GuardEvent })
+                    console.log('[Guard] Spawned on map:', map.id)
+                }
+                if (NPC_SPAWN_CONFIG.Artist) {
+                    map.createDynamicEvent({ x: 150, y: 400, event: ArtistEvent })
+                    console.log('[Artist] Spawned on map:', map.id)
+                }
+                if (NPC_SPAWN_CONFIG.Photographer) {
+                    map.createDynamicEvent({ x: 500, y: 200, event: PhotographerEvent })
+                    console.log('[Photographer] Spawned on map:', map.id)
+                }
+                if (NPC_SPAWN_CONFIG.Vendor) {
+                    map.createDynamicEvent({ x: 300, y: 500, event: VendorEvent })
+                    console.log('[Vendor] Spawned on map:', map.id)
+                }
+                if (NPC_SPAWN_CONFIG.Missionary) {
+                    map.createDynamicEvent({ x: 600, y: 400, event: MissionaryEvent })
+                    console.log('[Missionary] Spawned on map:', map.id)
+                }
+                if (NPC_SPAWN_CONFIG.CatDad) {
+                    map.createDynamicEvent({ x: 100, y: 300, event: CatDadEvent })
+                    console.log('[CatDad] Spawned on map:', map.id)
+                }
+                if (NPC_SPAWN_CONFIG.PerceptionTestNPC) {
+                    map.createDynamicEvent({ x: 350, y: 350, event: PerceptionTestNpcEvent })
+                    console.log('[PerceptionTestNPC] Spawned on map:', map.id)
+                }
+                if (NPC_SPAWN_CONFIG.SkillTestNPC) {
+                    map.createDynamicEvent({ x: 250, y: 300, event: SkillTestNpcEvent })
+                    console.log('[SkillTestNPC] Spawned on map:', map.id)
+                }
+                if (NPC_SPAWN_CONFIG.AgentRunnerTestNPC) {
+                    map.createDynamicEvent({ x: 450, y: 350, event: AgentRunnerTestNpcEvent })
+                    console.log('[AgentRunnerTestNPC] Spawned on map:', map.id)
+                }
 
                 npcSpawnedOnMap.add(map.id)
             } catch (err) {
