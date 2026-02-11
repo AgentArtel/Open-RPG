@@ -11,6 +11,7 @@ Last updated: 2026-02-10 (TASK-005 complete)
 | ID | Title | Agent | Priority | Status |
 |----|-------|-------|----------|--------|
 | TASK-005 | LLM Integration Feasibility Test | cursor | P0-Critical | DONE |
+| INFRA | GitHub Secrets setup and API key docs | cursor | N/A | REJECTED |
 | TASK-006 | Build PerceptionEngine | cursor | P0-Critical | PENDING |
 | TASK-007 | Build Skill System (5 MVP skills) | cursor | P0-Critical | PENDING |
 | TASK-008 | Build AgentRunner (core LLM loop) | cursor | P0-Critical | PENDING |
