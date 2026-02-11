@@ -6,6 +6,7 @@ import PhotographerEvent from './events/photographer'
 import VendorEvent from './events/vendor'
 import MissionaryEvent from './events/missionary'
 import CatDadEvent from './events/cat-dad'
+import PerceptionTestNpcEvent from './events/perception-test-npc'
 import { testLLMCall } from '../src/agents/core/llm-test'
 
 /**
@@ -73,6 +74,10 @@ const player: RpgPlayerHooks = {
 
                 map.createDynamicEvent({ x: 100, y: 300, event: CatDadEvent })
                 console.log('[CatDad] Spawned on map:', map.id)
+
+                // Perception test NPC - tests PerceptionEngine in real game environment
+                map.createDynamicEvent({ x: 350, y: 350, event: PerceptionTestNpcEvent })
+                console.log('[PerceptionTestNPC] Spawned on map:', map.id)
 
                 npcSpawnedOnMap.add(map.id)
             } catch (err) {
