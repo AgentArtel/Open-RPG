@@ -86,6 +86,15 @@ Implementation order: TASK-006 → TASK-007 → TASK-008 (008 depends on both 00
 - `docs/rpgjs-guide.md` — RPGJS v4 API cheat sheet
 - `docs/openclaw-patterns.md` — 6 extracted patterns with our adaptations
 
+## Recent Reviews
+
+| Task | Agent | Verdict | Date | Review File |
+|------|-------|---------|------|-------------|
+| TASK-006/007/008 | cursor | **REJECTED** | 2026-02-10 | `.ai/reviews/TASK-006-007-008-review.md` |
+
+**Rejection reason:** Severe boundary violations (modified `.ai/**` and `docs/**` files belonging to Claude Code). No implementation code submitted for any task. All acceptance criteria remain UNMET.
+
 ## Open Issues
 
 See `.ai/issues/active-issues.md` for full details.
+- **NEW:** Agent boundary clarification needed — Cursor attempted to modify Claude Code's domain files

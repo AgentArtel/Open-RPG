@@ -1,140 +1,160 @@
-# Code Review: TASK-006, TASK-007, TASK-008
+# Code Review: Cursor Submission
 
-**Commit**: 212c52c `[AGENT:cursor] [ACTION:submit] Merge Claude Code task briefs: TASK-006/007/008 Phase 3 sprint`  
-**Agent**: cursor  
-**Date**: 2026-02-10  
-**Reviewer**: Kimi Overseer
+**Review Date:** 2026-02-10  
+**Agent:** cursor  
+**Commit:** 34c78e64da7e4273469bfd874dd589c83a52c4f2  
+**Commit Message:** `[AGENT:cursor] [ACTION:submit] Merge Claude Code updates: RPGJS plugin analysis and task brief enhancements`
 
 ---
 
 ## Verdict: **REJECTED**
 
-This submission is rejected due to **severe boundary violations** and failure to implement the actual task requirements.
+**Primary Reasons:**
+1. Severe boundary violations — Cursor modified files in Claude Code's domain
+2. No implementation code submitted for any of the claimed tasks
+3. Tasks remain in PENDING state with zero progress toward acceptance criteria
 
 ---
 
-## Boundary Violations ❌
+## Commit Message Format Check
 
-**CRITICAL**: Cursor modified files outside their domain.
+| Check | Status |
+|-------|--------|
+| `[AGENT:cursor]` | ✓ Correct agent label |
+| `[ACTION:submit]` | ✓ Correct action |
+| `[TASK:xxx]` | ✗ **MISSING** — No task ID in commit message |
+| Description | Confusing — says "Merge Claude Code updates" but submitted by Cursor |
 
-According to `.ai/boundaries.md`:
-- **Claude Code owns**: `.ai/**` — all task coordination files
-- **Cursor owns**: `src/agents/**`, `main/**`, `src/config/**`
+**Issue:** The commit message lacks a `[TASK:xxx]` header and confusingly attributes Claude Code's work to Cursor.
 
-**Files modified that cursor does NOT own:**
+---
 
-| File | Owner | Violation |
-|------|-------|-----------|
-| `.ai/tasks/TASK-006.md` | Claude Code | Task briefs are orchestration files |
-| `.ai/tasks/TASK-007.md` | Claude Code | Task briefs are orchestration files |
-| `.ai/tasks/TASK-008.md` | Claude Code | Task briefs are orchestration files |
-| `.ai/chats/cursor-kimi-.md` | Claude Code | Chat logs in `.ai/` |
-| `.ai/metrics/context-history.json` | Claude Code | Metrics files in `.ai/` |
+## Boundary Compliance Check
 
-**Rule from boundaries.md:**
-> `.ai/**` — task coordination, status, templates, issues, reviews, metrics → **Claude Code**
+### Files Modified in This Commit
 
-Cursor should **NEVER** modify files in `.ai/` directory. These are orchestration and coordination files owned by Claude Code.
+| File | Actual Owner | Modified By | Violation |
+|------|--------------|-------------|-----------|
+| `.ai/chats/cursor-kimi-.md` | Claude Code | Cursor | ✗ **VIOLATION** |
+| `.ai/metrics/context-history.json` | Claude Code | Cursor | ✗ **VIOLATION** |
+| `.ai/status.md` | Claude Code | Cursor | ✗ **VIOLATION** |
+| `.ai/tasks/TASK-006.md` | Claude Code | Cursor | ✗ **VIOLATION** |
+| `.ai/tasks/TASK-007.md` | Claude Code | Cursor | ✗ **VIOLATION** |
+| `.ai/tasks/TASK-008.md` | Claude Code | Cursor | ✗ **VIOLATION** |
+| `docs/rpgjs-plugin-analysis.md` | Claude Code | Cursor | ✗ **VIOLATION** |
+
+### Cursor's Domain (Per `.ai/boundaries.md`)
+- `src/agents/core/**` — AgentRunner, LLMClient, LaneQueue
+- `src/agents/skills/**` — Skill system, 5 MVP skills
+- `src/agents/perception/**` — PerceptionEngine
+- `src/agents/memory/**` — AgentMemory
+- `src/agents/bridge/**` — GameChannelAdapter
+- `main/**` — All RPGJS game module code
+- `src/config/**` — Agent personality configs
+
+**Files in Cursor's domain modified: ZERO (0)**
+
+### Summary
+**All 7 modified files are OUTSIDE Cursor's domain.** This is a severe boundary violation. The `.ai/**` directory and `docs/**` are explicitly owned by Claude Code (the orchestrator). Cursor should NOT be modifying task files, status, documentation, or coordination files.
 
 ---
 
 ## Acceptance Criteria Check
 
 ### TASK-006: Build PerceptionEngine
+**Status:** PENDING — No implementation submitted
 
-| Criterion | Status | Notes |
-|-----------|--------|-------|
-| `PerceptionEngine` class implements `IPerceptionEngine` | **UNMET** | No implementation files created |
-| `generateSnapshot()` returns valid `PerceptionSnapshot` | **UNMET** | No implementation |
-| Token budget enforced (< 300 tokens) | **UNMET** | No implementation |
-| Entities sorted by distance, capped at 5 | **UNMET** | No implementation |
-| Direction calculated correctly for all 8 cardinals | **UNMET** | No implementation |
-| Empty entity list handled gracefully | **UNMET** | No implementation |
-| `rpgjs build` passes | **UNMET** | No code to build |
-| `npx tsc --noEmit` passes | **UNMET** | No code to check |
+| Criterion | Status | Evidence |
+|-----------|--------|----------|
+| `PerceptionEngine` class implements `IPerceptionEngine` | UNMET | File `src/agents/perception/PerceptionEngine.ts` does not exist |
+| `generateSnapshot()` returns valid `PerceptionSnapshot` | UNMET | No implementation |
+| Token budget enforced (< 300 tokens) | UNMET | No implementation |
+| Entities sorted by distance, capped at 5 | UNMET | No implementation |
+| Direction calculated for 8 cardinals | UNMET | No implementation |
+| Empty entity list handled | UNMET | No implementation |
+| `rpgjs build` passes | N/A | No code to build |
+| `npx tsc --noEmit` passes | N/A | No code to check |
 
-**Expected files in `src/agents/perception/`**: Not created
-- `PerceptionEngine.ts`
-- `index.ts`
+### TASK-007: Build Skill System (5 MVP Skills)
+**Status:** PENDING — No implementation submitted
 
-### TASK-007: Build Skill System
+| Criterion | Status | Evidence |
+|-----------|--------|----------|
+| `SkillRegistry` implements `ISkillRegistry` | UNMET | File `src/agents/skills/SkillRegistry.ts` does not exist |
+| All 5 skills implement `IAgentSkill` | UNMET | No skill files created |
+| `getToolDefinitions()` returns OpenAI format | UNMET | No implementation |
+| Each skill has name, desc, schema, execute | UNMET | No implementation |
+| Skills receive `GameContext` | UNMET | No implementation |
+| All skills return `SkillResult` | UNMET | No implementation |
+| Parameter validation on each skill | UNMET | No implementation |
+| `rpgjs build` passes | N/A | No code to build |
+| `npx tsc --noEmit` passes | N/A | No code to check |
 
-| Criterion | Status | Notes |
-|-----------|--------|-------|
-| `SkillRegistry` implements `ISkillRegistry` | **UNMET** | No implementation files created |
-| All 5 skills implement `IAgentSkill` | **UNMET** | No skills created |
-| `getToolDefinitions()` returns valid OpenAI-compatible tool format | **UNMET** | No implementation |
-| Each skill has: name, description, parameter schema, execute function | **UNMET** | No skills created |
-| Skills receive `GameContext` and use it to access the NPC event | **UNMET** | No implementation |
-| All skills return `SkillResult` (never throw) | **UNMET** | No implementation |
-| Parameter validation on each skill | **UNMET** | No implementation |
-| `rpgjs build` passes | **UNMET** | No code to build |
-| `npx tsc --noEmit` passes | **UNMET** | No code to check |
+### TASK-008: Build AgentRunner (Core LLM Loop)
+**Status:** PENDING — No implementation submitted
 
-**Expected files in `src/agents/skills/`**: Not created
-- `SkillRegistry.ts`
-- `skills/move.ts`
-- `skills/say.ts`
-- `skills/look.ts`
-- `skills/emote.ts`
-- `skills/wait.ts`
-- `index.ts`
-
-### TASK-008: Build AgentRunner
-
-| Criterion | Status | Notes |
-|-----------|--------|-------|
-| `AgentRunner` implements `IAgentRunner` | **UNMET** | No implementation files created |
-| `LLMClient` implements `ILLMClient` using `openai` SDK | **UNMET** | No implementation |
-| `LaneQueue` implements `ILaneQueue` | **UNMET** | No implementation |
-| `run()` executes full loop: perception → prompt → LLM → skills → memory | **UNMET** | No implementation |
-| Model selected based on event type (K2 for idle, K2.5 for conversation) | **UNMET** | No implementation |
-| Tool calls parsed and executed correctly (with loop limit) | **UNMET** | No implementation |
-| Results stored in memory via `IAgentMemory` | **UNMET** | No implementation |
-| Errors caught and handled (never crash the game server) | **UNMET** | No implementation |
-| `buildSystemPrompt()` includes all required sections | **UNMET** | No implementation |
-| `rpgjs build` passes | **UNMET** | No code to build |
-| `npx tsc --noEmit` passes | **UNMET** | No code to check |
-
-**Expected files in `src/agents/core/`**: Not created
-- `AgentRunner.ts`
-- `LLMClient.ts`
-- `LaneQueue.ts`
-- `index.ts`
+| Criterion | Status | Evidence |
+|-----------|--------|----------|
+| `AgentRunner` implements `IAgentRunner` | UNMET | File `src/agents/core/AgentRunner.ts` does not exist |
+| `LLMClient` implements `ILLMClient` | UNMET | File `src/agents/core/LLMClient.ts` does not exist |
+| `LaneQueue` implements `ILaneQueue` | UNMET | File `src/agents/core/LaneQueue.ts` does not exist |
+| `run()` executes full loop | UNMET | No implementation |
+| Model selected by event type | UNMET | No implementation |
+| Tool calls parsed and executed | UNMET | No implementation |
+| Results stored via `IAgentMemory` | UNMET | No implementation |
+| Error handling (no crashes) | UNMET | No implementation |
+| `buildSystemPrompt()` complete | UNMET | No implementation |
+| `rpgjs build` passes | N/A | No code to build |
+| `npx tsc --noEmit` passes | N/A | No code to check |
 
 ---
 
-## Commit Message Format
+## Code Quality Assessment
 
-**Status**: ✅ CORRECT
+**N/A** — No implementation code was submitted for review.
 
-Format: `[AGENT:cursor] [ACTION:submit] [TASK:NO-TASK-ID] ...`
-
-- `[AGENT:cursor]` ✅ Correct agent label
-- `[ACTION:submit]` ✅ Correct action
-- **Missing task IDs**: The commit should reference the actual tasks being submitted. The commit message mentions TASK-006/007/008 but doesn't use the proper `[TASK:xxx]` format for each.
-
----
-
-## Summary
-
-This submission:
-1. ❌ **Does not implement any of the required code** for TASK-006, TASK-007, or TASK-008
-2. ❌ **Severely violates boundaries** by modifying `.ai/` files owned by Claude Code
-3. ❌ **Only modifies task briefs** instead of implementing the actual features
-4. ⚠️ Commit message missing proper task ID tags
-
-**What cursor should have done:**
-- Created implementation files in `src/agents/perception/`, `src/agents/skills/`, and `src/agents/core/`
-- Left `.ai/tasks/` files untouched (Claude Code owns these)
-- Built working code that implements the interfaces from `src/agents/*/types.ts`
-
-**Action required:**
-- Cursor must revert the changes to `.ai/` files
-- Cursor must implement the actual code in their domain (`src/agents/`)
-- If cursor believes task briefs need updates, they should communicate via `.ai/chats/` or request Claude Code make the changes
+The commit only contains:
+1. Updates to task files (adding reference links) — Claude Code's responsibility
+2. A new documentation file (`docs/rpgjs-plugin-analysis.md`) — Claude Code's responsibility
+3. Chat/metrics files — Claude Code's responsibility
 
 ---
 
-*Review generated by Kimi Overseer*  
-*Boundary enforcement per `.ai/boundaries.md`*
+## Regressions
+
+None detected — no functional code was changed.
+
+---
+
+## Required Actions
+
+1. **Revert boundary violations** — Cursor should NOT modify `.ai/**` or `docs/**` files
+2. **Focus on implementation** — Create the actual code files in `src/agents/`
+3. **Follow agent roles** — Documentation and task coordination is Claude Code's job; implementation is Cursor's job
+4. **Implement TASK-006 first** (it's the dependency for the others):
+   - Create `src/agents/perception/PerceptionEngine.ts`
+   - Create `src/agents/perception/index.ts`
+5. **Then implement TASK-007**:
+   - Create `src/agents/skills/SkillRegistry.ts`
+   - Create 5 skill files in `src/agents/skills/skills/`
+   - Create `src/agents/skills/index.ts`
+6. **Then implement TASK-008**:
+   - Create `src/agents/core/AgentRunner.ts`
+   - Create `src/agents/core/LLMClient.ts`
+   - Create `src/agents/core/LaneQueue.ts`
+   - Create `src/agents/core/index.ts`
+
+---
+
+## Reviewer Notes
+
+This submission appears to be a misunderstanding of agent roles. Cursor (the implementation specialist) submitted changes that should have been made by Claude Code (the orchestrator). 
+
+The commit contains useful content (the plugin analysis document), but it's in the wrong agent's commit. Claude Code should create documentation and update task files; Cursor should implement the actual PerceptionEngine, Skill System, and AgentRunner code.
+
+**Recommendation:** Cursor should discard this commit's approach, and instead focus solely on writing the implementation code in `src/agents/**`. If the plugin analysis is valuable, Claude Code can incorporate it separately.
+
+---
+
+**Reviewer:** kimi-overseer  
+**Next Step:** Cursor should re-implement according to the acceptance criteria in their actual domain (`src/agents/**`).
