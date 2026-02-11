@@ -22,7 +22,7 @@ Always consult these before writing agent system code:
 The agent system extracts six patterns from OpenClaw:
 1. **Lane Queue** — per-agent async queue ensuring serial execution
 2. **Agent Runner** — core LLM loop (prompt → call → tool execution → response)
-3. **Skill System** — native Anthropic tool definitions for game commands
+3. **Skill System** — OpenAI-compatible tool definitions for game commands (works with Kimi K2/K2.5)
 4. **Channel Adapter** — bridges RPGJS events to agent runner
 5. **Memory System** — conversation buffer + JSON persistence
 6. **System Prompt Builder** — modular prompt assembly per NPC
@@ -35,15 +35,15 @@ The agent system extracts six patterns from OpenClaw:
 - Tool use / function calling: parse tool calls, execute skills, return results
 - Rate limiting: prevent agent from spamming LLM calls
 - Configurable model per call type:
-  - Idle behavior → `claude-haiku-4-5-20251001`
-  - Conversation → `claude-sonnet-4-5-20250929`
+  - Idle behavior → Kimi K2 (`kimi-k2-0905-chat`)
+  - Conversation → Kimi K2.5 (`kimi-k2.5`)
 - Execution feedback: if a skill fails, error fed back to LLM for re-planning
 
 **OpenClaw reference**: `docs/openclaw-reference/src/agents/pi-embedded-runner/run.ts`
 
 ## Skill Definitions
 
-- MVP: Use native Anthropic `tools` parameter (function calling)
+- MVP: Use OpenAI-compatible `tools` parameter (function calling via Kimi K2/K2.5)
 - Each skill maps to one RPGJS game action
 - Skills receive a `GameContext` with access to the NPC's RpgEvent instance
 - Skills validate parameters before executing
@@ -101,8 +101,11 @@ const moveSkill: IAgentSkill = {
 
 ## LLM Integration
 
-- Use `@anthropic-ai/sdk` directly
-- Enable prompt caching: system prompt + tool definitions are static per agent
+- Use `openai` SDK pointed at Moonshot API (`https://api.moonshot.ai/v1`)
+- Primary models: Kimi K2 (idle) and Kimi K2.5 (conversation)
+- Automatic context caching: 75% savings on repeated context (no config needed)
+- Environment variables: `MOONSHOT_API_KEY` (or `KIMI_API_KEY` as fallback)
+- Future: may add Anthropic/Google providers via Vercel AI SDK (`ai` package)
 - Handle API errors gracefully — NPC says something generic, retries later
 - Error classification (from OpenClaw):
   - `context_overflow` → compact/summarize old messages
@@ -135,8 +138,8 @@ graphic: npc-elder
 personality: |
   You are Elder Theron, the wise village elder...
 model:
-  idle: claude-haiku-4-5-20251001
-  conversation: claude-sonnet-4-5-20250929
+  idle: kimi-k2-0905-chat
+  conversation: kimi-k2.5
 skills: [say, move, look, emote, wait]
 spawn:
   map: medieval
