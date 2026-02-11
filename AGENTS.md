@@ -59,10 +59,15 @@ src/
 │   └── bridge/                   # GameChannelAdapter — RPGJS ↔ agent wiring
 └── config/                       # Agent personality configs (YAML)
 .ai/                              # Multi-agent coordination
+.agents/                          # Kimi Overseer config, skills, subagent templates
+.github/workflows/                # CI/CD (agent-review, sprint-eval, pre-mortal-merge)
+scripts/                          # Automation (git hooks, Kimi CLI, wire daemon)
 docs/                             # Architecture docs, ADRs, guides
 ├── rpgjs-reference/              # RPGJS v4.3.1 source + docs (local reference)
+├── openclaw-reference/           # OpenClaw v2026.2.9 source (pattern extraction)
 └── rpgjs-guide.md                # Extracted RPGJS cheat sheet
 idea/                             # Project vision and research documents
+past-configurations/              # Snapshots from prior projects (learning corpus)
 rpg.toml                          # RPGJS game configuration
 ```
 
@@ -74,7 +79,7 @@ rpg.toml                          # RPGJS game configuration
 
 ## Agent Team
 
-Two AI agents share this repo. The Human PM is Accountable for all decisions.
+Three AI agents share this repo. The Human PM is Accountable for all decisions.
 
 ### Claude Code — Orchestrator
 
@@ -125,6 +130,23 @@ perception engine, skill system, memory, UI components, map design.
 **Does NOT**: Modify coordination files (AGENTS.md, CLAUDE.md, .ai/),
 change root configs without orchestrator approval, modify idea/ docs.
 
+### Kimi Overseer — CI/Automation Coordinator
+
+**Role**: Automated code review, sprint evaluation, commit routing, multi-agent ops.
+
+**Owns**:
+- `.agents/**` — overseer config, subagent templates, skills, prompts
+- `.github/workflows/**` — GitHub Actions pipelines
+- `scripts/**` — git hooks, automation scripts, wire daemon
+- `past-configurations/**` — prior project snapshots (learning corpus)
+
+**Does**: Reviews commits on agent branches, enforces boundary compliance,
+manages sprint evaluations, routes commits via post-commit hooks,
+maintains automation infrastructure.
+
+**Does NOT**: Write production game code, modify architecture docs (docs/, idea/),
+change root configs, or override orchestrator decisions.
+
 ## Code Conventions
 
 - TypeScript strict mode — avoid `any`, use `unknown` and narrow
@@ -147,8 +169,10 @@ claude/feature-name     # Claude Code orchestration / architecture
 ```
 
 - Branch from `main`, conventional commits
+- Commit messages use routing headers: `[AGENT:x] [ACTION:y] [TASK:z] Description`
 - PRs require build pass + orchestrator review before merge
 - Run `rpgjs build` and `npx tsc --noEmit` before committing
+- Kimi Overseer auto-reviews `[ACTION:submit]` commits via GitHub Actions
 
 ## Task Coordination
 

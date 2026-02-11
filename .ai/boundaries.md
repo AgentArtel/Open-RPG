@@ -7,10 +7,10 @@ Every file in the repo maps to exactly one agent. When in doubt, check this file
 ### Coordination Files
 - `AGENTS.md` — universal source of truth
 - `CLAUDE.md` — orchestrator config
-- `.ai/**` — task coordination, status, templates, workforce guide
+- `.ai/**` — task coordination, status, templates, issues, reviews, metrics
 
 ### Documentation
-- `docs/**` — architecture docs, ADRs, guides, RPGJS reference
+- `docs/**` — architecture docs, ADRs, guides, prior art analysis
 - `idea/**` — project vision and research documents
 
 ### Root Configuration
@@ -46,6 +46,21 @@ Every file in the repo maps to exactly one agent. When in doubt, check this file
 
 ### Configuration
 - `src/config/**` — agent personality YAML files
+- `.cursor/rules/**` — Cursor-specific rules files
+
+## Kimi Overseer (CI/Automation)
+
+### Agent Definitions
+- `.agents/**` — Kimi overseer config, subagent templates, skills, prompts
+
+### CI/CD
+- `.github/workflows/**` — GitHub Actions (agent-review, sprint-evaluation, pre-mortal-merge)
+
+### Automation Scripts
+- `scripts/**` — git hooks, Kimi CLI scripts, wire daemon, API client, project setup
+
+### Past Configurations (Reference)
+- `past-configurations/**` — snapshots from prior projects (learning corpus for Kimi)
 
 ## Auto-Generated (DO NOT EDIT — Any Agent)
 
@@ -65,5 +80,7 @@ Every file in the repo maps to exactly one agent. When in doubt, check this file
 - `.ai/tasks/**` — all agents read; task owner updates status
 - `.ai/status.md` — all agents read; Claude Code writes
 - `.ai/boundaries.md` — all agents read; Claude Code writes
+- `.ai/issues/active-issues.md` — all agents read; any agent can add issues
 - `docs/rpgjs-guide.md` — all agents read; Claude Code writes
 - `docs/openclaw-patterns.md` — all agents read; Claude Code writes
+- `docs/prior-art-analysis.md` — all agents read; Claude Code writes
