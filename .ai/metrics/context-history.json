@@ -58,5 +58,14 @@
     "session": "test-session",
     "event": "auto-compact",
     "status": "CRITICAL"
+  },
+  {
+    "timestamp": "2026-02-11T00:54:41Z",
+    "session": "unknown",
+    "token_count": 17330,
+    "file_size_bytes": 27029,
+    "session_age_hours": 0,
+    "file_operations": 0,
+    "status": "HEALTHY"
   }
 ]
