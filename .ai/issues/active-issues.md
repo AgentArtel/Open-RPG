@@ -218,6 +218,57 @@ Kimi overseer automation only triggers when:
 
 ---
 
+## Issue #6: Runtime File Tracking Workflow
+
+**Severity**: Low  
+**Impact**: Maintains full history of agent interactions and metrics  
+**Status**: ✅ Resolved (workflow established)
+
+### Problem
+
+Runtime files (chat logs, metrics, session data) change frequently during agent operations. Need a clear workflow for when to commit these files.
+
+### Solution Established
+
+**Tracking Policy**: Keep all runtime files tracked in git for full history.
+
+**Commit Strategy**:
+1. **Task Completion**: Commit runtime files when a task is completed
+   - Example: `[AGENT:cursor] [ACTION:submit] Update runtime files: chat logs and metrics after task completion`
+
+2. **Periodic Commits**: Commit when files stabilize and pass tests/reviews
+   - After successful test runs
+   - After code reviews are approved
+   - When metrics show stable patterns
+
+3. **Frequency**: Commit runtime files:
+   - At task boundaries (task start/complete)
+   - After significant agent interactions (Kimi reviews, approvals)
+   - When metrics accumulate meaningful data
+
+### Files Tracked
+
+- `.ai/chats/*.md` — Agent-to-agent chat logs
+- `.ai/metrics/context-history.json` — Context usage metrics
+- `.ai/metrics/wire-metrics.json` — Wire daemon metrics
+- `.ai/sessions/active/*.json` — Active session data
+- `.ai/sessions/archived/*.json` — Archived session data
+
+### Benefits
+
+- Full audit trail of agent interactions
+- Ability to analyze patterns in agent behavior
+- Debugging support when issues arise
+- Historical context for decision-making
+
+### Implementation
+
+- ✅ Runtime files are tracked (not in `.gitignore`)
+- ✅ Commit pattern established: commit at task completion + periodic stabilization
+- ✅ Commit messages include context about why runtime files are being committed
+
+---
+
 **Last Updated**: 2026-02-10  
 **Next Review**: After TASK-006 completion
 
