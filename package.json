@@ -16,6 +16,8 @@
         "@rpgjs/server": "4.3.0",
         "@rpgjs/standalone": "4.3.0",
         "@rpgjs/types": "4.0.5",
+        "dotenv": "^17.2.4",
+        "openai": "^6.19.0",
         "socket.io-client": "4.7.4"
     },
     "devDependencies": {

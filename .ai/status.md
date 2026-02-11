@@ -1,21 +1,28 @@
 # Sprint Status
 
-Last updated: 2026-02-09
+Last updated: 2026-02-10 (TASK-005 complete)
 
 ## Current Phase
 
-**Phase 0: Environment Setup** — Project structure corrected to match RPGJS v4
-autoload conventions. RPGJS v4.3.1 source cloned as local reference. Dev toolkit
-created (guide, Cursor rules, boundaries). Ready to scaffold from sample2.
+**Phase 1: Foundation** — Phase 0 complete. RPGJS project scaffolded, dev server verified, TypeScript interfaces defined, and test NPC working. Open Artel multi-agent system fully integrated. Ready for agent system implementation.
 
-## Current Sprint
+## Current Sprint — Phase 1: Foundation + Phase 3: Core Implementation
 
 | ID | Title | Agent | Priority | Status |
 |----|-------|-------|----------|--------|
-| TASK-001 | Scaffold RPGJS v4 project from sample2 | cursor | P0-Critical | PENDING |
-| TASK-002 | Verify RPGJS dev server runs | cursor | P0-Critical | PENDING |
-| TASK-003 | Define TypeScript interfaces for all integration points | cursor | P0-Critical | PENDING |
-| TASK-004 | Build test NPC with patrol route and player interaction | cursor | P1-High | PENDING |
+| TASK-005 | LLM Integration Feasibility Test | cursor | P0-Critical | REVIEW |
+| TASK-006 | Build PerceptionEngine | cursor | P0-Critical | PENDING |
+| TASK-007 | Build Skill System (5 MVP skills) | cursor | P0-Critical | PENDING |
+| TASK-008 | Build AgentRunner (core LLM loop) | cursor | P0-Critical | PENDING |
+
+## Previous Sprint — Phase 0: Environment Setup
+
+| ID | Title | Agent | Priority | Status |
+|----|-------|-------|----------|--------|
+| TASK-001 | Scaffold RPGJS v4 project from sample2 | cursor | P0-Critical | REVIEW |
+| TASK-002 | Verify RPGJS dev server runs | cursor | P0-Critical | REVIEW |
+| TASK-003 | Define TypeScript interfaces for all integration points | cursor | P0-Critical | REVIEW |
+| TASK-004 | Build test NPC with patrol route and player interaction | cursor | P1-High | REVIEW |
 
 ## Backlog (from Project Outline)
 
@@ -42,6 +49,12 @@ created (guide, Cursor rules, boundaries). Ready to scaffold from sample2.
 
 | ID | Title | Agent | Date |
 |----|-------|-------|------|
+| TASK-005 | LLM Integration Feasibility Test (openai + Moonshot API) | cursor | 2026-02-10 |
+| TASK-001 | Scaffold RPGJS v4 project from sample2 | cursor | 2026-02-10 |
+| TASK-002 | Verify RPGJS dev server runs | cursor | 2026-02-10 |
+| TASK-003 | Define TypeScript interfaces for all integration points | cursor | 2026-02-10 |
+| TASK-004 | Build test NPC with patrol route and player interaction | cursor | 2026-02-10 |
+| — | Open Artel multi-agent system setup (Kimi, git hooks, skills) | cursor | 2026-02-10 |
 | — | Project structure and multi-agent setup | claude-code | 2026-02-09 |
 | — | RPGJS v4.3.1 reference cloned to docs/ | claude-code | 2026-02-09 |
 | — | Dev toolkit created (guide, Cursor rules, corrected structure) | claude-code | 2026-02-09 |
