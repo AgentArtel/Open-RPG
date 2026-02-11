@@ -125,6 +125,9 @@ const client = new OpenAI({
 - OpenClaw queue: `docs/openclaw-reference/src/process/command-queue.ts`
 - OpenClaw patterns: `docs/openclaw-patterns.md` — Patterns 1 (LaneQueue) & 2 (AgentRunner)
 - Prior art: `docs/prior-art-analysis.md` — AI Town async decoupling, Stanford react-and-replan
+- **Plugin analysis**: `docs/rpgjs-plugin-analysis.md` — thinking indicator via
+  `EmotionBubble.ThreeDot` while LLM processes; `showText()` for modal dialogue
+  on `player_action`; sprite-attached bubble for proximity greetings (Phase 4)
 
 ### Handoff Notes
 

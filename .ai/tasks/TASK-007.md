@@ -50,8 +50,21 @@ OpenAI-compatible tool definitions for the LLM.
 
 4. **`emote`** — Express an emotion or perform an action
    - Params: `action: enum('wave', 'nod', 'shake_head', 'laugh', 'think')`
-   - Execute: Could trigger animation or just log for now
-   - Result: "Waved at nearby players"
+   - Execute: Use `@rpgjs/plugin-emotion-bubbles` — call `this.showEmotionBubble(emotion)`
+     on the NPC event (works because `RpgEvent extends RpgPlayer`).
+   - Map actions to `EmotionBubble` enum values:
+     ```ts
+     import { EmotionBubble } from '@rpgjs/plugin-emotion-bubbles'
+     const emotionMap = {
+       'wave': EmotionBubble.Happy,
+       'nod': EmotionBubble.Exclamation,
+       'shake_head': EmotionBubble.Cross,
+       'laugh': EmotionBubble.HaHa,
+       'think': EmotionBubble.ThreeDot,
+     }
+     context.npcEvent.showEmotionBubble(emotionMap[action])
+     ```
+   - Result: "Showed 'laugh' emotion" or "Performed 'think' action"
 
 5. **`wait`** — Wait for a moment (idle/thinking)
    - Params: `durationMs?: number` (default 2000, max 10000)
@@ -122,6 +135,11 @@ You may need to update the `ToolDefinition` type or create a separate
 - RPGJS movement: `docs/rpgjs-reference/docs/guide/player.md`
 - OpenClaw skills: `docs/openclaw-patterns.md` — Pattern 3: Skill/Tool System
 - OpenClaw source: `docs/openclaw-reference/src/agents/pi-tools.ts`
+- **Plugin analysis**: `docs/rpgjs-plugin-analysis.md` — emote skill maps to
+  @rpgjs/plugin-emotion-bubbles (30+ emotions, `showEmotionBubble()` works on NPCs)
+- **Emotion bubbles source**: `docs/rpgjs-reference/packages/plugins/emotion-bubbles/src/`
+- **Key API insight**: `RpgEvent extends RpgPlayer` — NPCs can call `showEmotionBubble()`,
+  `showText()`, `showAnimation()`, `showNotification()` directly
 
 ### Handoff Notes
 
