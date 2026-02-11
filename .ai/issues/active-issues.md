@@ -269,6 +269,154 @@ Runtime files (chat logs, metrics, session data) change frequently during agent 
 
 ---
 
+## Issue #7: API Key Setup for Local vs GitHub Actions (This Project)
+
+**Severity**: Low (Resolved)  
+**Impact**: Better tracking and security for API usage  
+**Status**: ✅ Configured
+
+> **Note**: See Issue #8 for the general setup pattern that applies to all projects.
+
+### Problem
+
+Initially, the GitHub Actions workflow failed with "insufficient funds" error because `KIMI_API_KEY` secret was not configured in GitHub repository settings.
+
+### Solution Applied
+
+**Separate API Keys for Tracking**:
+- **Local Development** (`.env` file): `sk-V1u7bkTPrUtFzSr1nE99Po7pNAuCySVfOKhtIi9CDOY9fet5`
+  - Used by: Local server code, post-commit hooks, development scripts
+  - Set in: `.env` file (both `MOONSHOT_API_KEY` and `KIMI_API_KEY`)
+
+- **GitHub Actions** (Repository Secret): `sk-8E4NsDODbuY2FnXwqyaEqUceSBAGMCOHiAo1pzc2cmnaA1vt`
+  - Used by: GitHub Actions workflows (agent-review.yml, sprint-evaluation.yml)
+  - Set in: GitHub repo Settings > Secrets and variables > Actions > `KIMI_API_KEY`
+
+### Benefits
+
+1. **Usage Tracking**: Separate keys allow tracking local development vs CI/CD usage
+2. **Security**: Can revoke/rotate keys independently if needed
+3. **Debugging**: Easier to identify which environment is making API calls
+4. **Cost Management**: Can monitor spending per environment
+
+### Configuration
+
+- ✅ Local `.env` file updated with new API key
+- ✅ Both `MOONSHOT_API_KEY` and `KIMI_API_KEY` set (for compatibility)
+- ⚠️ **Action Required**: User must manually add GitHub Secret `KIMI_API_KEY` in repository settings
+
+### References
+
+- `.github/workflows/agent-review.yml` — Uses `environment: open-rpg` with `${{ secrets.KIMI_API_KEY }}`
+- `.github/workflows/sprint-evaluation.yml` — Uses `environment: open-rpg` with `${{ secrets.KIMI_API_KEY }}`
+- `docs/github-actions-automation.md` — Setup instructions
+- Issue #8 — General setup pattern for all projects
+
+---
+
+## Issue #8: GitHub Secrets Setup Required for All Projects
+
+**Severity**: High  
+**Impact**: Workflows will fail without proper API key configuration  
+**Status**: ⚠️ Action Required — Manual Setup Needed
+
+### Problem
+
+All projects using the `.ai/` multi-agent setup require GitHub Secrets to be configured manually. This is a **one-time setup step** that must be completed for each new project, and it's easy to miss during initial project setup.
+
+**Symptoms of missing setup**:
+- GitHub Actions workflows fail with "insufficient funds" error
+- Automated reviews don't run
+- Sprint evaluations fail
+- Error: `Failed to run review: insufficient funds`
+
+### Required Setup Per Project
+
+**Each project needs TWO separate API keys** for proper tracking and security:
+
+1. **Local/Project API Key** (for `.env` file):
+   - **Variable Names**: `MOONSHOT_API_KEY` and `KIMI_API_KEY` (both set to same value)
+   - **Location**: Project root `.env` file
+   - **Used By**: 
+     - Local server code (RPGJS game server)
+     - Post-commit hooks (if running locally)
+     - Development scripts
+     - LLM integration tests
+
+2. **GitHub Actions API Key** (for GitHub Secrets):
+   - **Secret Name**: `KIMI_API_KEY` (exact name, case-sensitive)
+   - **Location**: GitHub repo Settings > Environments > `open-rpg` > Environment secrets
+   - **Used By**:
+     - `.github/workflows/agent-review.yml` — Automated code reviews
+     - `.github/workflows/sprint-evaluation.yml` — Sprint evaluation reports
+
+### Setup Instructions for Human
+
+**Step 1: Create Two API Keys**
+1. Go to https://platform.moonshot.ai/
+2. Navigate to API Keys section
+3. Create **two separate API keys**:
+   - **Key #1**: For local/project use (`.env` file)
+   - **Key #2**: For GitHub Actions (environment secret)
+
+**Step 2: Report Back with Keys**
+Provide the following information:
+- **Local API Key**: `sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX`
+- **GitHub Actions API Key**: `sk-YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY`
+
+**Step 3: Implementation**
+- Agent will update `.env` file with local API key
+- Agent will update workflows to use environment (if needed)
+- Human must manually add GitHub Secret (cannot be automated)
+
+### Why Two Separate Keys?
+
+1. **Usage Tracking**: Monitor costs separately for local dev vs CI/CD
+2. **Security**: Can revoke/rotate keys independently
+3. **Debugging**: Easier to identify which environment is making calls
+4. **Cost Management**: Track spending per environment in Moonshot dashboard
+
+### Verification Checklist
+
+For each project, verify:
+- [ ] `.env` file exists with `MOONSHOT_API_KEY` and `KIMI_API_KEY` set
+- [ ] GitHub Environment `open-rpg` exists
+- [ ] Environment secret `KIMI_API_KEY` is configured
+- [ ] Workflows reference the environment: `environment: open-rpg`
+- [ ] Test commit with `[ACTION:submit]` triggers review successfully
+
+### Projects Affected
+
+This applies to **all projects** using:
+- `.ai/` directory structure
+- `.github/workflows/agent-review.yml`
+- `.github/workflows/sprint-evaluation.yml`
+- Multi-agent coordination system
+
+### Action Items
+
+**For New Projects**:
+1. Human creates two API keys in Moonshot dashboard
+2. Human reports keys to agent
+3. Agent updates `.env` file with local key
+4. Agent updates workflows (if needed)
+5. Human manually adds GitHub Secret `KIMI_API_KEY` to environment
+6. Verify with test commit
+
+**For Existing Projects**:
+- Check if GitHub Secret exists
+- If missing, follow setup instructions above
+- Update this issue with project name and status
+
+### References
+
+- `.github/workflows/agent-review.yml` — Requires `KIMI_API_KEY` secret
+- `.github/workflows/sprint-evaluation.yml` — Requires `KIMI_API_KEY` secret
+- `docs/github-actions-automation.md` — Setup documentation
+- Issue #7 — This project's specific setup (resolved)
+
+---
+
 **Last Updated**: 2026-02-10  
 **Next Review**: After TASK-006 completion
 
