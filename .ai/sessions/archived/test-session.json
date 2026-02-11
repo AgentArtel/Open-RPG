@@ -1,0 +1,13 @@
+{
+  "name": "test-session",
+  "kimi_session_id": "test-session",
+  "created_at": "2026-02-10T12:20:27Z",
+  "sprint": "",
+  "agent_file": ".agents/kimi-overseer.yaml",
+  "status": "archived",
+  "notes": "Session created",
+  "initial_context_size_bytes": "0",
+  "compacted": "true",
+  "archived_at": "2026-02-11T00:51:34Z",
+  "tasks_completed": "0\n0"
+}

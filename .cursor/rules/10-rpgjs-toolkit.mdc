@@ -79,6 +79,119 @@ export default class MyNpcEvent extends RpgEvent {
 - Add a Point object with `name` matching the `@EventData.name` value
 - The event will spawn at that position on the map
 
+## Quick NPC Generation Tool
+
+**Fastest way to create a new NPC:** Use the template file!
+
+### 5-Minute NPC Creation Workflow
+
+1. **Copy the template:**
+   ```bash
+   cp .cursor/templates/npc-event.template.ts main/events/{{npc-name}}.ts
+   ```
+   Example: `cp .cursor/templates/npc-event.template.ts main/events/baker.ts`
+
+2. **Fill in placeholders** (use Find/Replace):
+   - `{{EVENT_NAME}}` → `EV-BAKER` (unique event identifier)
+   - `{{CLASS_NAME}}` → `BakerEvent` (TypeScript class name)
+   - `{{NPC_ROLE}}` → `Baker` (human-readable role, used in logs)
+   - `{{NPC_DESCRIPTION}}` → `A friendly baker selling fresh bread`
+   - `{{INIT_MESSAGE}}` → `ready to sell bread` (console log message)
+   - `{{DIALOGUE_LINE_1}}` → `"Fresh bread, hot from the oven!"`
+   - `{{DIALOGUE_LINE_2}}` → `"Would you like a loaf?"`
+   - `{{FREQUENCY}}` → `200` (movement frequency in ms, default: 200)
+   - `{{DETECTION_SIZE}}` → `100` (detection radius in pixels, default: 100)
+
+3. **Add spawn code to `main/player.ts`:**
+   - See `.cursor/templates/npc-spawn-snippet.ts` for exact code
+   - Add import: `import BakerEvent from './events/baker'`
+   - Add spawn line inside the `onJoinMap` try block:
+     ```ts
+     map.createDynamicEvent({ x: 250, y: 350, event: BakerEvent })
+     console.log('[Baker] Spawned on map:', map.id)
+     ```
+
+4. **Done!** The NPC will spawn when players join the map.
+
+### Template Files
+
+- **`.cursor/templates/npc-event.template.ts`** — Complete NPC event class template
+- **`.cursor/templates/npc-spawn-snippet.ts`** — Spawn code snippet with instructions
+
+### Customization Options
+
+For advanced customization (different movement patterns, larger detection radius, etc.),
+see the detailed "NPC with Patrol and Detection (Proven Pattern)" section below.
+
+## NPC with Patrol and Detection (Proven Pattern)
+
+Use this pattern to create an NPC that patrols randomly, detects nearby
+players, and responds to interaction. This is the foundation for all
+AI-controlled NPCs.
+
+### Step 1 — Event class in `main/events/`
+
+```ts
+import { RpgEvent, EventData, RpgPlayer, Move,
+         ShapePositioning, RpgShape } from '@rpgjs/server'
+
+@EventData({
+    name: 'EV-MY-NPC',   // Unique event name
+    hitbox: { width: 32, height: 16 }
+})
+export default class MyNpcEvent extends RpgEvent {
+    onInit() {
+        this.setGraphic('female')           // Spritesheet PNG filename
+        this.speed = 1                       // Movement speed
+        this.frequency = 200                 // ms between move steps
+        this.infiniteMoveRoute([Move.tileRandom()])  // Random patrol
+        this.attachShape({                   // Detection radius
+            height: 100, width: 100,
+            positioning: ShapePositioning.Center
+        })
+    }
+    async onAction(player: RpgPlayer) {
+        await player.showText('Hello!', { talkWith: this })
+    }
+    onDetectInShape(player: RpgPlayer, shape: RpgShape) {
+        console.log(`[MyNPC] Player "${player.name}" entered radius`)
+    }
+    onDetectOutShape(player: RpgPlayer, shape: RpgShape) {
+        console.log(`[MyNPC] Player "${player.name}" left radius`)
+    }
+}
+```
+
+### Step 2 — Spawn dynamically in `main/player.ts`
+
+Do NOT create a `@MapData` class for maps loaded via `.world` files — it
+causes duplicate registration errors. Instead, spawn NPCs dynamically:
+
+```ts
+import MyNpcEvent from './events/my-npc'
+
+const npcSpawnedOnMap: Set<string> = new Set()
+
+// Inside onJoinMap:
+const map = player.getCurrentMap<RpgMap>()
+if (map && map.id === 'target-map' && !npcSpawnedOnMap.has(map.id)) {
+    try {
+        map.createDynamicEvent({ x: 200, y: 200, event: MyNpcEvent })
+        npcSpawnedOnMap.add(map.id)
+    } catch (err) {
+        console.error('[MyNPC] Failed to spawn:', err)
+    }
+}
+```
+
+### Key gotchas
+
+- `map.createDynamicEvent()` = Shared mode (all players see it) ✅
+- `player.createDynamicEvent()` = Scenario mode (per-player) ❌ for NPCs
+- World file maps + `@MapData` class = conflict — use dynamic spawning
+- Always wrap spawn logic in try/catch
+- Use a `Set` to prevent duplicate spawns on the same map
+
 ## Map Creation Pattern
 
 ```ts

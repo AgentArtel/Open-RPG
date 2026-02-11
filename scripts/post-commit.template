@@ -1,0 +1,213 @@
+#!/usr/bin/env bash
+# =============================================================================
+# Open Artel — Git Post-Commit Hook (Starter Kit Template)
+# =============================================================================
+#
+# This hook automatically routes agent commits to Kimi Code CLI for review,
+# merge, or report actions based on commit message routing headers.
+#
+# Format expected:
+#   [AGENT:agent] [ACTION:action] [TASK:task-id] Short description
+#
+# Actions handled:
+#   submit  — Triggers automated review via Kimi Print Mode
+#   approve — Triggers merge to pre-mortal via Kimi Print Mode
+#   report  — Triggers report update via Kimi Print Mode
+#
+# Install: ./scripts/install-git-hooks.sh
+# Disable: mv .git/hooks/post-commit .git/hooks/post-commit.disabled
+#
+# [REPLACE: Add any project-specific notes here]
+# =============================================================================
+
+set -o pipefail
+
+# ---------------------------------------------------------------------------
+# Load environment variables
+# ---------------------------------------------------------------------------
+
+# Load .env file if it exists (for API keys)
+if [ -f "$(git rev-parse --show-toplevel)/.env" ]; then
+    set -a
+    source "$(git rev-parse --show-toplevel)/.env"
+    set +a
+fi
+
+# ---------------------------------------------------------------------------
+# Configuration
+# [REPLACE: Customize these settings for your project]
+# ---------------------------------------------------------------------------
+
+# Log file for hook output and errors
+HOOK_LOG="$(git rev-parse --git-dir)/hooks/post-commit.log"
+
+# Set to "true" to run Kimi commands in the background (non-blocking commits)
+# Set to "false" if you want commits to wait for automation to complete
+ASYNC_MODE="true"
+
+# Set to "true" to skip all Kimi calls (dry-run mode for testing)
+# Can also be set via environment variable: export OPEN_ARTEL_DRY_RUN=true
+DRY_RUN="${OPEN_ARTEL_DRY_RUN:-false}"
+
+# Agent file for Kimi overseer
+# [REPLACE: Update this path if your agent file is in a different location]
+AGENT_FILE=".agents/kimi-overseer.yaml"
+
+# ---------------------------------------------------------------------------
+# Logging helper
+# ---------------------------------------------------------------------------
+
+log() {
+    local timestamp
+    timestamp="$(date '+%Y-%m-%d %H:%M:%S')"
+    echo "[$timestamp] $*" >> "$HOOK_LOG" 2>/dev/null
+}
+
+# ---------------------------------------------------------------------------
+# Parse commit message for routing headers
+# ---------------------------------------------------------------------------
+
+# Get the latest commit message
+COMMIT_MSG="$(git log -1 --pretty=%B 2>/dev/null)"
+
+if [ -z "$COMMIT_MSG" ]; then
+    exit 0
+fi
+
+# Extract routing headers using POSIX-compatible sed
+AGENT="$(echo "$COMMIT_MSG" | sed -n 's/.*\[AGENT:\([a-zA-Z0-9_]*\)\].*/\1/p' | head -1)"
+ACTION="$(echo "$COMMIT_MSG" | sed -n 's/.*\[ACTION:\([a-zA-Z0-9_]*\)\].*/\1/p' | head -1)"
+TASK="$(echo "$COMMIT_MSG" | sed -n 's/.*\[TASK:\([a-zA-Z0-9_-]*\)\].*/\1/p' | head -1)"
+
+# Skip commits without routing headers
+if [ -z "$AGENT" ] || [ -z "$ACTION" ]; then
+    exit 0
+fi
+
+log "Detected: AGENT=$AGENT ACTION=$ACTION TASK=$TASK"
+
+# ---------------------------------------------------------------------------
+# Check prerequisites
+# ---------------------------------------------------------------------------
+
+if ! command -v kimi &>/dev/null; then
+    log "WARNING: kimi command not found. Skipping automation."
+    log "Install with: pipx install kimi-cli"
+    exit 0
+fi
+
+# ---------------------------------------------------------------------------
+# Kimi Print Mode helper
+# ---------------------------------------------------------------------------
+
+run_kimi() {
+    local prompt="$1"
+    local description="$2"
+
+    log "Running: $description"
+
+    if [ "$DRY_RUN" = "true" ]; then
+        log "DRY RUN — would execute: kimi --print -p \"$prompt\""
+        return 0
+    fi
+
+    # Build the kimi command with environment variables
+    # Export KIMI_API_KEY if it's set (from .env file)
+    local env_vars=""
+    if [ -n "${KIMI_API_KEY:-}" ]; then
+        env_vars="KIMI_API_KEY=\"$KIMI_API_KEY\" "
+    fi
+    
+    local cmd="${env_vars}kimi --print -p"
+
+    if [ "$ASYNC_MODE" = "true" ]; then
+        # Run in background so the commit returns immediately
+        (eval "$cmd \"$prompt\"" >> "$HOOK_LOG" 2>&1 || log "ERROR: $description failed (exit $?)") &
+        log "Started in background (PID $!)"
+    else
+        # Run synchronously (blocks until complete)
+        eval "$cmd \"$prompt\"" >> "$HOOK_LOG" 2>&1 || log "ERROR: $description failed (exit $?)"
+    fi
+}
+
+# ---------------------------------------------------------------------------
+# Route based on ACTION
+# [REPLACE: Customize the prompts below for your project's specific needs]
+# ---------------------------------------------------------------------------
+
+case "$ACTION" in
+
+    submit)
+        log "ACTION: submit — triggering review for $TASK from $AGENT"
+
+        # [REPLACE: Customize the review prompt for your project]
+        REVIEW_PROMPT="You are reviewing a code submission for task $TASK from agent $AGENT.
+
+Your review process:
+1. Read the task brief from .ai/tasks/$TASK.md to understand the acceptance criteria.
+2. Run: git diff HEAD~1 -- to see what changed in this commit.
+3. Check each acceptance criterion — mark as MET or UNMET.
+4. Check file boundary compliance against .ai/boundaries.md — verify all modified files are within $AGENT's domain.
+5. Check the commit message format follows [AGENT:x] [ACTION:y] [TASK:z] convention.
+
+Write your review to .ai/reviews/$TASK-review.md using the structure from .ai/templates/review.md.
+Set the verdict to APPROVED, CHANGES_REQUESTED, or REJECTED with specific findings.
+
+If the task file .ai/tasks/$TASK.md does not exist, write a note to the review file explaining the task brief was not found."
+
+        run_kimi "$REVIEW_PROMPT" "Review $TASK submission from $AGENT"
+        ;;
+
+    approve)
+        log "ACTION: approve — triggering merge for $TASK ($AGENT branch)"
+
+        # [REPLACE: Customize the merge prompt for your project]
+        MERGE_PROMPT="The reviewer has approved task $TASK. Perform the following steps:
+
+1. Check if branch $AGENT/$TASK exists. If not, check for branches matching $AGENT/$TASK-* pattern.
+2. Switch to the pre-mortal branch: git checkout pre-mortal
+3. Merge the agent branch with: git merge $AGENT/$TASK --no-ff -m '[AGENT:kimi] [ACTION:merge] [TASK:$TASK] Approved and merged to pre-mortal'
+4. If there are merge conflicts, do NOT force-resolve. Instead, write a report to .ai/reports/$TASK-merge-conflict.md and abort the merge.
+5. If merge succeeds, update .ai/status.md to mark $TASK as DONE.
+6. Check .ai/tasks/ for any tasks that depend on $TASK (look for 'Depends on: $TASK'). If found, note them as now unblocked.
+7. Switch back to the original branch.
+
+If any step fails, log the error but do not leave the repository in a broken state."
+
+        run_kimi "$MERGE_PROMPT" "Merge $TASK to pre-mortal"
+        ;;
+
+    report)
+        log "ACTION: report — updating reports for $TASK"
+
+        # [REPLACE: Customize the report prompt for your project]
+        REPORT_PROMPT="An agent ($AGENT) has submitted a report commit for $TASK.
+
+1. Read the full commit message: git log -1 --pretty=%B
+2. Extract the key information: what was done, decisions made, issues encountered.
+3. Append a structured summary to .ai/reports/sprint-current.md with:
+   - Date and time
+   - Agent name
+   - Task ID
+   - Summary of the report content
+4. If .ai/reports/sprint-current.md does not exist, create it with a header."
+
+        run_kimi "$REPORT_PROMPT" "Update reports for $TASK from $AGENT"
+        ;;
+
+    reject)
+        log "ACTION: reject — $AGENT rejected $TASK (feedback should be in .ai/reviews/)"
+        ;;
+
+    update|delegate|merge)
+        log "ACTION: $ACTION — no automation triggered (informational only)"
+        ;;
+
+    *)
+        log "WARNING: Unknown ACTION '$ACTION' in commit. Skipping."
+        ;;
+esac
+
+# Always exit 0 — never block a commit
+exit 0
+

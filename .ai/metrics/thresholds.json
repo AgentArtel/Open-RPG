@@ -1,0 +1,9 @@
+{
+  "warn_context_size_bytes": 50000,
+  "compact_context_size_bytes": 100000,
+  "max_context_size_bytes": 200000,
+  "warn_session_age_hours": 4,
+  "compact_session_age_hours": 8,
+  "warn_file_operations": 50,
+  "compact_file_operations": 100
+}

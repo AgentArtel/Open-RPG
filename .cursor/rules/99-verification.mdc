@@ -30,3 +30,14 @@ Before committing any changes, verify:
 - [ ] No agent logic in `onStep` (60 FPS) or `onChanges`
 - [ ] Perception snapshots under 300 tokens
 - [ ] NPCs use `EventMode.Shared`, not `Scenario`
+
+## Runtime Files (Chat Logs, Metrics, Sessions)
+- [ ] Runtime files are tracked in git (not in `.gitignore`)
+- [ ] Commit runtime files when task is completed
+- [ ] Commit runtime files periodically when they stabilize (after tests/reviews pass)
+- [ ] Commit messages include context: `Update runtime files: [reason]`
+- [ ] Chat logs (`.ai/chats/*.md`) committed at task boundaries
+- [ ] Metrics (`.ai/metrics/*.json`) committed when meaningful data accumulates
+- [ ] Session data committed when sessions complete or are archived
+
+**Note**: See `.ai/issues/active-issues.md` Issue #6 for full runtime file tracking policy.
