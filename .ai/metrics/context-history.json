@@ -1,0 +1,11 @@
+[
+  {
+    "timestamp": "2026-02-11T00:28:18Z",
+    "session": "test-session",
+    "token_count": 44437,
+    "file_size_bytes": 141280,
+    "session_age_hours": 12,
+    "file_operations": 19,
+    "status": "CRITICAL"
+  }
+]
