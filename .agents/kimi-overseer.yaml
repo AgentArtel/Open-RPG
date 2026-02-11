@@ -1,0 +1,45 @@
+# Kimi Overseer — Persistent Project Coordinator
+#
+# Launch:   kimi --agent-file .agents/kimi-overseer.yaml
+# Resume:   kimi --agent-file .agents/kimi-overseer.yaml --continue
+#
+# This agent coordinates Claude Code, Cursor, and Lovable agents.
+# It reviews work, manages branches, assigns tasks, and reports to the Human PM.
+
+version: 1
+agent:
+  name: kimi-overseer
+  system_prompt_path: ./prompts/overseer.md
+  system_prompt_args:
+    PROJECT_NAME: "Open-RPG"
+    SPRINT_STATUS: "${KIMI_WORK_DIR}/.ai/status.md"
+    ROLE_ADDITIONAL: ""
+  tools:
+    # Shell & File Operations
+    - "kimi_cli.tools.shell:Shell"
+    - "kimi_cli.tools.file:ReadFile"
+    - "kimi_cli.tools.file:WriteFile"
+    - "kimi_cli.tools.file:StrReplaceFile"
+    - "kimi_cli.tools.file:Glob"
+    - "kimi_cli.tools.file:Grep"
+    # Planning & Reasoning
+    - "kimi_cli.tools.todo:SetTodoList"
+    - "kimi_cli.tools.think:Think"
+    # Multi-agent Coordination
+    - "kimi_cli.tools.multiagent:Task"
+    - "kimi_cli.tools.multiagent:CreateSubagent"
+    - "kimi_cli.tools.dmail:SendDMail"
+    # Web & Research
+    - "kimi_cli.tools.web:SearchWeb"
+    - "kimi_cli.tools.web:FetchURL"
+    # Moonshot API Built-in Tools (available via API, not CLI tools):
+    # - $web_search: Web search via Moonshot API ($0.005/query)
+    # - $code_runner: Sandboxed code execution via Moonshot API
+  subagents:
+    reviewer:
+      path: ./reviewer-sub.yaml
+      description: "Review agent work submissions against task acceptance criteria and boundary compliance"
+    researcher:
+      path: ./researcher-sub.yaml
+      description: "Research codebases, APIs, documentation, and technical feasibility"
+

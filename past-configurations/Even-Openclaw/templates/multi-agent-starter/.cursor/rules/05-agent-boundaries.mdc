@@ -1,0 +1,37 @@
+---
+description: USE WHEN modifying files to check agent ownership boundaries
+globs:
+alwaysApply: false
+---
+
+# Agent File Boundaries
+
+You (Cursor) own implementation files. Lovable owns UI primitives. Claude Code owns coordination.
+See AGENTS.md and .ai/boundaries.md for the complete map.
+
+## Your Domain (Cursor)
+
+- [REPLACE: List your backend directories]
+- [REPLACE: List your hooks directory]
+- [REPLACE: List your services/API layer]
+- [REPLACE: List logic-heavy components by name]
+- [REPLACE: List logic-heavy pages by name]
+
+## Do NOT Modify (Lovable's Domain)
+
+- `src/components/ui/**` — design system
+- [REPLACE: List layout components]
+- [REPLACE: List UI-only hooks]
+- [REPLACE: List global CSS files]
+
+## Do NOT Modify (Claude Code's Domain)
+
+- `AGENTS.md`, `CLAUDE.md`, `.ai/`
+- `App.tsx` routing structure
+- Root configs: `package.json`, `vite.config.ts`, `tsconfig*.json`
+- [REPLACE: List auto-generated files]
+- [REPLACE: List migration/schema directories]
+
+## If You Need a Change Outside Your Domain
+
+Note it in your task file's handoff notes and set status to BLOCKED.

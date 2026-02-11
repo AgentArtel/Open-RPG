@@ -1,0 +1,119 @@
+# =============================================================================
+# Sprint Evaluation — Starter Kit Template
+# =============================================================================
+#
+# Generates sprint evaluation reports using metrics collection and Kimi.
+# Triggers manually or on [ACTION:evaluate] commits to pre-mortal.
+#
+# Setup: Add KIMI_API_KEY to GitHub repo Settings > Secrets > Actions
+#
+# =============================================================================
+
+name: Sprint Evaluation
+
+on:
+  workflow_dispatch:
+    inputs:
+      sprint_number:
+        description: 'Sprint number (e.g., 3)'
+        required: false
+        default: ''
+      include_baseline:
+        description: 'Include baseline comparison'
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+      quick_mode:
+        description: 'Quick mode (metrics only, no Kimi report)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+  push:
+    branches:
+      - 'pre-mortal'
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.check.outputs.should_run }}
+    steps:
+      - name: Check trigger
+        id: check
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+          else
+            COMMIT_MSG=$(echo "${{ github.event.head_commit.message }}" || echo "")
+            if echo "$COMMIT_MSG" | grep -q "\[ACTION:evaluate\]"; then
+              echo "should_run=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "should_run=false" >> "$GITHUB_OUTPUT"
+            fi
+          fi
+
+  evaluate:
+    runs-on: ubuntu-latest
+    needs: check
+    if: needs.check.outputs.should_run == 'true'
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Kimi Code CLI
+        run: pip install kimi-cli
+
+      - name: Generate evaluation
+        env:
+          KIMI_API_KEY: ${{ secrets.KIMI_API_KEY }}
+        run: |
+          chmod +x scripts/generate-evaluation.sh
+          ARGS=""
+          SPRINT="${{ github.event.inputs.sprint_number }}"
+          [ -n "$SPRINT" ] && ARGS="$ARGS --sprint $SPRINT"
+          BASELINE="${{ github.event.inputs.include_baseline }}"
+          [ "$BASELINE" = "true" ] || [ -z "$BASELINE" ] && ARGS="$ARGS --baseline"
+          QUICK="${{ github.event.inputs.quick_mode }}"
+          [ "$QUICK" = "true" ] && ARGS="$ARGS --quick"
+          eval "./scripts/generate-evaluation.sh $ARGS"
+
+      - name: Commit evaluation report
+        run: |
+          if ls .ai/reports/eval-*.md 1>/dev/null 2>&1; then
+            git config user.name "Kimi Overseer (CI)"
+            git config user.email "kimi-ci@open-artel.dev"
+            git add .ai/reports/eval-*.md
+            git commit -m "[AGENT:kimi] [ACTION:report] [TASK:SPRINT-EVAL] Sprint evaluation report" || echo "No changes"
+            git push || echo "Push failed"
+          fi
+
+      - name: Post summary
+        if: always()
+        run: |
+          echo "## Sprint Evaluation" >> "$GITHUB_STEP_SUMMARY"
+          REPORT=$(ls -t .ai/reports/eval-*.md 2>/dev/null | head -1)
+          if [ -n "$REPORT" ] && [ -f "$REPORT" ]; then
+            cat "$REPORT" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No evaluation report generated." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
