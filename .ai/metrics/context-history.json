@@ -7,5 +7,56 @@
     "session_age_hours": 12,
     "file_operations": 19,
     "status": "CRITICAL"
+  },
+  {
+    "timestamp": "2026-02-11T00:49:20Z",
+    "session": "test-session",
+    "token_count": 15762,
+    "file_size_bytes": 19720,
+    "session_age_hours": 12,
+    "file_operations": 22,
+    "status": "CRITICAL"
+  },
+  {
+    "timestamp": "2026-02-11T00:50:29Z",
+    "session": "test-session",
+    "token_count": 15762,
+    "file_size_bytes": 19720,
+    "session_age_hours": 12,
+    "file_operations": 24,
+    "status": "CRITICAL"
+  },
+  {
+    "timestamp": "2026-02-11T00:50:29Z",
+    "session": "test-session",
+    "token_count": 15762,
+    "file_size_bytes": 19720,
+    "session_age_hours": 12,
+    "file_operations": 24,
+    "status": "CRITICAL"
+  },
+  {
+    "timestamp": "2026-02-11T00:51:14Z",
+    "session": "test-session",
+    "token_count": 15762,
+    "file_size_bytes": 19720,
+    "session_age_hours": 12,
+    "file_operations": 24,
+    "status": "CRITICAL"
+  },
+  {
+    "timestamp": "2026-02-11T00:51:15Z",
+    "session": "test-session",
+    "token_count": 15762,
+    "file_size_bytes": 19720,
+    "session_age_hours": 12,
+    "file_operations": 24,
+    "status": "CRITICAL"
+  },
+  {
+    "timestamp": "2026-02-11T00:51:34Z",
+    "session": "test-session",
+    "event": "auto-compact",
+    "status": "CRITICAL"
   }
 ]
