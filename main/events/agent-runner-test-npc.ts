@@ -1,9 +1,16 @@
 /**
  * Agent Runner Test NPC — Live integration test for the Core Agent System
  *
- * Runs AgentRunner with real LLM (Moonshot/Kimi) inside the game. You can see:
- * - Terminal: [AgentRunner:agent-runner-test] logs, run results, skill outputs
- * - Game: Say skill shows dialogue; move/emote/look affect the NPC
+ * Now uses the Bridge + GameChannelAdapter pattern (Phase 4).
+ * The NPC builds its own runner/lane/memory/perception/skills (Option A),
+ * wraps them in a GameChannelAdapter, and registers with the shared bridge.
+ *
+ * The adapter handles:
+ * - Idle tick timer (setInterval / setTimeout)
+ * - Enqueueing runner.run() on the LaneQueue
+ * - Logging results and errors
+ *
+ * The NPC simply forwards RPGJS hooks to the bridge.
  *
  * Triggers:
  * - Idle tick: every 15s the NPC gets "a moment to yourself" and may use skills
@@ -34,6 +41,7 @@ import {
   emoteSkill,
   waitSkill,
 } from '../../src/agents/skills'
+import { bridge, GameChannelAdapter } from '../../src/agents/bridge'
 import type { AgentConfig, AgentEvent, RunContext } from '../../src/agents/core/types'
 import type { PerceptionContext } from '../../src/agents/perception/types'
 import type { GameContext, NearbyPlayerInfo } from '../../src/agents/skills/types'
@@ -42,6 +50,10 @@ import type { Position } from '../../src/agents/bridge/types'
 const TILE_SIZE = 32
 const LOG_PREFIX = '[AgentRunnerTestNPC]'
 const AGENT_ID = 'agent-runner-test'
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
 function tileDistance(
   a: { x: number; y: number },
@@ -59,7 +71,8 @@ function createAgentConfig(): AgentConfig {
     graphic: 'female',
     personality:
       'You are a test NPC in a small village. You can move, look around, emote, say things to the player, and wait. Keep replies very short (under 100 characters).',
-    // Default both to kimi-k2-0711-preview so conversation works; set KIMI_CONVERSATION_MODEL for K2.5 when available.
+    // Default both to kimi-k2-0711-preview so conversation works;
+    // set KIMI_CONVERSATION_MODEL for K2.5 when available.
     model: {
       idle: process.env.KIMI_IDLE_MODEL || 'kimi-k2-0711-preview',
       conversation: process.env.KIMI_CONVERSATION_MODEL || 'kimi-k2-0711-preview',
@@ -74,22 +87,25 @@ function createAgentConfig(): AgentConfig {
   }
 }
 
+// ---------------------------------------------------------------------------
+// NPC Event Class
+// ---------------------------------------------------------------------------
+
 @EventData({
   name: 'EV-AGENT-RUNNER-TEST',
   hitbox: { width: 32, height: 16 },
 })
 export default class AgentRunnerTestNpcEvent extends RpgEvent {
   private runner: AgentRunner | null = null
-  private laneQueue: LaneQueue | null = null
-  private idleInterval: NodeJS.Timeout | null = null
 
   onInit() {
     this.setGraphic('female')
     this.speed = 1
     this.frequency = 200
 
-    console.log(`${LOG_PREFIX} onInit — building runner and lane queue...`)
+    console.log(`${LOG_PREFIX} onInit — building runner and registering with bridge...`)
     try {
+      // 1. Build subsystems
       const perception = new PerceptionEngine()
       const registry = new SkillRegistry()
       registry.register(moveSkill)
@@ -102,6 +118,7 @@ export default class AgentRunnerTestNpcEvent extends RpgEvent {
       const llmClient = new LLMClient()
       const config = createAgentConfig()
 
+      // RunContext provider — closes over `this` (the RpgEvent)
       const getContext = async (event: AgentEvent): Promise<RunContext> => {
         return this.buildRunContext(event)
       }
@@ -114,26 +131,36 @@ export default class AgentRunnerTestNpcEvent extends RpgEvent {
         llmClient,
         getContext
       )
-      this.laneQueue = new LaneQueue()
 
-      console.log(`${LOG_PREFIX} Initialized — real LLM, idle every 15s, talk to trigger conversation`)
+      // 2. Create LaneQueue and GameChannelAdapter
+      const laneQueue = new LaneQueue()
+      const adapter = new GameChannelAdapter({
+        agentId: AGENT_ID,
+        laneQueue,
+        runner: this.runner,
+        idleIntervalMs: config.behavior?.idleInterval ?? 15000,
+        logPrefix: LOG_PREFIX,
+      })
 
-      this.idleInterval = setInterval(() => {
-        this.enqueueIdleTick()
-      }, 15000)
+      // 3. Register with the shared bridge (starts idle timer automatically)
+      bridge.registerAgent(this, AGENT_ID, adapter)
 
-      // First idle tick after 3s so server can settle
-      setTimeout(() => this.enqueueIdleTick(), 3000)
+      console.log(`${LOG_PREFIX} Initialized — registered with bridge, idle every 15s, talk to trigger conversation`)
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
       console.error(`${LOG_PREFIX} Failed to init (missing MOONSHOT_API_KEY?):`, msg)
       this.runner = null
-      this.laneQueue = null
     }
   }
 
+  /**
+   * Forward player action to the bridge. The bridge routes to our adapter,
+   * which builds the AgentEvent and enqueues runner.run().
+   */
   async onAction(player: RpgPlayer) {
-    if (!this.laneQueue || !this.runner) {
+    // If this NPC isn't registered, show fallback text
+    const agentId = bridge.getAgentId(this)
+    if (!agentId) {
       await player.showText(
         'Agent runner not available. Set MOONSHOT_API_KEY in .env and restart.',
         { talkWith: this }
@@ -141,63 +168,14 @@ export default class AgentRunnerTestNpcEvent extends RpgEvent {
       return
     }
 
-    const event: AgentEvent = {
-      type: 'player_action',
-      timestamp: Date.now(),
-      player: {
-        id: player.id,
-        name: player.name ?? 'Player',
-        position: { x: player.position.x, y: player.position.y },
-      },
-    }
-
-    console.log(`${LOG_PREFIX} enqueueing onAction`)
-    this.laneQueue.enqueue(AGENT_ID, async () => {
-      console.log(`${LOG_PREFIX} [onAction] task started, calling runner.run()...`)
-      try {
-        const result = await this.runner!.run(event)
-        console.log(`${LOG_PREFIX} [onAction] success=${result.success} duration=${result.durationMs}ms`)
-      if (result.text) console.log(`${LOG_PREFIX}   text: ${result.text}`)
-      if (result.skillResults?.length) {
-        result.skillResults.forEach((sr) => {
-          console.log(`${LOG_PREFIX}   skill: ${sr.skillName} -> ${sr.result.message}`)
-        })
-      }
-      if (result.error) console.error(`${LOG_PREFIX}   error: ${result.error}`)
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err)
-        console.error(`${LOG_PREFIX} [onAction] run failed:`, msg)
-      }
-    })
+    // Delegate to bridge → adapter → lane queue → runner
+    bridge.handlePlayerAction(player, this)
   }
 
-  private enqueueIdleTick() {
-    if (!this.laneQueue || !this.runner) return
-
-    const event: AgentEvent = {
-      type: 'idle_tick',
-      timestamp: Date.now(),
-    }
-
-    console.log(`${LOG_PREFIX} enqueueing idle tick`)
-    this.laneQueue.enqueue(AGENT_ID, async () => {
-      console.log(`${LOG_PREFIX} [idle] task started, calling runner.run()...`)
-      try {
-        const result = await this.runner!.run(event)
-        console.log(`${LOG_PREFIX} [idle] success=${result.success} duration=${result.durationMs}ms`)
-      if (result.text) console.log(`${LOG_PREFIX}   text: ${result.text}`)
-      if (result.skillResults?.length) {
-        result.skillResults.forEach((sr) => {
-          console.log(`${LOG_PREFIX}   skill: ${sr.skillName} -> ${sr.result.message}`)
-        })
-      }
-      if (result.error) console.error(`${LOG_PREFIX}   error: ${result.error}`)
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err)
-        console.error(`${LOG_PREFIX} [idle] run failed:`, msg)
-      }
-    })
-  }
+  // -----------------------------------------------------------------------
+  // RunContext builder (still lives here in Option A — will be extracted
+  // to a shared helper when AgentManager is built in Phase 4.2)
+  // -----------------------------------------------------------------------
 
   private buildRunContext(event: AgentEvent | null): RunContext {
     const map = this.getCurrentMap<RpgMap>()
@@ -293,15 +271,16 @@ export default class AgentRunnerTestNpcEvent extends RpgEvent {
     }
   }
 
+  /**
+   * Clean up: unregister from bridge (disposes adapter + timers)
+   * and dispose the runner.
+   */
   onDestroy() {
-    if (this.idleInterval) {
-      clearInterval(this.idleInterval)
-      this.idleInterval = null
-    }
+    bridge.unregisterAgent(this)
+
     if (this.runner) {
       void this.runner.dispose()
       this.runner = null
     }
-    this.laneQueue = null
   }
 }

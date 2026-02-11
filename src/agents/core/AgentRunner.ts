@@ -206,6 +206,30 @@ export class AgentRunner implements IAgentRunner {
         totalOutputTokens += response.usage.outputTokens
       }
 
+      // If the LLM replied with text but did not use the say tool, show it to the player
+      // when this is a conversation (player_action). Otherwise the player gets no feedback.
+      if (
+        response.text &&
+        event.type === 'player_action' &&
+        this.config.skills.includes('say')
+      ) {
+        try {
+          const sayResult = await this.skills.executeSkill(
+            'say',
+            { message: response.text },
+            runContext.gameContext
+          )
+          skillResults.push({
+            skillName: 'say',
+            params: { message: response.text },
+            result: sayResult,
+          })
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err)
+          console.error(`[AgentRunner:${this.config.id}] say fallback failed:`, msg)
+        }
+      }
+
       if (response.text) {
         this.memory.addMessage({
           role: 'assistant',

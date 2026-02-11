@@ -4,17 +4,18 @@ Last updated: 2026-02-11
 
 ## Current Phase
 
-**Phase 3: Core Implementation — COMPLETE.** PerceptionEngine, Skill System (5 MVP skills), and AgentRunner are implemented and tested. Live in-game NPC (AgentRunnerTestNPC) runs real LLM, idle ticks, and conversation; LaneQueue and move/say/look/emote/wait skills verified. Next: Phase 4 (bridge) or AgentManager (TASK-009).
+**Phase 4: Bridge Layer — COMPLETE.** GameChannelAdapter and Bridge implemented; AgentRunnerTestNPC refactored to use the bridge (register on init, forward onAction to bridge). Idle ticks and conversation with in-game dialogue verified. Next: AgentManager (P1) or Phase 4.2 (e.g. thinking indicator, non-blocking dialogue).
 
-## Current Sprint — Core Agent System (Phase 3) — DONE
+## Current Sprint — Phase 4 Bridge — DONE
 
 | ID | Title | Agent | Priority | Status |
 |----|-------|-------|----------|--------|
+| TASK-009 | Build GameChannelAdapter (bridge) | cursor | P0-Critical | DONE |
 | TASK-006 | Build PerceptionEngine | cursor | P0-Critical | DONE |
 | TASK-007 | Build Skill System (5 MVP skills) | cursor | P0-Critical | DONE |
 | TASK-008 | Build AgentRunner (core LLM loop) | cursor | P0-Critical | DONE |
 
-All three implemented, unit-tested, and live-tested in game (AgentRunnerTestNPC at 450,350 on simplemap).
+Phase 4: Bridge + GameChannelAdapter implemented; AgentRunnerTestNPC uses bridge; manual + edge-case tests (bridge); conversation dialogue fix (say fallback) in AgentRunner. Live-tested in game.
 
 ## Previous Sprint — Phase 0: Environment Setup (ALL DONE)
 
@@ -32,7 +33,6 @@ All three implemented, unit-tested, and live-tested in game (AgentRunnerTestNPC 
 |-------|-------|-------|----------|
 | Phase 3 | Build AgentMemory | cursor | P1 |
 | Phase 3 | Build AgentManager | cursor | P1 |
-| Phase 4 | Build GameChannelAdapter (bridge) | cursor | P0 |
 | Phase 4 | RPGJS Module Integration (NPC speech bubble GUI) | cursor | P0 |
 | Phase 5 | End-to-end integration testing | cursor | P0 |
 | Phase 5 | Agent personality configuration | cursor | P1 |
@@ -43,6 +43,7 @@ All three implemented, unit-tested, and live-tested in game (AgentRunnerTestNPC 
 
 | ID | Title | Agent | Date |
 |----|-------|-------|------|
+| TASK-009 | Build GameChannelAdapter (bridge) + dialogue fix | cursor | 2026-02-11 |
 | TASK-008 | Build AgentRunner (core LLM loop) + live test NPC | cursor | 2026-02-11 |
 | TASK-007 | Build Skill System (5 MVP skills) | cursor | 2026-02-11 |
 | TASK-006 | Build PerceptionEngine | cursor | 2026-02-11 |
@@ -59,6 +60,10 @@ All three implemented, unit-tested, and live-tested in game (AgentRunnerTestNPC 
 | — | Project structure and multi-agent setup | claude-code | 2026-02-09 |
 | — | Dev toolkit created (guide, Cursor rules, corrected structure) | claude-code | 2026-02-09 |
 | — | OpenClaw reference + patterns extraction guide | claude-code | 2026-02-09 |
+
+## Known Behavior (Phase 4 Bridge)
+
+- **Multiple onAction enqueues**: If the player presses the action key several times in quick succession when talking to an AI NPC, each press is enqueued separately. The lane queue processes them one after the other, so the player may see multiple NPC replies in sequence. This is expected (serialized per-agent); not a bug. Optional future improvement: debounce or coalesce rapid action key presses.
 
 ## Architecture Notes
 
@@ -89,9 +94,12 @@ All three implemented, unit-tested, and live-tested in game (AgentRunnerTestNPC 
 
 | Task | Agent | Verdict | Date | Review File |
 |------|-------|---------|------|-------------|
+| TASK-008 | cursor | **APPROVED** | 2026-02-11 | `.ai/reviews/008-review.md` |
 | TASK-006/007/008 | cursor | **REJECTED** | 2026-02-10 | `.ai/reviews/TASK-006-007-008-review.md` |
 
-**Rejection reason:** Severe boundary violations (modified `.ai/**` and `docs/**` files belonging to Claude Code). No implementation code submitted for any task. All acceptance criteria remain UNMET.
+**TASK-008 Approval:** All 11 acceptance criteria met. AgentRunner, LLMClient, LaneQueue fully implemented. Minor boundary violations in workflow files (task status updates, dependency installation) — acceptable for handoff documentation. Build and typecheck pass. 15 unit tests + live integration test.
+
+**Previous Rejection (2026-02-10):** Severe boundary violations (modified `.ai/**` and `docs/**` files belonging to Claude Code). No implementation code submitted. **RESOLVED** in new submission.
 
 ## Open Issues
 
