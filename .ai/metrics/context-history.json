@@ -130,5 +130,14 @@
     "session_age_hours": 0,
     "file_operations": 0,
     "status": "HEALTHY"
+  },
+  {
+    "timestamp": "2026-02-11T02:18:33Z",
+    "session": "unknown",
+    "token_count": 21587,
+    "file_size_bytes": 42668,
+    "session_age_hours": 0,
+    "file_operations": 0,
+    "status": "HEALTHY"
   }
 ]
