@@ -77,6 +77,10 @@ valid `PerceptionSnapshot` objects from game state.
 - Test NPC: `main/events/test-npc.ts` (shows RPGJS entity/map access patterns)
 - RPGJS event guide: `docs/rpgjs-reference/docs/guide/event.md`
 - Prior art: `docs/prior-art-analysis.md` — all three projects validate structured text perception
+- **Plugin analysis**: `docs/rpgjs-plugin-analysis.md` — Components API can display
+  NPC name labels via `setComponentsTop(Components.text('{name}'))`
+- **Key API insight**: `RpgEvent extends RpgPlayer` — NPCs have access to all
+  position/map query methods that players do
 
 ### Handoff Notes
 
