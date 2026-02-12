@@ -1,6 +1,6 @@
 # Sprint Status
 
-Last updated: 2026-02-11
+Last updated: 2026-02-12
 
 ## Current Phase
 
@@ -29,20 +29,23 @@ Phase 4: Bridge + GameChannelAdapter implemented; AgentRunnerTestNPC uses bridge
 
 ## Backlog
 
-| Phase | Title | Agent | Priority |
-|-------|-------|-------|----------|
-| Phase 3 | Build AgentMemory | cursor | P1 |
-| Phase 3 | Build AgentManager | cursor | P1 |
-| Phase 4 | RPGJS Module Integration (NPC speech bubble GUI) | cursor | P0 |
-| Phase 5 | End-to-end integration testing | cursor | P0 |
-| Phase 5 | Agent personality configuration | cursor | P1 |
-| Phase 5 | Save/load player state (@rpgjs/save) | cursor | P2 |
-| Phase 6 | Architecture documentation | claude-code | P2 |
+| ID | Phase | Title | Agent | Priority |
+|----|-------|-------|-------|----------|
+| — | Phase 3 | Build AgentMemory | cursor | P1 |
+| — | Phase 3 | Build AgentManager | cursor | P1 |
+| TASK-010 | Phase 3.5 | Multi-Provider LLM Gateway | cursor | P1 |
+| TASK-011 | Phase 3.5 | GitHub Copilot CLI Provider Adapter | cursor | P2 |
+| — | Phase 4 | RPGJS Module Integration (NPC speech bubble GUI) | cursor | P0 |
+| — | Phase 5 | End-to-end integration testing | cursor | P0 |
+| — | Phase 5 | Agent personality configuration | cursor | P1 |
+| — | Phase 5 | Save/load player state (@rpgjs/save) | cursor | P2 |
+| — | Phase 6 | Architecture documentation | claude-code | P2 |
 
 ## Recently Completed
 
 | ID | Title | Agent | Date |
 |----|-------|-------|------|
+| — | Multi-provider LLM gateway feature design (idea + plan + TASK-010/011) | claude-code | 2026-02-12 |
 | TASK-009 | Build GameChannelAdapter (bridge) + dialogue fix | cursor | 2026-02-11 |
 | TASK-008 | Build AgentRunner (core LLM loop) + live test NPC | cursor | 2026-02-11 |
 | TASK-007 | Build Skill System (5 MVP skills) | cursor | 2026-02-11 |
@@ -89,6 +92,8 @@ Phase 4: Bridge + GameChannelAdapter implemented; AgentRunnerTestNPC uses bridge
 - `docs/prior-art-analysis.md` — Stanford/AI Town/Voyager patterns and how we adapt them
 - `docs/rpgjs-guide.md` — RPGJS v4 API cheat sheet
 - `docs/openclaw-patterns.md` — 6 extracted patterns with our adaptations
+- `.ai/idea/05-multi-provider-llm-gateway.md` — Multi-provider LLM gateway feature idea
+- `.ai/idea/05a-multi-provider-implementation-plan.md` — Implementation plan for TASK-010/011
 
 ## Recent Reviews
 
