@@ -9,6 +9,12 @@ and AgentManager all complete. YAML-driven NPCs spawn automatically. Builder das
 prototype added. Next priorities: player state persistence, deployment to Railway, or
 NPC speech bubble GUI.
 
+## Active Sprint — Player Persistence
+
+| ID | Title | Agent | Priority | Status |
+|----|-------|-------|----------|--------|
+| TASK-013 | Player State Persistence via Supabase | cursor | P2-Medium | IN PROGRESS |
+
 ## Completed Sprint — Persistence + AgentManager (ALL DONE)
 
 | ID | Title | Agent | Priority | Status |
@@ -42,7 +48,7 @@ TASK-014: `AgentManager` loads YAML configs, wires subsystems, spawns via `Agent
 
 | ID | Phase | Title | Agent | Priority |
 |----|-------|-------|-------|----------|
-| TASK-013 | Phase 5 | Player State Persistence via Supabase | cursor | P2 |
+| ~~TASK-013~~ | ~~Phase 5~~ | ~~Player State Persistence via Supabase~~ | ~~cursor~~ | ~~IN PROGRESS~~ |
 | TASK-010 | Phase 3.5 | Multi-Provider LLM Gateway | cursor | P1 |
 | TASK-011 | Phase 3.5 | GitHub Copilot CLI Provider Adapter | cursor | P2 |
 | — | Phase 4 | RPGJS Module Integration (NPC speech bubble GUI) | cursor | P0 |
