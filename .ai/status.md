@@ -31,20 +31,21 @@ Phase 4: Bridge + GameChannelAdapter implemented; AgentRunnerTestNPC uses bridge
 
 | ID | Phase | Title | Agent | Priority |
 |----|-------|-------|-------|----------|
-| — | Phase 3 | Build AgentMemory | cursor | P1 |
+| TASK-012 | Phase 3 | Supabase Agent Memory Persistence | cursor | P1 |
+| TASK-013 | Phase 5 | Player State Persistence via Supabase | cursor | P2 |
 | — | Phase 3 | Build AgentManager | cursor | P1 |
 | TASK-010 | Phase 3.5 | Multi-Provider LLM Gateway | cursor | P1 |
 | TASK-011 | Phase 3.5 | GitHub Copilot CLI Provider Adapter | cursor | P2 |
 | — | Phase 4 | RPGJS Module Integration (NPC speech bubble GUI) | cursor | P0 |
 | — | Phase 5 | End-to-end integration testing | cursor | P0 |
 | — | Phase 5 | Agent personality configuration | cursor | P1 |
-| — | Phase 5 | Save/load player state (@rpgjs/save) | cursor | P2 |
 | — | Phase 6 | Architecture documentation | claude-code | P2 |
 
 ## Recently Completed
 
 | ID | Title | Agent | Date |
 |----|-------|-------|------|
+| — | Supabase persistence feature design (idea + plan + TASK-012/013) | claude-code | 2026-02-12 |
 | — | Multi-provider LLM gateway feature design (idea + plan + TASK-010/011) | claude-code | 2026-02-12 |
 | TASK-009 | Build GameChannelAdapter (bridge) + dialogue fix | cursor | 2026-02-11 |
 | TASK-008 | Build AgentRunner (core LLM loop) + live test NPC | cursor | 2026-02-11 |
@@ -72,6 +73,9 @@ Phase 4: Bridge + GameChannelAdapter implemented; AgentRunnerTestNPC uses bridge
 
 - **LLM Provider**: Moonshot Kimi K2 (idle) + K2.5 (conversation) via `openai` SDK.
   NOT using Anthropic or OpenAI yet — may add later via Vercel AI SDK.
+- **Database**: Supabase (hosted Postgres + pgvector). Agent memory persistence
+  (TASK-012) and player state (TASK-013). `@supabase/supabase-js` SDK.
+  Env vars: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
 - **Deployment**: Railway (RPGJS game server) + Lovable (frontend iframe embed).
 - **Structure**: Flat `main/` directory matching RPGJS v4 autoload conventions.
 - **Plugins (3 active)**: `@rpgjs/default-gui` (dialogue, choices, notifications),
@@ -94,6 +98,8 @@ Phase 4: Bridge + GameChannelAdapter implemented; AgentRunnerTestNPC uses bridge
 - `docs/openclaw-patterns.md` — 6 extracted patterns with our adaptations
 - `.ai/idea/05-multi-provider-llm-gateway.md` — Multi-provider LLM gateway feature idea
 - `.ai/idea/05a-multi-provider-implementation-plan.md` — Implementation plan for TASK-010/011
+- `.ai/idea/06-supabase-persistence.md` — Supabase persistence feature idea
+- `.ai/idea/06a-supabase-implementation-plan.md` — Implementation plan for TASK-012/013
 
 ## Recent Reviews
 
