@@ -417,6 +417,108 @@ This applies to **all projects** using:
 
 ---
 
-**Last Updated**: 2026-02-10  
-**Next Review**: After TASK-006 completion
+## Issue #9: Stale JSDoc References to Anthropic API in Types
+
+**Severity**: Low (Cosmetic)
+**Impact**: Misleading documentation for contributors
+**Status**: Open — circle back later
+
+### Problem
+
+Several JSDoc comments in the type files still reference Anthropic's API, even though the implementation uses the OpenAI-compatible format (Kimi K2/K2.5 via `openai` SDK).
+
+### Locations
+
+1. `src/agents/skills/types.ts:6` — File header says "Anthropic's function-calling / tool-use API"
+2. `src/agents/skills/types.ts:107` — `SkillParameterSchema` says "Mirrors the JSON Schema subset that Anthropic's tool-use API accepts"
+3. `src/agents/skills/types.ts:132` — `IAgentSkill` says "exposed to the LLM as a tool via Anthropic's function-calling API"
+4. `src/agents/skills/types.ts:172` — `parameters` JSDoc says "Used to build the JSON Schema for Anthropic's `tools` array"
+5. `src/agents/core/types.ts:209` — `ILLMClient` JSDoc says "wraps `@moonshot-ai/moonshot-sdk`" — should say `openai` SDK
+
+### Fix
+
+Find-and-replace "Anthropic" references with "OpenAI-compatible (Kimi K2/K2.5)" and update the SDK reference. ~5 minutes of work.
+
+---
+
+## Issue #10: LaneQueue Promise Chain Accumulation
+
+**Severity**: Low (Performance)
+**Impact**: Minor memory/GC overhead at high NPC counts
+**Status**: Open — monitor, fix if needed
+
+### Problem
+
+`LaneQueue.enqueue()` chains a new `.then(runNext)` onto `lane.promise` on every call, even when the lane is idle. Over thousands of idle ticks across many NPCs, this creates long resolved-promise chains that the GC must eventually clean up.
+
+### Location
+
+`src/agents/core/LaneQueue.ts:57` — `lane.promise = lane.promise.then(runNext)`
+
+### Potential Fix
+
+Check if the lane is idle before chaining. If idle, execute immediately and set the promise to the task's result:
+
+```typescript
+if (!lane.isProcessing && lane.queue.length === 0) {
+  lane.isProcessing = true
+  lane.promise = task().catch(...).finally(() => { lane.isProcessing = false })
+} else {
+  lane.queue.push(task)
+  // ... existing chain logic
+}
+```
+
+### When to Fix
+
+Only if profiling shows GC pressure with 20+ NPCs. Not a concern for MVP.
+
+---
+
+## Issue #11: AgentRunner Tool Message Format Inconsistency
+
+**Severity**: Low (Correctness)
+**Impact**: Works correctly but internal representation is non-standard
+**Status**: Open — cosmetic
+
+### Problem
+
+In `AgentRunner.run()` (line 192-195), tool_use blocks and tool_result blocks are pushed together into a single assistant message's content array. The OpenAI chat format expects:
+1. An assistant message with `tool_calls` array
+2. Separate `role: 'tool'` messages for each tool result
+
+The `LLMClient.mapMessagesToOpenAI()` correctly splits these when sending to the API, so the API calls work fine. But the internal `currentMessages` array has a non-standard structure that could confuse future maintainers.
+
+### Location
+
+`src/agents/core/AgentRunner.ts:192-195`
+
+### Potential Fix
+
+Push tool_use and tool_result as separate messages in `currentMessages` to match the OpenAI format natively, removing the need for `mapMessagesToOpenAI` to do the splitting.
+
+### When to Fix
+
+When refactoring for multi-provider support (TASK-010), since the gateway will need a clean internal message format.
+
+---
+
+## Issue #12: All Test NPCs Use Same Graphic ('female')
+
+**Severity**: Low (Visual)
+**Impact**: All AI NPCs look identical in-game
+**Status**: Open — address when adding more spritesheets
+
+### Problem
+
+Every NPC event file (`agent-runner-test-npc.ts`, `perception-test-npc.ts`, `skill-test-npc.ts`, plus the personality NPCs from Phase 1) calls `this.setGraphic('female')`. Only two spritesheets exist: `female.png` and `hero.png`.
+
+### Fix
+
+When adding agent personality configs (Phase 5 backlog item), include diverse spritesheets. The `AgentConfig.graphic` field already supports this — just need more sprite assets registered in `main/spritesheets/`.
+
+---
+
+**Last Updated**: 2026-02-12
+**Next Review**: Before Phase 5 (personality configuration)
 
