@@ -1,53 +1,53 @@
 # TileMap
 
-Une tilemap (littéralement une "carte de tuile" ou "carte de carreaux") est une grille utilisée pour créer la disposition/le fond graphique d'un jeu. Il y a plusieurs avantages à utiliser le nœud TileMap pour concevoir vos niveaux. Cela rend possible de dessiner le layout(disposition) en "peignant" les tuiles sur la grille, ce qui est beaucoup plus rapide que de placer individuellement chacune des tuiles sous formes de nœuds Sprite un par un.
+A tilemap (literally a “tile map” or “grid map”) is a grid used to create a game’s layout / graphical background. There are several advantages to using the TileMap node to design your levels. It makes it possible to draw the layout by “painting” tiles onto the grid, which is much faster than placing each tile individually as Sprite nodes one by one.
 
 # Tileset
 
-Un tileset est un ensemble de carreaux, qui permettra de créer une carte (mapping).
+A tileset is a set of tiles that lets you create a map (mapping).
 
-1) Choisissez la taille du carreau. Ici, nous avons 32*32px
+1) Choose the tile size. Here, we have 32×32 px.
 
 ![tileset](./spec-tileset.png)
 
-2) Il y a pas d'importance sur la largeur et hauteur de l'image, mais la bonne pratique est d'avoir une largeur plus petite (par exemple, afficher 8 carreaux sur une ligne) et d'avoir une hauteur plus grande (par exemple, 100 carreaux). ça permet de manier le tileset plus facilement dans les éditeurs de cartes
-3) L'image ne doit pas dépasser 4096*4096px
-4) La taille du carreau doit être un multiple de la taille de l'image. Par exemple, si la largeur est de 32px, le tileset ne doit pas faire 250px mais 256px (8 carreaux de 32px)
-5) Il est possible d'avoir plusieurs tilesets sur une carte. Si vous pensez utiliser la plupart des carreaux, privilégiez, tout de même, un grand tileset que plusieurs tilesets.
+2) The image width and height don’t matter, but best practice is to keep the width smaller (for example, showing 8 tiles per row) and the height larger (for example, 100 tiles). This makes the tileset easier to handle in map editors.  
+3) The image must not exceed 4096×4096 px.  
+4) The tile size must evenly divide the image size. For example, if the tile width is 32 px, the tileset shouldn’t be 250 px wide but 256 px (8 tiles of 32 px).  
+5) It’s possible to use multiple tilesets on a map. If you think you’ll use most of the tiles, still prefer one large tileset rather than several separate tilesets.
 
-> Ce n'est pas une obligation d'avoir un carré mais c'est recommandé (plus simple pour le mapping)
+> It’s not mandatory for it to be a square, but it’s recommended (simpler for mapping).
 
-Ensuite, ce carreau est utilisé pour être dessiné sur la carte
+Then, this tile is used to be drawn onto the map.
 
 ![tileset2](./spec-tileset2.png)
 
 # Autotiles
 
-Les Autotiles vous permettent de définir un groupe de tuiles, puis d'ajouter des règles pour contrôler quelle tuile est utilisée pour le dessin en fonction du contenu des cellules adjacentes
+Autotiles let you define a group of tiles, then add rules to control which tile is used when drawing, depending on what’s in neighboring cells.
 
-## Autotile de bords
+## Edge autotile
 
-Un autotile est un petit tileset qui affichera des carreaux selon des règles précises. Ici, c'est la génération des bords d'un carreau
+An autotile is a small tileset that displays tiles according to specific rules. Here, it’s about generating the edges of a tile.
 
-Les bords sont définis de la forme suivante:
+The edges are defined like this:
 
 ![autotile](./spec-autotile.png)
 
-# Un Spritesheet
+# A Spritesheet
 
-Un sprite est un élément graphique dans le jeu. Il représente un joueur, un personnage non joueur, un coffre, etc. Souvent, ce sprite possède des animations de déplacement ou d'actions. Pour réaliser les animations, on utilise un Spritesheet (un ensemble de Sprites)
+A sprite is a graphical element in the game. It represents a player, a non-player character, a chest, etc. Often, that sprite has movement or action animations. To make animations, we use a spritesheet (a set of sprites).
 
 ![spritesheet](./spritesheet.png)
 
-1) Généralement, la largeur du sprite est la même que la largeur d'un carreau, et la hauteur est la hauteur d'un carreau (ou la hauteur d'un carreau * 1,5)
-2) Chaque bande du spritesheet représente une action, par exemple, l'animation de déplacement
-3) Si vous avez plusieurs autres personnages, utilisez la même logique (les mêmes bandes d'animations)
-4) Important: la largeur et hauteur d'un sprite doit être identique aux autres sprites dans l'animation.
+1) Generally, the sprite’s width is the same as the tile width, and the height is the tile height (or tile height × 1.5).  
+2) Each row of the spritesheet represents an action, for example, the walking/movement animation.  
+3) If you have multiple other characters, use the same logic (the same animation rows).  
+4) Important: the width and height of a sprite must be identical to the other sprites in the animation.
 
 ![spritesheet-bad](./spritesheet-bad.png)
 
 ![spritesheet-ok](./spritesheet-ok.png)
 
-5) Si vous avez d'autres actions que le déplacement, mettez le dans la même image. Exemple
+5) If you have actions other than movement, put them in the same image. Example:
 
 ![spritesheet-actions](./animation-chara.png)
