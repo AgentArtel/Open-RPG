@@ -1,6 +1,6 @@
 # Sprint Status
 
-Last updated: 2026-02-11
+Last updated: 2026-02-12
 
 ## Current Phase
 
@@ -32,21 +32,24 @@ Implementation order: TASK-006 → TASK-007 → TASK-008 (008 depends on both 00
 
 ## Backlog
 
-| Phase | Title | Agent | Priority |
-|-------|-------|-------|----------|
-| Phase 3 | Build AgentMemory | cursor | P1 |
-| Phase 3 | Build AgentManager | cursor | P1 |
-| Phase 4 | Build GameChannelAdapter (bridge) | cursor | P0 |
-| Phase 4 | RPGJS Module Integration (NPC speech bubble GUI) | cursor | P0 |
-| Phase 5 | End-to-end integration testing | cursor | P0 |
-| Phase 5 | Agent personality configuration | cursor | P1 |
-| Phase 5 | Save/load player state (@rpgjs/save) | cursor | P2 |
-| Phase 6 | Architecture documentation | claude-code | P2 |
+| ID | Phase | Title | Agent | Priority |
+|----|-------|-------|-------|----------|
+| — | Phase 3 | Build AgentMemory | cursor | P1 |
+| TASK-009 | Phase 3 | Build AgentManager + Bridge Integration | cursor | P1 |
+| TASK-010 | Phase 3.5 | Multi-Provider LLM Gateway | cursor | P1 |
+| TASK-011 | Phase 3.5 | GitHub Copilot CLI Provider Adapter | cursor | P2 |
+| — | Phase 4 | Build GameChannelAdapter (bridge) | cursor | P0 |
+| — | Phase 4 | RPGJS Module Integration (NPC speech bubble GUI) | cursor | P0 |
+| — | Phase 5 | End-to-end integration testing | cursor | P0 |
+| — | Phase 5 | Agent personality configuration | cursor | P1 |
+| — | Phase 5 | Save/load player state (@rpgjs/save) | cursor | P2 |
+| — | Phase 6 | Architecture documentation | claude-code | P2 |
 
 ## Recently Completed
 
 | ID | Title | Agent | Date |
 |----|-------|-------|------|
+| — | Multi-provider LLM gateway feature design (idea + plan + task briefs) | claude-code | 2026-02-12 |
 | — | RPGJS plugin analysis (use vs build) | claude-code | 2026-02-11 |
 | — | Prior art analysis (Stanford, AI Town, Voyager) | claude-code | 2026-02-11 |
 | — | Updated architecture to Kimi K2/K2.5 + Railway + Lovable | claude-code | 2026-02-11 |
@@ -85,6 +88,8 @@ Implementation order: TASK-006 → TASK-007 → TASK-008 (008 depends on both 00
 - `docs/prior-art-analysis.md` — Stanford/AI Town/Voyager patterns and how we adapt them
 - `docs/rpgjs-guide.md` — RPGJS v4 API cheat sheet
 - `docs/openclaw-patterns.md` — 6 extracted patterns with our adaptations
+- `.ai/idea/05-multi-provider-llm-gateway.md` — Multi-provider LLM gateway feature idea
+- `.ai/idea/05a-multi-provider-implementation-plan.md` — Implementation plan for TASK-010/011
 
 ## Open Issues
 
