@@ -148,5 +148,50 @@
     "session_age_hours": 0,
     "file_operations": 0,
     "status": "HEALTHY"
+  },
+  {
+    "timestamp": "2026-02-11T02:54:53Z",
+    "session": "unknown",
+    "token_count": 26287,
+    "file_size_bytes": 61432,
+    "session_age_hours": 0,
+    "file_operations": 0,
+    "status": "WARNING"
+  },
+  {
+    "timestamp": "2026-02-11T03:37:10Z",
+    "session": "unknown",
+    "token_count": 29268,
+    "file_size_bytes": 69597,
+    "session_age_hours": 0,
+    "file_operations": 0,
+    "status": "WARNING"
+  },
+  {
+    "timestamp": "2026-02-11T05:15:14Z",
+    "session": "unknown",
+    "token_count": 29894,
+    "file_size_bytes": 71863,
+    "session_age_hours": 0,
+    "file_operations": 0,
+    "status": "WARNING"
+  },
+  {
+    "timestamp": "2026-02-11T10:18:15Z",
+    "session": "unknown",
+    "token_count": 32964,
+    "file_size_bytes": 84579,
+    "session_age_hours": 0,
+    "file_operations": 0,
+    "status": "WARNING"
+  },
+  {
+    "timestamp": "2026-02-11T23:54:21Z",
+    "session": "unknown",
+    "token_count": 39396,
+    "file_size_bytes": 106183,
+    "session_age_hours": 0,
+    "file_operations": 0,
+    "status": "CRITICAL"
   }
 ]
