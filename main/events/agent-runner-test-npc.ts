@@ -30,8 +30,8 @@ import {
   AgentRunner,
   LaneQueue,
   LLMClient,
-  InMemoryAgentMemory,
 } from '../../src/agents/core'
+import { createAgentMemory } from '../../src/agents/memory'
 import { PerceptionEngine } from '../../src/agents/perception/PerceptionEngine'
 import {
   SkillRegistry,
@@ -97,6 +97,7 @@ function createAgentConfig(): AgentConfig {
 })
 export default class AgentRunnerTestNpcEvent extends RpgEvent {
   private runner: AgentRunner | null = null
+  private memory: import('../../src/agents/memory/types').IAgentMemory | null = null
 
   onInit() {
     this.setGraphic('female')
@@ -104,53 +105,65 @@ export default class AgentRunnerTestNpcEvent extends RpgEvent {
     this.frequency = 200
 
     console.log(`${LOG_PREFIX} onInit — building runner and registering with bridge...`)
-    try {
-      // 1. Build subsystems
-      const perception = new PerceptionEngine()
-      const registry = new SkillRegistry()
-      registry.register(moveSkill)
-      registry.register(saySkill)
-      registry.register(createLookSkill(perception))
-      registry.register(emoteSkill)
-      registry.register(waitSkill)
 
-      const memory = new InMemoryAgentMemory()
-      const llmClient = new LLMClient()
-      const config = createAgentConfig()
+    // Wrap in async IIFE because RPGJS onInit() is synchronous but
+    // memory.load() needs to hydrate from Supabase before the runner
+    // processes its first event.
+    void (async () => {
+      try {
+        // 1. Build subsystems
+        const perception = new PerceptionEngine()
+        const registry = new SkillRegistry()
+        registry.register(moveSkill)
+        registry.register(saySkill)
+        registry.register(createLookSkill(perception))
+        registry.register(emoteSkill)
+        registry.register(waitSkill)
 
-      // RunContext provider — closes over `this` (the RpgEvent)
-      const getContext = async (event: AgentEvent): Promise<RunContext> => {
-        return this.buildRunContext(event)
+        // 2. Create memory via factory (Supabase if configured, else in-memory)
+        const memory = createAgentMemory(AGENT_ID)
+        this.memory = memory
+
+        // Hydrate prior conversation history from DB (no-op for in-memory)
+        await memory.load(AGENT_ID)
+
+        const llmClient = new LLMClient()
+        const config = createAgentConfig()
+
+        // RunContext provider — closes over `this` (the RpgEvent)
+        const getContext = async (event: AgentEvent): Promise<RunContext> => {
+          return this.buildRunContext(event)
+        }
+
+        this.runner = new AgentRunner(
+          config,
+          perception,
+          registry,
+          memory,
+          llmClient,
+          getContext
+        )
+
+        // 3. Create LaneQueue and GameChannelAdapter
+        const laneQueue = new LaneQueue()
+        const adapter = new GameChannelAdapter({
+          agentId: AGENT_ID,
+          laneQueue,
+          runner: this.runner,
+          idleIntervalMs: config.behavior?.idleInterval ?? 15000,
+          logPrefix: LOG_PREFIX,
+        })
+
+        // 4. Register with the shared bridge (starts idle timer automatically)
+        bridge.registerAgent(this, AGENT_ID, adapter)
+
+        console.log(`${LOG_PREFIX} Initialized — registered with bridge, idle every 15s, talk to trigger conversation`)
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err)
+        console.error(`${LOG_PREFIX} Failed to init (missing MOONSHOT_API_KEY?):`, msg)
+        this.runner = null
       }
-
-      this.runner = new AgentRunner(
-        config,
-        perception,
-        registry,
-        memory,
-        llmClient,
-        getContext
-      )
-
-      // 2. Create LaneQueue and GameChannelAdapter
-      const laneQueue = new LaneQueue()
-      const adapter = new GameChannelAdapter({
-        agentId: AGENT_ID,
-        laneQueue,
-        runner: this.runner,
-        idleIntervalMs: config.behavior?.idleInterval ?? 15000,
-        logPrefix: LOG_PREFIX,
-      })
-
-      // 3. Register with the shared bridge (starts idle timer automatically)
-      bridge.registerAgent(this, AGENT_ID, adapter)
-
-      console.log(`${LOG_PREFIX} Initialized — registered with bridge, idle every 15s, talk to trigger conversation`)
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err)
-      console.error(`${LOG_PREFIX} Failed to init (missing MOONSHOT_API_KEY?):`, msg)
-      this.runner = null
-    }
+    })()
   }
 
   /**
@@ -272,8 +285,8 @@ export default class AgentRunnerTestNpcEvent extends RpgEvent {
   }
 
   /**
-   * Clean up: unregister from bridge (disposes adapter + timers)
-   * and dispose the runner.
+   * Clean up: unregister from bridge (disposes adapter + timers),
+   * dispose the runner, and flush + dispose memory.
    */
   onDestroy() {
     bridge.unregisterAgent(this)
@@ -282,5 +295,11 @@ export default class AgentRunnerTestNpcEvent extends RpgEvent {
       void this.runner.dispose()
       this.runner = null
     }
+
+    // Dispose memory (flushes pending writes to Supabase if applicable)
+    if (this.memory && 'dispose' in this.memory) {
+      void (this.memory as { dispose: () => Promise<void> }).dispose()
+    }
+    this.memory = null
   }
 }

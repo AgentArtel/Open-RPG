@@ -1,4 +1,4 @@
-import { RpgPlayer, type RpgPlayerHooks, Control, Components, type RpgMap } from '@rpgjs/server'
+import { RpgPlayer, type RpgPlayerHooks, Control, Components, type RpgMap, type RpgEvent } from '@rpgjs/server'
 import TestNpcEvent from './events/test-npc'
 import GuardEvent from './events/guard'
 import ArtistEvent from './events/artist'
@@ -8,8 +8,42 @@ import MissionaryEvent from './events/missionary'
 import CatDadEvent from './events/cat-dad'
 import PerceptionTestNpcEvent from './events/perception-test-npc'
 import SkillTestNpcEvent from './events/skill-test-npc'
-import AgentRunnerTestNpcEvent from './events/agent-runner-test-npc'
+import AgentNpcEvent from './events/AgentNpcEvent'
+import { agentManager, setAgentNpcEventClass } from '../src/agents/core'
 import { testLLMCall } from '../src/agents/core/llm-test'
+
+// ---------------------------------------------------------------------------
+// Builder Dashboard — Scripted NPC Registry
+// Maps string IDs to event classes so the builder can spawn them dynamically.
+// ---------------------------------------------------------------------------
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const SCRIPTED_EVENT_REGISTRY: Record<string, new (...args: any[]) => RpgEvent> = {
+    'test-npc': TestNpcEvent,
+    'guard': GuardEvent,
+    'artist': ArtistEvent,
+    'photographer': PhotographerEvent,
+    'vendor': VendorEvent,
+    'missionary': MissionaryEvent,
+    'cat-dad': CatDadEvent,
+}
+
+/**
+ * Build the list of available scripted events for the builder dashboard.
+ * Each entry has an id (the registry key) and a human-readable name.
+ */
+function getScriptedEventOptions(): Array<{ id: string; name: string }> {
+    return Object.keys(SCRIPTED_EVENT_REGISTRY).map((id) => ({
+        id,
+        // Convert kebab-case to Title Case for display
+        name: id
+            .split('-')
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(' '),
+    }))
+}
+
+// Wire the generic AI NPC event class so AgentManager can spawn YAML-driven agents
+setAgentNpcEventClass(AgentNpcEvent)
 
 /**
  * Tracks which maps have already had the test NPC spawned on them.
@@ -35,7 +69,7 @@ const NPC_SPAWN_CONFIG = {
     CatDad: false,
     PerceptionTestNPC: false,
     SkillTestNPC: false,
-    AgentRunnerTestNPC: true,
+    // AI NPCs from YAML (elder-theron, test-agent) spawn via agentManager below
 } as const
 
 const player: RpgPlayerHooks = {
@@ -63,6 +97,85 @@ const player: RpgPlayerHooks = {
         if (input == Control.Back) {
             player.callMainMenu()
         }
+
+        // Builder Dashboard — open when player presses 'B'
+        // The 'builder-dashboard' input is registered in rpg.toml
+        if (input === 'builder-dashboard') {
+            try {
+                const map = player.getCurrentMap<RpgMap>()
+                if (!map) return
+
+                const gui = player.gui('builder-dashboard')
+
+                // Listen for "place" interactions from the client GUI
+                gui.on('place', async (data: {
+                    mapId: string
+                    x: number
+                    y: number
+                    type: 'ai-npc' | 'scripted'
+                    id: string
+                }) => {
+                    try {
+                        const currentMap = player.getCurrentMap<RpgMap>()
+                        if (!currentMap || currentMap.id !== data.mapId) {
+                            console.warn('[Builder] Map mismatch — player moved away')
+                            return
+                        }
+
+                        if (data.type === 'ai-npc') {
+                            // Spawn an AI NPC via AgentManager
+                            const ok = await agentManager.spawnAgentAt(
+                                data.id,
+                                currentMap,
+                                data.x,
+                                data.y,
+                            )
+                            if (ok) {
+                                console.log(`[Builder] Placed AI NPC "${data.id}" at (${data.x}, ${data.y})`)
+                                await player.showText(`Placed AI NPC "${data.id}" at (${data.x}, ${data.y})`)
+                            } else {
+                                console.warn(`[Builder] Failed to spawn AI NPC "${data.id}"`)
+                                await player.showText(`Failed to place "${data.id}" — config not found.`)
+                            }
+                        } else if (data.type === 'scripted') {
+                            // Spawn a scripted NPC from the registry
+                            const EventClass = SCRIPTED_EVENT_REGISTRY[data.id]
+                            if (EventClass) {
+                                currentMap.createDynamicEvent({
+                                    x: data.x,
+                                    y: data.y,
+                                    event: EventClass,
+                                })
+                                console.log(`[Builder] Placed scripted NPC "${data.id}" at (${data.x}, ${data.y})`)
+                                await player.showText(`Placed "${data.id}" at (${data.x}, ${data.y})`)
+                            } else {
+                                console.warn(`[Builder] Unknown scripted event id "${data.id}"`)
+                                await player.showText(`Unknown scripted NPC "${data.id}"`)
+                            }
+                        }
+                    } catch (err) {
+                        console.error('[Builder] Error placing entity:', err)
+                    }
+                })
+
+                // Gather the list of AI NPC configs from AgentManager
+                const aiNpcConfigs = Array.from(agentManager.getAllAgents()).map(
+                    (a) => a.config.id,
+                )
+
+                // Open the GUI, passing available options as props
+                gui.open(
+                    {
+                        mapId: map.id,
+                        aiNpcConfigs,
+                        scriptedEvents: getScriptedEventOptions(),
+                    },
+                    { blockPlayerInput: true },
+                )
+            } catch (err) {
+                console.error('[Builder] Error opening dashboard:', err)
+            }
+        }
     },
     async onJoinMap(player: RpgPlayer) {
         // Spawn NPCs on the starting map if they haven't been spawned yet.
@@ -71,6 +184,9 @@ const player: RpgPlayerHooks = {
         const map = player.getCurrentMap<RpgMap>()
         if (map && map.id === 'simplemap' && !npcSpawnedOnMap.has(map.id)) {
             try {
+                // Spawn AI NPCs from YAML configs (src/config/agents/*.yaml)
+                await agentManager.spawnAgentsOnMap(map)
+
                 if (NPC_SPAWN_CONFIG.TestNPC) {
                     map.createDynamicEvent({ x: 200, y: 200, event: TestNpcEvent })
                     console.log('[TestNPC] Spawned on map:', map.id)
@@ -106,10 +222,6 @@ const player: RpgPlayerHooks = {
                 if (NPC_SPAWN_CONFIG.SkillTestNPC) {
                     map.createDynamicEvent({ x: 250, y: 300, event: SkillTestNpcEvent })
                     console.log('[SkillTestNPC] Spawned on map:', map.id)
-                }
-                if (NPC_SPAWN_CONFIG.AgentRunnerTestNPC) {
-                    map.createDynamicEvent({ x: 450, y: 350, event: AgentRunnerTestNpcEvent })
-                    console.log('[AgentRunnerTestNPC] Spawned on map:', map.id)
                 }
 
                 npcSpawnedOnMap.add(map.id)

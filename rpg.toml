@@ -4,8 +4,13 @@ modules = [
     './main',
     '@rpgjs/mobile-gui',
     '@rpgjs/default-gui',
+    '@rpgjs/plugin-emotion-bubbles',
     '@rpgjs/gamepad'
 ]
+
+[inputs.builder-dashboard]
+    name = "builder-dashboard"
+    bind = "b"
 
 [start]
     map = 'simplemap'
