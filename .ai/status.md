@@ -13,15 +13,14 @@ Now building: Supabase persistence (agent memory + player state) and AgentManage
 
 | ID | Title | Agent | Priority | Status |
 |----|-------|-------|----------|--------|
-| TASK-012 | Supabase Agent Memory Persistence | cursor | P1-High | PENDING |
+| TASK-012 | Supabase Agent Memory Persistence | cursor | P1-High | DONE |
 | TASK-014 | Build AgentManager + YAML Config Loader | cursor | P1-High | PENDING |
 | TASK-013 | Player State Persistence via Supabase | cursor | P2-Medium | PENDING |
 
 Implementation order: TASK-012 → TASK-014 → TASK-013
 (012 provides `createAgentMemory()` factory that 014 uses; 013 is independent but lower priority)
 
-**Human prerequisite for TASK-012:** Create Supabase project and add env vars.
-See `docs/supabase-setup-guide.md` for step-by-step instructions.
+**TASK-012 done.** For TASK-013 ensure Supabase env vars are set (see `docs/supabase-setup-guide.md`).
 
 ## Previous Sprint — Core Agent System (ALL DONE)
 
@@ -57,6 +56,7 @@ See `docs/supabase-setup-guide.md` for step-by-step instructions.
 
 | ID | Title | Agent | Date |
 |----|-------|-------|------|
+| TASK-012 | Supabase Agent Memory Persistence | cursor | 2026-02-12 |
 | — | AgentManager task brief (TASK-014) + sprint planning | claude-code | 2026-02-12 |
 | — | Supabase persistence feature design (idea + plan + TASK-012/013) | claude-code | 2026-02-12 |
 | — | Multi-provider LLM gateway feature design (idea + plan + TASK-010/011) | claude-code | 2026-02-12 |

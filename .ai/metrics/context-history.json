@@ -193,5 +193,23 @@
     "session_age_hours": 0,
     "file_operations": 0,
     "status": "CRITICAL"
+  },
+  {
+    "timestamp": "2026-02-12T00:22:41Z",
+    "session": "unknown",
+    "token_count": 47214,
+    "file_size_bytes": 143255,
+    "session_age_hours": 0,
+    "file_operations": 0,
+    "status": "CRITICAL"
+  },
+  {
+    "timestamp": "2026-02-12T00:26:33Z",
+    "session": "unknown",
+    "token_count": 30701,
+    "file_size_bytes": 75225,
+    "session_age_hours": 0,
+    "file_operations": 0,
+    "status": "WARNING"
   }
 ]
