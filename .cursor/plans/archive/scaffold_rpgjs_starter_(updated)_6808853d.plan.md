@@ -111,4 +111,3 @@ After scaffolding, the project will have:
 
 - Complete RPGJS starter structure with working game code
 - Preserved agent system directory scaffolding with .gitkeep files
-- All project documentation intact

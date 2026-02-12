@@ -1,0 +1,4 @@
+/* Tailwind CSS — utility-first framework for RPGJS GUI styling */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
