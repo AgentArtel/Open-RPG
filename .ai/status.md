@@ -44,14 +44,26 @@ TASK-014: `AgentManager` loads YAML configs, wires subsystems, spawns via `Agent
 | TASK-004 | Build test NPC with patrol route and player interaction | cursor | P1-High | DONE |
 | TASK-005 | LLM Integration Feasibility Test | cursor | P0-Critical | DONE |
 
+## Next Sprint — Polish + Deploy (queued after TASK-013)
+
+| ID | Title | Agent | Priority | Status |
+|----|-------|-------|----------|--------|
+| TASK-015 | NPC Speech Bubble GUI | cursor | P0-Critical | PENDING |
+| TASK-016 | Agent Conversation Log GUI | cursor | P1-High | PENDING |
+| TASK-017 | Deploy to Railway | cursor | P0-Critical | PENDING |
+
+**Recommended order**: TASK-015 → TASK-016 → TASK-017 (deploy with all GUI polish in place).
+
+TASK-015: Floating speech bubbles above NPC sprites (`rpgAttachToSprite`). Three-tier speech: modal for action-key, bubble for proximity/idle. Replaces blocking `showText()` for ambient interactions.
+TASK-016: Side panel ('L' key) showing per-NPC conversation history. Reads from existing `IAgentMemory`. Filter by NPC, timestamps, scrollable.
+TASK-017: Railway deployment. Health check endpoint, `railway.toml`, Dockerfile HEALTHCHECK, CORS prep. Human prerequisite: create Railway project + set env vars.
+
 ## Backlog
 
 | ID | Phase | Title | Agent | Priority |
 |----|-------|-------|-------|----------|
-| ~~TASK-013~~ | ~~Phase 5~~ | ~~Player State Persistence via Supabase~~ | ~~cursor~~ | ~~IN PROGRESS~~ |
 | TASK-010 | Phase 3.5 | Multi-Provider LLM Gateway | cursor | P1 |
 | TASK-011 | Phase 3.5 | GitHub Copilot CLI Provider Adapter | cursor | P2 |
-| — | Phase 4 | RPGJS Module Integration (NPC speech bubble GUI) | cursor | P0 |
 | — | Phase 5 | End-to-end integration testing | cursor | P0 |
 | — | Phase 5 | Agent personality configuration + diverse sprites | cursor | P1 |
 | — | Phase 5 | Builder dashboard polish (Cursor started in gui-design) | cursor | P2 |
@@ -62,6 +74,7 @@ TASK-014: `AgentManager` loads YAML configs, wires subsystems, spawns via `Agent
 
 | ID | Title | Agent | Date |
 |----|-------|-------|------|
+| — | Task briefs for TASK-015/016/017 (speech bubble, conv log, Railway) | claude-code | 2026-02-12 |
 | TASK-014 | AgentManager + YAML config + AgentNpcEvent + builder dashboard | cursor | 2026-02-12 |
 | TASK-012 | Supabase Agent Memory Persistence | cursor | 2026-02-12 |
 | — | AgentManager task brief (TASK-014) + sprint planning | claude-code | 2026-02-12 |
