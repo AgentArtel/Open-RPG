@@ -4,23 +4,20 @@ Last updated: 2026-02-12
 
 ## Current Phase
 
-**Phase 3/5: Persistence + Multi-NPC.** Core agent system and bridge complete.
-Now building: Supabase persistence (agent memory + player state) and AgentManager
-(YAML-driven multi-NPC spawning). Human prerequisite: set up Supabase project
-(see `docs/supabase-setup-guide.md`).
+**Phase 5: Polish + Deployment prep.** Core agent system, bridge, Supabase persistence,
+and AgentManager all complete. YAML-driven NPCs spawn automatically. Builder dashboard
+prototype added. Next priorities: player state persistence, deployment to Railway, or
+NPC speech bubble GUI.
 
-## Active Sprint — Persistence + AgentManager
+## Completed Sprint — Persistence + AgentManager (ALL DONE)
 
 | ID | Title | Agent | Priority | Status |
 |----|-------|-------|----------|--------|
 | TASK-012 | Supabase Agent Memory Persistence | cursor | P1-High | DONE |
-| TASK-014 | Build AgentManager + YAML Config Loader | cursor | P1-High | PENDING |
-| TASK-013 | Player State Persistence via Supabase | cursor | P2-Medium | PENDING |
+| TASK-014 | Build AgentManager + YAML Config Loader | cursor | P1-High | DONE |
 
-Implementation order: TASK-012 → TASK-014 → TASK-013
-(012 provides `createAgentMemory()` factory that 014 uses; 013 is independent but lower priority)
-
-**TASK-012 done.** For TASK-013 ensure Supabase env vars are set (see `docs/supabase-setup-guide.md`).
+TASK-012: `SupabaseAgentMemory` with write-behind buffer, graceful fallback, `createAgentMemory()` factory.
+TASK-014: `AgentManager` loads YAML configs, wires subsystems, spawns via `AgentNpcEvent` + `spawnContext` pattern. Builder dashboard bonus (`spawnAgentAt()`).
 
 ## Previous Sprint — Core Agent System (ALL DONE)
 
@@ -45,17 +42,21 @@ Implementation order: TASK-012 → TASK-014 → TASK-013
 
 | ID | Phase | Title | Agent | Priority |
 |----|-------|-------|-------|----------|
+| TASK-013 | Phase 5 | Player State Persistence via Supabase | cursor | P2 |
 | TASK-010 | Phase 3.5 | Multi-Provider LLM Gateway | cursor | P1 |
 | TASK-011 | Phase 3.5 | GitHub Copilot CLI Provider Adapter | cursor | P2 |
 | — | Phase 4 | RPGJS Module Integration (NPC speech bubble GUI) | cursor | P0 |
 | — | Phase 5 | End-to-end integration testing | cursor | P0 |
-| — | Phase 5 | Agent personality configuration | cursor | P1 |
+| — | Phase 5 | Agent personality configuration + diverse sprites | cursor | P1 |
+| — | Phase 5 | Builder dashboard polish (Cursor started in gui-design) | cursor | P2 |
+| — | Phase 5 | Session recorder / NPC jobs (Cursor idea doc) | cursor | P2 |
 | — | Phase 6 | Architecture documentation | claude-code | P2 |
 
 ## Recently Completed
 
 | ID | Title | Agent | Date |
 |----|-------|-------|------|
+| TASK-014 | AgentManager + YAML config + AgentNpcEvent + builder dashboard | cursor | 2026-02-12 |
 | TASK-012 | Supabase Agent Memory Persistence | cursor | 2026-02-12 |
 | — | AgentManager task brief (TASK-014) + sprint planning | claude-code | 2026-02-12 |
 | — | Supabase persistence feature design (idea + plan + TASK-012/013) | claude-code | 2026-02-12 |
@@ -66,66 +67,52 @@ Implementation order: TASK-012 → TASK-014 → TASK-013
 | TASK-006 | Build PerceptionEngine | cursor | 2026-02-11 |
 | — | RPGJS plugin analysis (use vs build) | claude-code | 2026-02-11 |
 | — | Prior art analysis (Stanford, AI Town, Voyager) | claude-code | 2026-02-11 |
-| — | Updated architecture to Kimi K2/K2.5 + Railway + Lovable | claude-code | 2026-02-11 |
-| — | Updated boundaries for Kimi Overseer ownership | claude-code | 2026-02-11 |
-| TASK-005 | LLM Integration Feasibility Test (openai + Moonshot API) | cursor | 2026-02-10 |
-| TASK-001 | Scaffold RPGJS v4 project from sample2 | cursor | 2026-02-10 |
-| TASK-002 | Verify RPGJS dev server runs | cursor | 2026-02-10 |
-| TASK-003 | Define TypeScript interfaces for all integration points | cursor | 2026-02-10 |
-| TASK-004 | Build test NPC with patrol route and player interaction | cursor | 2026-02-10 |
-| — | Open Artel multi-agent system setup (Kimi, git hooks, skills) | cursor | 2026-02-10 |
-| — | Project structure and multi-agent setup | claude-code | 2026-02-09 |
-| — | Dev toolkit created (guide, Cursor rules, corrected structure) | claude-code | 2026-02-09 |
-| — | OpenClaw reference + patterns extraction guide | claude-code | 2026-02-09 |
+| TASK-005 | LLM Integration Feasibility Test | cursor | 2026-02-10 |
+| TASK-001-004 | Scaffold + interfaces + test NPC | cursor | 2026-02-10 |
 
-## Known Behavior (Phase 4 Bridge)
+## Known Behavior
 
-- **Multiple onAction enqueues**: If the player presses the action key several times in quick succession when talking to an AI NPC, each press is enqueued separately. The lane queue processes them one after the other, so the player may see multiple NPC replies in sequence. This is expected (serialized per-agent); not a bug. Optional future improvement: debounce or coalesce rapid action key presses.
+- **Multiple onAction enqueues**: Rapid action key presses enqueue separate tasks. Serialized per-agent; not a bug.
+- **All AI NPCs share 'female' graphic**: Only 2 spritesheets available. See Issue #12.
 
 ## Architecture Notes
 
 - **LLM Provider**: Moonshot Kimi K2 (idle) + K2.5 (conversation) via `openai` SDK.
-  NOT using Anthropic or OpenAI yet — may add later via Vercel AI SDK.
-- **Database**: Supabase (hosted Postgres + pgvector). Agent memory persistence
-  (TASK-012) and player state (TASK-013). `@supabase/supabase-js` SDK.
+- **Database**: Supabase (hosted Postgres + pgvector). `@supabase/supabase-js` SDK.
   Env vars: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
+- **Agent Management**: `AgentManager` singleton loads YAML from `src/config/agents/`.
+  `AgentNpcEvent` is the generic RpgEvent for all AI NPCs. `spawnContext` passes
+  config to events since `createDynamicEvent()` has no constructor args.
 - **Deployment**: Railway (RPGJS game server) + Lovable (frontend iframe embed).
 - **Structure**: Flat `main/` directory matching RPGJS v4 autoload conventions.
-- **Plugins (3 active)**: `@rpgjs/default-gui` (dialogue, choices, notifications),
-  `@rpgjs/plugin-emotion-bubbles` (30+ emotions for NPC expressions),
-  `@rpgjs/gamepad` (controller support). See `docs/rpgjs-plugin-analysis.md`.
-- **Key API discovery**: `RpgEvent extends RpgPlayer` — NPCs inherit ALL player
-  methods: `showEmotionBubble()`, `showText()`, `showAnimation()`, Components API.
-- **Custom builds needed**: Non-blocking NPC speech bubble (sprite-attached GUI,
-  Phase 4), thinking indicator (`EmotionBubble.ThreeDot`, Phase 4).
-- **Prior art**: Stanford Generative Agents, AI Town, Voyager analyzed with
-  ADOPT/ADAPT/SKIP guide at `docs/prior-art-analysis.md`.
-- **Multi-agent ops**: Kimi Overseer reviews commits via GitHub Actions.
-  Commit routing headers: `[AGENT:x] [ACTION:y] [TASK:z]`.
+- **Plugins**: `@rpgjs/default-gui`, `@rpgjs/plugin-emotion-bubbles`, `@rpgjs/gamepad`.
+- **GUI**: Builder dashboard prototype (`main/gui/builder-dashboard.vue`) with Tailwind CSS.
+  Opens via 'B' key input. Can place AI NPCs and scripted NPCs at arbitrary positions.
+- **Prior art**: Stanford Generative Agents, AI Town, Voyager.
+  See `docs/prior-art-analysis.md`.
 
-## Research Documents (for Cursor to review before implementing)
+## Research Documents
 
-- `docs/rpgjs-plugin-analysis.md` — Plugin use/skip/build decisions with code examples
-- `docs/prior-art-analysis.md` — Stanford/AI Town/Voyager patterns and how we adapt them
+- `docs/rpgjs-plugin-analysis.md` — Plugin use/skip/build decisions
+- `docs/prior-art-analysis.md` — Stanford/AI Town/Voyager patterns
 - `docs/rpgjs-guide.md` — RPGJS v4 API cheat sheet
 - `docs/openclaw-patterns.md` — 6 extracted patterns with our adaptations
-- `.ai/idea/05-multi-provider-llm-gateway.md` — Multi-provider LLM gateway feature idea
-- `.ai/idea/05a-multi-provider-implementation-plan.md` — Implementation plan for TASK-010/011
-- `.ai/idea/06-supabase-persistence.md` — Supabase persistence feature idea
-- `.ai/idea/06a-supabase-implementation-plan.md` — Implementation plan for TASK-012/013
+- `docs/supabase-setup-guide.md` — Supabase project setup instructions
+- `.ai/idea/05-multi-provider-llm-gateway.md` — Multi-provider LLM gateway
+- `.ai/idea/06-supabase-persistence.md` — Supabase persistence
+- `.ai/idea/07-session-recorder-workflow-npc-jobs.md` — Session recorder / NPC jobs (Cursor)
+- `.ai/idea/plugins/` — 10 plugin ideas (Cursor): builder-dashboard, quest-log, day-night-cycle, etc.
 
 ## Recent Reviews
 
 | Task | Agent | Verdict | Date | Review File |
 |------|-------|---------|------|-------------|
+| TASK-012+014 | cursor | **APPROVED** | 2026-02-12 | (this review) |
+| TASK-001-009 | cursor | **APPROVED** | 2026-02-12 | `.ai/reviews/001-009-review.md` |
 | TASK-008 | cursor | **APPROVED** | 2026-02-11 | `.ai/reviews/008-review.md` |
-| TASK-006/007/008 | cursor | **REJECTED** | 2026-02-10 | `.ai/reviews/TASK-006-007-008-review.md` |
 
-**TASK-008 Approval:** All 11 acceptance criteria met. AgentRunner, LLMClient, LaneQueue fully implemented. Minor boundary violations in workflow files (task status updates, dependency installation) — acceptable for handoff documentation. Build and typecheck pass. 15 unit tests + live integration test.
-
-**Previous Rejection (2026-02-10):** Severe boundary violations (modified `.ai/**` and `docs/**` files belonging to Claude Code). No implementation code submitted. **RESOLVED** in new submission.
+**TASK-012+014 Approval (2026-02-12):** SupabaseAgentMemory implements IAgentMemory with write-behind buffer, correct error handling, graceful fallback. AgentManager implements IAgentManager with YAML loading, skill wiring, bridge registration via spawnContext pattern. Clever solution for `createDynamicEvent` limitation. Builder dashboard bonus. Minor notes: player.ts still has scripted NPC spawn config alongside AgentManager (acceptable hybrid). TASK-001-009 archived to `.ai/tasks/archive/`.
 
 ## Open Issues
 
-See `.ai/issues/active-issues.md` for full details.
-- **NEW:** Agent boundary clarification needed — Cursor attempted to modify Claude Code's domain files
+See `.ai/issues/active-issues.md` for issues #1-#12.
