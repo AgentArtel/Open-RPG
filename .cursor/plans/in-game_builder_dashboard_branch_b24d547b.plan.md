@@ -136,4 +136,3 @@ sequenceDiagram
 - Client: [default-gui shop](docs/rpgjs-reference/packages/plugins/default-gui/src/shop/main.vue) uses `rpgSocket().emit('gui.interaction', { guiId, name, data })`.
 - Scene pointer: [Map.ts](docs/rpgjs-reference/packages/client/src/Scene/Map.ts) `on('pointerdown', (position) => ...)`; position in pixels; scene has `tileWidth`, `tileHeight`.
 - Spawn: [AgentManager.spawnAgentsOnMap](src/agents/core/AgentManager.ts) and [player.ts](main/player.ts) `map.createDynamicEvent`.
-
