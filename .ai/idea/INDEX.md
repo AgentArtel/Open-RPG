@@ -40,6 +40,7 @@ This folder holds project vision, research, feature ideas, implementation plans,
 |----------|-------------|
 | [05-multi-provider-llm-gateway.md](05-multi-provider-llm-gateway.md) | Provider-agnostic LLM gateway: route by tier (e.g. Copilot idle, Kimi conversation). |
 | [06-supabase-persistence.md](06-supabase-persistence.md) | Supabase as persistence: agent memory, player state, semantic search (pgvector). |
+| [07-session-recorder-workflow-npc-jobs.md](07-session-recorder-workflow-npc-jobs.md) | Record player sessions as logs, label them as workflows, assign workflows to NPCs as repeatable daily jobs. |
 
 ### Implementation plans
 
@@ -47,6 +48,7 @@ This folder holds project vision, research, feature ideas, implementation plans,
 |----------|-------------|
 | [05a-multi-provider-implementation-plan.md](05a-multi-provider-implementation-plan.md) | How to implement the multi-provider LLM gateway (builds on LLMClient). |
 | [06a-supabase-implementation-plan.md](06a-supabase-implementation-plan.md) | How to add Supabase persistence (agent memory + player state). |
+| [07a-session-recorder-implementation-plan.md](07a-session-recorder-implementation-plan.md) | How to build session recorder, workflow labeling, and NPC job replay (phased). |
 
 ### Plugins
 
