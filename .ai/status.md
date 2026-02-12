@@ -4,9 +4,26 @@ Last updated: 2026-02-12
 
 ## Current Phase
 
-**Phase 4: Bridge Layer — COMPLETE.** GameChannelAdapter and Bridge implemented; AgentRunnerTestNPC refactored to use the bridge (register on init, forward onAction to bridge). Idle ticks and conversation with in-game dialogue verified. Next: AgentManager (P1) or Phase 4.2 (e.g. thinking indicator, non-blocking dialogue).
+**Phase 3/5: Persistence + Multi-NPC.** Core agent system and bridge complete.
+Now building: Supabase persistence (agent memory + player state) and AgentManager
+(YAML-driven multi-NPC spawning). Human prerequisite: set up Supabase project
+(see `docs/supabase-setup-guide.md`).
 
-## Current Sprint — Phase 4 Bridge — DONE
+## Active Sprint — Persistence + AgentManager
+
+| ID | Title | Agent | Priority | Status |
+|----|-------|-------|----------|--------|
+| TASK-012 | Supabase Agent Memory Persistence | cursor | P1-High | PENDING |
+| TASK-014 | Build AgentManager + YAML Config Loader | cursor | P1-High | PENDING |
+| TASK-013 | Player State Persistence via Supabase | cursor | P2-Medium | PENDING |
+
+Implementation order: TASK-012 → TASK-014 → TASK-013
+(012 provides `createAgentMemory()` factory that 014 uses; 013 is independent but lower priority)
+
+**Human prerequisite for TASK-012:** Create Supabase project and add env vars.
+See `docs/supabase-setup-guide.md` for step-by-step instructions.
+
+## Previous Sprint — Core Agent System (ALL DONE)
 
 | ID | Title | Agent | Priority | Status |
 |----|-------|-------|----------|--------|
@@ -15,9 +32,7 @@ Last updated: 2026-02-12
 | TASK-007 | Build Skill System (5 MVP skills) | cursor | P0-Critical | DONE |
 | TASK-008 | Build AgentRunner (core LLM loop) | cursor | P0-Critical | DONE |
 
-Phase 4: Bridge + GameChannelAdapter implemented; AgentRunnerTestNPC uses bridge; manual + edge-case tests (bridge); conversation dialogue fix (say fallback) in AgentRunner. Live-tested in game.
-
-## Previous Sprint — Phase 0: Environment Setup (ALL DONE)
+## Phase 0: Environment Setup (ALL DONE)
 
 | ID | Title | Agent | Priority | Status |
 |----|-------|-------|----------|--------|
@@ -31,9 +46,6 @@ Phase 4: Bridge + GameChannelAdapter implemented; AgentRunnerTestNPC uses bridge
 
 | ID | Phase | Title | Agent | Priority |
 |----|-------|-------|-------|----------|
-| TASK-012 | Phase 3 | Supabase Agent Memory Persistence | cursor | P1 |
-| TASK-013 | Phase 5 | Player State Persistence via Supabase | cursor | P2 |
-| — | Phase 3 | Build AgentManager | cursor | P1 |
 | TASK-010 | Phase 3.5 | Multi-Provider LLM Gateway | cursor | P1 |
 | TASK-011 | Phase 3.5 | GitHub Copilot CLI Provider Adapter | cursor | P2 |
 | — | Phase 4 | RPGJS Module Integration (NPC speech bubble GUI) | cursor | P0 |
@@ -45,6 +57,7 @@ Phase 4: Bridge + GameChannelAdapter implemented; AgentRunnerTestNPC uses bridge
 
 | ID | Title | Agent | Date |
 |----|-------|-------|------|
+| — | AgentManager task brief (TASK-014) + sprint planning | claude-code | 2026-02-12 |
 | — | Supabase persistence feature design (idea + plan + TASK-012/013) | claude-code | 2026-02-12 |
 | — | Multi-provider LLM gateway feature design (idea + plan + TASK-010/011) | claude-code | 2026-02-12 |
 | TASK-009 | Build GameChannelAdapter (bridge) + dialogue fix | cursor | 2026-02-11 |
