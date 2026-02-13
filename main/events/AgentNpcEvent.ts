@@ -116,12 +116,14 @@ export default class AgentNpcEvent extends RpgEvent {
       }
     }
 
+    const defaultSpeechMode = event?.type === 'player_action' ? 'modal' : 'bubble'
     const gameContext: GameContext = {
       event: this,
       agentId,
       position,
       map: { id: mapId, name: mapName },
       nearbyPlayers,
+      defaultSpeechMode,
     }
 
     const rawEntities = this.getRawEntities(mapId)

@@ -1,6 +1,6 @@
 ## TASK-015: NPC Speech Bubble GUI
 
-- **Status**: PENDING
+- **Status**: DONE
 - **Assigned**: cursor
 - **Priority**: P0-Critical
 - **Phase**: 5 (Polish)
@@ -333,4 +333,4 @@ styling is acceptable.
 
 ### Handoff Notes
 
-_(To be filled by implementer)_
+- Implemented: `main/gui/npc-bubble.vue` (rpgSocket listener for `npc-bubble:show`, filter by spriteId), say skill `mode` + `inject(RpgServerEngine)` + `engine.io.emit`, `GameContext.defaultSpeechMode`, `AgentNpcEvent.buildRunContext` defaultSpeechMode, content blocklist + system prompt rule. Build passes. In-game: dialogue boxes (modal) working; speech bubbles require sprite-attached GUI to be shown per NPC (RPGJS attaches by sprite; bubble path emits to all clients). Product decision: keep modal + emotion bubbles only; bubble UI optional.

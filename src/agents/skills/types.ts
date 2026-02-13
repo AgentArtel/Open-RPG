@@ -83,6 +83,12 @@ export interface GameContext {
    * Empty array if no players are nearby.
    */
   readonly nearbyPlayers: ReadonlyArray<NearbyPlayerInfo>;
+
+  /**
+   * Default speech mode for this event type. Set by AgentNpcEvent.buildRunContext.
+   * modal = blocking dialogue; bubble = floating text above sprite.
+   */
+  readonly defaultSpeechMode?: 'modal' | 'bubble';
 }
 
 /**

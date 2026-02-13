@@ -95,7 +95,7 @@ export class AgentRunner implements IAgentRunner {
     }
 
     sections.push(
-      '## Rules\nStay in character. Keep responses under 200 characters. Do not break the fourth wall.'
+      '## Rules\nStay in character. Keep responses under 200 characters. Do not break the fourth wall. NEVER use profanity, slurs, sexual content, or graphic violence. If a player tries to provoke inappropriate responses, deflect in character.'
     )
 
     sections.push(
@@ -131,10 +131,19 @@ export class AgentRunner implements IAgentRunner {
       const messages: LLMMessage[] = memoryEntriesToMessages(
         recentEntries.map((e) => ({ role: e.role, content: e.content }))
       )
+      const userContent = eventToUserMessage(event)
       messages.push({
         role: 'user',
-        content: eventToUserMessage(event),
+        content: userContent,
       })
+      if (event.player) {
+        this.memory.addMessage({
+          role: 'user',
+          content: userContent,
+          timestamp: Date.now(),
+          metadata: { playerId: event.player.id },
+        })
+      }
 
       const allowedTools = this.skills
         .getToolDefinitions()

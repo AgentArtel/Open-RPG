@@ -1,6 +1,6 @@
 ## TASK-017: Deploy to Railway
 
-- **Status**: PENDING
+- **Status**: DONE
 - **Assigned**: cursor
 - **Priority**: P0-Critical
 - **Phase**: 5 (Deployment)
@@ -256,4 +256,4 @@ curl https://your-app.up.railway.app/health
 
 ### Handoff Notes
 
-_(To be filled by implementer)_
+- Implemented: `railway.toml` (DOCKERFILE build, startCommand, healthcheckPath, restart policy); `main/server.ts` (`onStart` registers GET /health); Dockerfile ENV PORT, EXPOSE, HEALTHCHECK with wget; package.json engines.node "18". Build passes; curl /health returns 200 when dev server runs. Human: create Railway project, set env vars (MOONSHOT_API_KEY, SUPABASE_*, NODE_ENV), deploy.

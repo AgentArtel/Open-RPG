@@ -176,6 +176,16 @@ const player: RpgPlayerHooks = {
                 console.error('[Builder] Error opening dashboard:', err)
             }
         }
+
+        if (input === 'conversation-log') {
+            try {
+                const conversations = agentManager.getConversationsForPlayer(player.id)
+                const gui = player.gui('conversation-log')
+                gui.open({ conversations }, { blockPlayerInput: false })
+            } catch (err) {
+                console.error('[ConversationLog] Error opening:', err)
+            }
+        }
     },
     async onJoinMap(player: RpgPlayer) {
         // Spawn NPCs on the starting map if they haven't been spawned yet.
