@@ -73,13 +73,18 @@ TASK-017: Railway deployment. Health check endpoint, `railway.toml`, Dockerfile 
 | — | Phase 5 | Builder dashboard polish (Cursor started in gui-design) | cursor | P2 |
 | — | Phase 5 | Session recorder / NPC jobs (Cursor idea doc) | cursor | P2 |
 | — | Phase 6+ | Fragment Quest System (past/future fragments, starter choice) | cursor | P2 |
-| — | Phase 7 | Agent Evaluation Arena (benchmarking, task assignment, paid service) | cursor | P2 |
+| TASK-022 | Phase 7 | Evaluation Schema + Test Definitions | cursor | P2 |
+| TASK-023 | Phase 7 | Examiner NPC + Test Runner | cursor | P2 |
+| TASK-024 | Phase 7 | Agent Performance Profiles + Tracking | cursor | P2 |
+| TASK-025 | Phase 7 | Performance-Driven Task Assignment | cursor | P2 |
+| TASK-026 | Phase 7 | Evaluation Dashboard | lovable | P2 |
 | — | Phase 6 | Architecture documentation | claude-code | P2 |
 
 ## Recently Completed
 
 | ID | Title | Agent | Date |
 |----|-------|-------|------|
+| — | Agent Evaluation Arena impl plan + TASK-022/023/024/025/026 briefs | claude-code | 2026-02-13 |
 | — | Agent Evaluation Arena idea doc (benchmarking + paid service) | claude-code | 2026-02-13 |
 | — | NPC Social + Associative Memory + Fragments vision + TASK-019/020/021 briefs | claude-code | 2026-02-13 |
 | — | API-as-Identity vision doc + TASK-018 brief (Photographer NPC) | claude-code | 2026-02-13 |
@@ -134,6 +139,7 @@ TASK-017: Railway deployment. Health check endpoint, `railway.toml`, Dockerfile 
 - `.ai/idea/09-npc-social-memory-fragments.md` — NPC social feed, associative recall, fragment quests
 - `.ai/idea/09a-social-memory-fragments-implementation-plan.md` — ContentStore + tagging + recall + feed impl plan
 - `.ai/idea/10-agent-evaluation-arena.md` — Agent benchmarking, performance tracking, paid evaluation service
+- `.ai/idea/10a-agent-evaluation-implementation-plan.md` — Evaluation schema, examiner NPC, profiles, task assignment, dashboard
 - `.ai/idea/plugins/` — 10 plugin ideas (Cursor): builder-dashboard, quest-log, day-night-cycle, etc.
 
 ## Recent Reviews

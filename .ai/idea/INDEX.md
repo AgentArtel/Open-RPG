@@ -54,6 +54,7 @@ This folder holds project vision, research, feature ideas, implementation plans,
 | [07a-session-recorder-implementation-plan.md](07a-session-recorder-implementation-plan.md) | How to build session recorder, workflow labeling, and NPC job replay (phased). |
 | [08a-api-powered-skills-implementation-plan.md](08a-api-powered-skills-implementation-plan.md) | How to add DALL-E image generation skill + Photographer NPC (Stage 2 proof). |
 | [09a-social-memory-fragments-implementation-plan.md](09a-social-memory-fragments-implementation-plan.md) | ContentStore + semantic tagging + associative recall + Lovable feed UI + fragment system. |
+| [10a-agent-evaluation-implementation-plan.md](10a-agent-evaluation-implementation-plan.md) | Evaluation schema, examiner NPC, profiles, task assignment, dashboard (TASK-022–026). |
 
 ### Plugins
 
