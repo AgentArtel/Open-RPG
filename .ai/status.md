@@ -1,6 +1,6 @@
 # Sprint Status
 
-Last updated: 2026-02-12
+Last updated: 2026-02-13
 
 ## Current Phase
 
@@ -62,6 +62,7 @@ TASK-017: Railway deployment. Health check endpoint, `railway.toml`, Dockerfile 
 
 | ID | Phase | Title | Agent | Priority |
 |----|-------|-------|-------|----------|
+| TASK-018 | Phase 6 | Photographer NPC + Image Generation Skill (API-as-Identity Stage 2) | cursor | P1 |
 | TASK-010 | Phase 3.5 | Multi-Provider LLM Gateway | cursor | P1 |
 | TASK-011 | Phase 3.5 | GitHub Copilot CLI Provider Adapter | cursor | P2 |
 | — | Phase 5 | End-to-end integration testing | cursor | P0 |
@@ -74,6 +75,7 @@ TASK-017: Railway deployment. Health check endpoint, `railway.toml`, Dockerfile 
 
 | ID | Title | Agent | Date |
 |----|-------|-------|------|
+| — | API-as-Identity vision doc + TASK-018 brief (Photographer NPC) | claude-code | 2026-02-13 |
 | — | Task briefs for TASK-015/016/017 (speech bubble, conv log, Railway) | claude-code | 2026-02-12 |
 | TASK-014 | AgentManager + YAML config + AgentNpcEvent + builder dashboard | cursor | 2026-02-12 |
 | TASK-012 | Supabase Agent Memory Persistence | cursor | 2026-02-12 |
@@ -120,6 +122,8 @@ TASK-017: Railway deployment. Health check endpoint, `railway.toml`, Dockerfile 
 - `.ai/idea/05-multi-provider-llm-gateway.md` — Multi-provider LLM gateway
 - `.ai/idea/06-supabase-persistence.md` — Supabase persistence
 - `.ai/idea/07-session-recorder-workflow-npc-jobs.md` — Session recorder / NPC jobs (Cursor)
+- `.ai/idea/08-api-as-identity-npcs.md` — API-as-Identity NPC vision (token economy, four-stage progression)
+- `.ai/idea/08a-api-powered-skills-implementation-plan.md` — DALL-E skill + Photographer NPC impl plan
 - `.ai/idea/plugins/` — 10 plugin ideas (Cursor): builder-dashboard, quest-log, day-night-cycle, etc.
 
 ## Recent Reviews
