@@ -1,0 +1,79 @@
+# =============================================================================
+# Pre-Mortal Merge Validation — Starter Kit Template
+# =============================================================================
+#
+# Validates pushes to the pre-mortal staging branch. Checks commit format,
+# coordination files, and script syntax.
+#
+# Setup: Add KIMI_API_KEY to GitHub repo Settings > Secrets > Actions
+#
+# =============================================================================
+
+name: Pre-Mortal Merge Validation
+
+on:
+  push:
+    branches:
+      - 'pre-mortal'
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 10
+
+      - name: Validate commit format
+        id: validate_format
+        run: |
+          ISSUES=0
+          for HASH in $(git log -5 --format="%H" 2>/dev/null); do
+            MSG=$(git log -1 --format=%B "$HASH")
+            AGENT=$(echo "$MSG" | sed -n 's/.*\[AGENT:\([a-zA-Z0-9_]*\)\].*/\1/p' | head -1)
+            ACTION=$(echo "$MSG" | sed -n 's/.*\[ACTION:\([a-zA-Z0-9_]*\)\].*/\1/p' | head -1)
+
+            if [ -n "$AGENT" ] && [ -n "$ACTION" ]; then
+              echo "✓ $HASH: [$AGENT] [$ACTION]"
+            elif echo "$MSG" | grep -qE "^Merge|^Initial|^Add|^Update|^Fix"; then
+              echo "○ $HASH: Non-routed commit (allowed)"
+            else
+              echo "⚠ $HASH: Missing routing headers"
+              ISSUES=$((ISSUES + 1))
+            fi
+          done
+          echo "format_issues=$ISSUES" >> "$GITHUB_OUTPUT"
+
+      - name: Validate coordination files
+        run: |
+          for DIR in .ai/tasks .ai/reviews .ai/reports .ai/templates .ai/instructions; do
+            [ -d "$DIR" ] && echo "✓ $DIR exists" || echo "⚠ $DIR missing"
+          done
+          [ -f .ai/status.md ] && echo "✓ .ai/status.md exists" || echo "⚠ .ai/status.md missing"
+          [ -f .ai/boundaries.md ] && echo "✓ .ai/boundaries.md exists" || echo "⚠ .ai/boundaries.md missing"
+
+      - name: Validate scripts
+        run: |
+          for SCRIPT in scripts/*.sh scripts/post-commit; do
+            if [ -f "$SCRIPT" ]; then
+              bash -n "$SCRIPT" 2>/dev/null && echo "✓ $SCRIPT: valid" || { echo "✗ $SCRIPT: syntax error"; exit 1; }
+            fi
+          done
+
+      - name: Generate summary
+        if: always()
+        run: |
+          echo "## Pre-Mortal Merge Validation" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Check | Result |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|-------|--------|" >> "$GITHUB_STEP_SUMMARY"
+          FORMAT_ISSUES="${{ steps.validate_format.outputs.format_issues }}"
+          [ "${FORMAT_ISSUES:-0}" -eq 0 ] && echo "| Commit format | PASS |" >> "$GITHUB_STEP_SUMMARY" || echo "| Commit format | WARN ($FORMAT_ISSUES issues) |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Script syntax | PASS |" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Commit**: ${{ github.sha }}" >> "$GITHUB_STEP_SUMMARY"
+

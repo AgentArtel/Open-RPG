@@ -5,7 +5,8 @@ AI agents live inside an RPGJS game world as NPC characters — they perceive th
 ## Tech Stack
 
 - **Game Framework**: RPGJS v4 (TypeScript, ViteJS build, Express + Socket.IO server, PixiJS client)
-- **AI / LLM**: Anthropic Claude API via `@anthropic-ai/sdk` (Haiku 4.5 for idle behavior, Sonnet 4.5 for conversations)
+- **AI / LLM**: Moonshot Kimi K2/K2.5 via `openai` SDK (OpenAI-compatible API). K2 for idle behavior, K2.5 for conversations. Other providers (Anthropic, Google) may be added later via Vercel AI SDK.
+- **Deployment**: Railway (game server) + Lovable (frontend wrapper with iframe embed)
 - **Agent Architecture**: OpenClaw-inspired patterns (extracted, not imported) — lane queue, perception engine, skill system, memory
 - **Language**: TypeScript 5 (strict mode, experimental decorators for RPGJS)
 - **Maps**: Tiled Map Editor (.tmx/.tsx files)
@@ -58,10 +59,15 @@ src/
 │   └── bridge/                   # GameChannelAdapter — RPGJS ↔ agent wiring
 └── config/                       # Agent personality configs (YAML)
 .ai/                              # Multi-agent coordination
+.agents/                          # Kimi Overseer config, skills, subagent templates
+.github/workflows/                # CI/CD (agent-review, sprint-eval, pre-mortal-merge)
+scripts/                          # Automation (git hooks, Kimi CLI, wire daemon)
 docs/                             # Architecture docs, ADRs, guides
 ├── rpgjs-reference/              # RPGJS v4.3.1 source + docs (local reference)
+├── openclaw-reference/           # OpenClaw v2026.2.9 source (pattern extraction)
 └── rpgjs-guide.md                # Extracted RPGJS cheat sheet
 idea/                             # Project vision and research documents
+past-configurations/              # Snapshots from prior projects (learning corpus)
 rpg.toml                          # RPGJS game configuration
 ```
 
@@ -73,7 +79,7 @@ rpg.toml                          # RPGJS game configuration
 
 ## Agent Team
 
-Two AI agents share this repo. The Human PM is Accountable for all decisions.
+Three AI agents share this repo. The Human PM is Accountable for all decisions.
 
 ### Claude Code — Orchestrator
 
@@ -124,6 +130,23 @@ perception engine, skill system, memory, UI components, map design.
 **Does NOT**: Modify coordination files (AGENTS.md, CLAUDE.md, .ai/),
 change root configs without orchestrator approval, modify idea/ docs.
 
+### Kimi Overseer — CI/Automation Coordinator
+
+**Role**: Automated code review, sprint evaluation, commit routing, multi-agent ops.
+
+**Owns**:
+- `.agents/**` — overseer config, subagent templates, skills, prompts
+- `.github/workflows/**` — GitHub Actions pipelines
+- `scripts/**` — git hooks, automation scripts, wire daemon
+- `past-configurations/**` — prior project snapshots (learning corpus)
+
+**Does**: Reviews commits on agent branches, enforces boundary compliance,
+manages sprint evaluations, routes commits via post-commit hooks,
+maintains automation infrastructure.
+
+**Does NOT**: Write production game code, modify architecture docs (docs/, idea/),
+change root configs, or override orchestrator decisions.
+
 ## Code Conventions
 
 - TypeScript strict mode — avoid `any`, use `unknown` and narrow
@@ -146,8 +169,10 @@ claude/feature-name     # Claude Code orchestration / architecture
 ```
 
 - Branch from `main`, conventional commits
+- Commit messages use routing headers: `[AGENT:x] [ACTION:y] [TASK:z] Description`
 - PRs require build pass + orchestrator review before merge
 - Run `rpgjs build` and `npx tsc --noEmit` before committing
+- Kimi Overseer auto-reviews `[ACTION:submit]` commits via GitHub Actions
 
 ## Task Coordination
 
@@ -162,10 +187,11 @@ These are documented in the idea/ folder and are the source of truth:
 
 - **Agent thinking model**: Hybrid — event-driven for interactions + 15s idle tick for ambient behavior
 - **Perception format**: Structured hybrid (JSON state + brief narrative summary, ~150 tokens)
-- **Command execution**: Function calling / tool use (structured commands via Anthropic API)
+- **Command execution**: Function calling / tool use (structured commands via OpenAI-compatible API)
 - **Agent hosting**: Agent pool within RPGJS server process, one AgentManager for all agents
 - **Memory**: In-memory conversation buffer + JSON file persistence per agent (MVP)
-- **LLM strategy**: Haiku 4.5 for idle behavior, Sonnet 4.5 for conversations. Prompt caching mandatory.
+- **LLM strategy**: Kimi K2 for idle behavior, Kimi K2.5 for conversations. Automatic context caching (75% savings on repeated context).
+- **Deployment**: Railway for RPGJS server, Lovable-built frontend embeds game via iframe
 - **RPGJS event hooks**: `onAction` for conversation, `attachShape()` + `onDetectInShape` for proximity, `setInterval` for idle ticks. Never use `onStep` or `onChanges` for agent logic.
 
 ## Do

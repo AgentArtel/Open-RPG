@@ -7,5 +7,209 @@
     "session_age_hours": 12,
     "file_operations": 19,
     "status": "CRITICAL"
+  },
+  {
+    "timestamp": "2026-02-11T00:49:20Z",
+    "session": "test-session",
+    "token_count": 15762,
+    "file_size_bytes": 19720,
+    "session_age_hours": 12,
+    "file_operations": 22,
+    "status": "CRITICAL"
+  },
+  {
+    "timestamp": "2026-02-11T00:50:29Z",
+    "session": "test-session",
+    "token_count": 15762,
+    "file_size_bytes": 19720,
+    "session_age_hours": 12,
+    "file_operations": 24,
+    "status": "CRITICAL"
+  },
+  {
+    "timestamp": "2026-02-11T00:50:29Z",
+    "session": "test-session",
+    "token_count": 15762,
+    "file_size_bytes": 19720,
+    "session_age_hours": 12,
+    "file_operations": 24,
+    "status": "CRITICAL"
+  },
+  {
+    "timestamp": "2026-02-11T00:51:14Z",
+    "session": "test-session",
+    "token_count": 15762,
+    "file_size_bytes": 19720,
+    "session_age_hours": 12,
+    "file_operations": 24,
+    "status": "CRITICAL"
+  },
+  {
+    "timestamp": "2026-02-11T00:51:15Z",
+    "session": "test-session",
+    "token_count": 15762,
+    "file_size_bytes": 19720,
+    "session_age_hours": 12,
+    "file_operations": 24,
+    "status": "CRITICAL"
+  },
+  {
+    "timestamp": "2026-02-11T00:51:34Z",
+    "session": "test-session",
+    "event": "auto-compact",
+    "status": "CRITICAL"
+  },
+  {
+    "timestamp": "2026-02-11T00:54:41Z",
+    "session": "unknown",
+    "token_count": 17330,
+    "file_size_bytes": 27029,
+    "session_age_hours": 0,
+    "file_operations": 0,
+    "status": "HEALTHY"
+  },
+  {
+    "timestamp": "2026-02-11T00:57:22Z",
+    "session": "unknown",
+    "token_count": 23593,
+    "file_size_bytes": 48014,
+    "session_age_hours": 0,
+    "file_operations": 0,
+    "status": "HEALTHY"
+  },
+  {
+    "timestamp": "2026-02-11T01:34:45Z",
+    "session": "unknown",
+    "token_count": 19031,
+    "file_size_bytes": 32125,
+    "session_age_hours": 0,
+    "file_operations": 0,
+    "status": "HEALTHY"
+  },
+  {
+    "timestamp": "2026-02-11T01:35:03Z",
+    "session": "unknown",
+    "token_count": 19031,
+    "file_size_bytes": 32125,
+    "session_age_hours": 0,
+    "file_operations": 0,
+    "status": "HEALTHY"
+  },
+  {
+    "timestamp": "2026-02-11T01:37:32Z",
+    "session": "unknown",
+    "token_count": 19943,
+    "file_size_bytes": 35756,
+    "session_age_hours": 0,
+    "file_operations": 0,
+    "status": "HEALTHY"
+  },
+  {
+    "timestamp": "2026-02-11T01:37:52Z",
+    "session": "unknown",
+    "token_count": 19943,
+    "file_size_bytes": 35756,
+    "session_age_hours": 0,
+    "file_operations": 0,
+    "status": "HEALTHY"
+  },
+  {
+    "timestamp": "2026-02-11T02:15:44Z",
+    "session": "unknown",
+    "token_count": 21098,
+    "file_size_bytes": 40508,
+    "session_age_hours": 0,
+    "file_operations": 0,
+    "status": "HEALTHY"
+  },
+  {
+    "timestamp": "2026-02-11T02:18:18Z",
+    "session": "unknown",
+    "token_count": 21587,
+    "file_size_bytes": 42668,
+    "session_age_hours": 0,
+    "file_operations": 0,
+    "status": "HEALTHY"
+  },
+  {
+    "timestamp": "2026-02-11T02:18:33Z",
+    "session": "unknown",
+    "token_count": 21587,
+    "file_size_bytes": 42668,
+    "session_age_hours": 0,
+    "file_operations": 0,
+    "status": "HEALTHY"
+  },
+  {
+    "timestamp": "2026-02-11T02:18:47Z",
+    "session": "unknown",
+    "token_count": 21587,
+    "file_size_bytes": 42668,
+    "session_age_hours": 0,
+    "file_operations": 0,
+    "status": "HEALTHY"
+  },
+  {
+    "timestamp": "2026-02-11T02:54:53Z",
+    "session": "unknown",
+    "token_count": 26287,
+    "file_size_bytes": 61432,
+    "session_age_hours": 0,
+    "file_operations": 0,
+    "status": "WARNING"
+  },
+  {
+    "timestamp": "2026-02-11T03:37:10Z",
+    "session": "unknown",
+    "token_count": 29268,
+    "file_size_bytes": 69597,
+    "session_age_hours": 0,
+    "file_operations": 0,
+    "status": "WARNING"
+  },
+  {
+    "timestamp": "2026-02-11T05:15:14Z",
+    "session": "unknown",
+    "token_count": 29894,
+    "file_size_bytes": 71863,
+    "session_age_hours": 0,
+    "file_operations": 0,
+    "status": "WARNING"
+  },
+  {
+    "timestamp": "2026-02-11T10:18:15Z",
+    "session": "unknown",
+    "token_count": 32964,
+    "file_size_bytes": 84579,
+    "session_age_hours": 0,
+    "file_operations": 0,
+    "status": "WARNING"
+  },
+  {
+    "timestamp": "2026-02-11T23:54:21Z",
+    "session": "unknown",
+    "token_count": 39396,
+    "file_size_bytes": 106183,
+    "session_age_hours": 0,
+    "file_operations": 0,
+    "status": "CRITICAL"
+  },
+  {
+    "timestamp": "2026-02-12T00:22:41Z",
+    "session": "unknown",
+    "token_count": 47214,
+    "file_size_bytes": 143255,
+    "session_age_hours": 0,
+    "file_operations": 0,
+    "status": "CRITICAL"
+  },
+  {
+    "timestamp": "2026-02-12T00:26:33Z",
+    "session": "unknown",
+    "token_count": 30701,
+    "file_size_bytes": 75225,
+    "session_age_hours": 0,
+    "file_operations": 0,
+    "status": "WARNING"
   }
 ]

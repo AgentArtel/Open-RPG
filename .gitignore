@@ -1,48 +1,5 @@
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-
-# Node.js
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# Build outputs
-dist/
-build/
-*.tsbuildinfo
-
-# Environment variables
+node_modules
 .env
-.env.local
-.env.*.local
-
-# IDE
+dist/
+.DS_Store
 .vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# Logs
-logs/
-*.log
-
-# Temporary files
-tmp/
-temp/
-*.tmp
-
-# OS files
-Thumbs.db
-Desktop.ini
-
-# RPGJS build cache
-.rpgjs/
-
-# Secrets
-*.pem
-credentials.json

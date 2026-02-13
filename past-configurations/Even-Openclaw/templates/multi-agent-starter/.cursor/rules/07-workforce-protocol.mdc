@@ -1,0 +1,58 @@
+---
+description: USE WHEN the user mentions manager chat, task chat, workforce, delegation, or task briefs
+globs:
+alwaysApply: false
+---
+
+# Cursor Workforce Protocol
+
+This project uses a **Manager + Task Chat** workflow pattern.
+See `.ai/CURSOR_WORKFORCE.md` for the full guide.
+
+## Chat Roles
+
+**Manager Chat** (Chat mode — no code writing):
+- Plans implementation approaches for features
+- Produces scoped task briefs for Task Chats
+- Reviews completion reports from Task Chats
+- Tracks session progress
+- Never writes code directly
+
+**Task Chat** (Agent/Composer mode — writes code):
+- Receives a single task brief
+- Reads the specified files, implements the changes
+- Produces a completion report when done
+- Stays within Cursor's file boundaries (see AGENTS.md)
+
+## Task Brief Format (Manager → Task Chat)
+
+```
+TASK: [Short title]
+FILES IN SCOPE: [Files to read and modify]
+OBJECTIVE: [What "done" looks like]
+APPROACH: [Step-by-step plan]
+CONSTRAINTS:
+- [Boundary rules]
+ACCEPTANCE CRITERIA:
+- [ ] [Testable criterion]
+```
+
+## Completion Report Format (Task Chat → Manager)
+
+```
+COMPLETED: [Task title]
+STATUS: Done | Partial | Blocked
+FILES CHANGED:
+- [file]: [what changed]
+DECISIONS: [Judgment calls made]
+ISSUES: [Problems encountered]
+TESTS: [How to verify]
+```
+
+## Boundaries Reminder
+
+You (Cursor) own implementation files. Before modifying any file, check
+that it's in Cursor's domain per AGENTS.md. If you need changes to:
+- `src/components/ui/**` → Flag for Lovable
+- `App.tsx` routing, configs, migrations → Flag for Claude Code
+- Auto-generated files → Do not touch

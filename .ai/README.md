@@ -16,7 +16,8 @@ This directory contains all multi-agent coordination files, task tracking, and a
 │   ├── resolved/          # Archive of resolved issues
 │   └── templates/         # Issue templates
 │
-├── tasks/                 # Task briefs (TASK-001.md, TASK-002.md, etc.)
+├── tasks/                 # Active task briefs (TASK-010.md, TASK-011.md, etc.)
+│   └── archive/           # Completed tasks (TASK-001 through TASK-009)
 ├── chats/                 # Agent-to-agent chat logs
 ├── instructions/          # Task instructions and handoffs
 ├── reports/               # Status reports, analysis, comparisons
@@ -37,7 +38,7 @@ This directory contains all multi-agent coordination files, task tracking, and a
 
 - **`status.md`** — Current sprint status, task assignments, phase tracking
 - **`boundaries.md`** — File ownership mapping (prevents conflicts)
-- **`tasks/TASK-XXX.md`** — Individual task briefs with specs and acceptance criteria
+- **`tasks/TASK-XXX.md`** — Active task briefs. Completed tasks are in `tasks/archive/`.
 - **`issues/active-issues.md`** — Tracked issues, bugs, improvements
 
 ## Workflow

@@ -324,6 +324,35 @@ When implementing AI NPC events that connect to the agent system:
 5. Agent skills call back into RPGJS APIs (move, showText, etc.)
 6. **Agent errors must never crash the game server** — always wrap in try/catch
 
+## In-game builder feature
+
+The in-game builder dashboard uses the same RPGJS features as the rest of the game. Use this approach so builder work stays consistent and reusable.
+
+### Visibility: only me vs everyone
+
+- **Everyone**: `map.createDynamicEvent({ x, y, event: EventClass })` — **EventMode.Shared** (one instance, all players see it).
+- **Only me (creator/admin)**: `player.createDynamicEvent({ x, y, event: EventClass })` — **EventMode.Scenario** (per-player instance; only that player sees it).
+
+Dashboard sends `visibility: 'everyone' | 'only-me'`; server chooses map vs player accordingly.
+
+### State and persistence
+
+- **Player variables**: `player.setVariable(key, value)` / `player.getVariable(key)` for builder flags or metadata; included in `player.save()`.
+- **Save/load**: `player.save()` returns JSON; persist it (e.g. backend or file). On join, `player.load(json)` restores state. Builder placements can be stored the same way (e.g. keyed by map id or player) and re-applied on map load via `createDynamicEvent`.
+
+### RPGJS guides to use
+
+| Need | Guide |
+|------|--------|
+| Shared vs Scenario, variables | `docs/rpgjs-reference/docs/guide/create-event.md` |
+| Dynamic shapes (optional) | `docs/rpgjs-reference/docs/guide/create-shape.md` |
+| save/load, props, sync | `docs/rpgjs-reference/docs/guide/synchronization.md`, `save.md` |
+| Key to open builder | `docs/rpgjs-reference/docs/guide/inputs.md` |
+| GUI open / handle actions | `docs/rpgjs-reference/docs/commands/gui.md`, `classes/player.md` |
+| List/remove events | Map API: `map.events`, `map.removeEvent(eventId)` |
+
+See also: `.cursor/plans/in-game_builder_dashboard_branch_b24d547b.plan.md` for the full implementation plan and references.
+
 ## Verifying Your Work
 
 Before considering a task complete:

@@ -1,0 +1,42 @@
+/*
+    OpenClaw × RPGJS — Global GUI Theme
+    
+    These SCSS variables are injected by the RPGJS compiler into every Vue
+    component build. They style the <rpg-window> wrapper and default-gui
+    elements (dialog, shop, menu, notifications, cursors).
+
+    The compiler resolves this file automatically because it lives at the
+    project root as `theme.scss`.
+*/
+
+// -- Window frame --
+// Dark glassmorphism: translucent dark slate with a subtle blue tint
+$window-background: linear-gradient(
+  160deg,
+  rgba(15, 23, 42, 0.88) 0%,       // slate-900
+  rgba(30, 41, 59, 0.82) 50%,       // slate-800
+  rgba(15, 23, 42, 0.90) 100%       // slate-900
+);
+$window-border: 1.5px solid rgba(148, 163, 184, 0.25);  // subtle slate-400 border
+$window-border-radius: 8px;
+
+// -- Window typography --
+$window-font-size: 15px;
+$window-font-color: #e2e8f0;        // slate-200
+$window-font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+
+// -- Window arrow --
+$window-arrow-color: rgba(148, 163, 184, 0.6);
+
+// -- Cursor (for rpg-choice lists) --
+$cursor-background: rgba(56, 189, 248, 0.2);   // sky-400/20
+$cursor-border: 1px solid rgba(56, 189, 248, 0.4);
+
+// -- Extra window styling via mixin --
+@mixin window-content {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}

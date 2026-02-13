@@ -1,0 +1,466 @@
+#!/usr/bin/env bash
+# =============================================================================
+# Open Artel — Git Post-Commit Hook
+# =============================================================================
+#
+# Automatically routes agent commits to Kimi Code CLI for review, merge,
+# or report actions based on commit message routing headers.
+#
+# Format expected:
+#   [AGENT:agent] [ACTION:action] [TASK:task-id] Short description
+#
+# Actions handled:
+#   submit   — Triggers automated review via Kimi Print Mode + chat log
+#   approve  — Triggers merge to pre-mortal via Kimi Print Mode + chat log
+#   report   — Triggers report update via Kimi Print Mode
+#   reject   — Logs chat entry (review feedback already in .ai/reviews/)
+#   delegate — Logs chat entry (task assignment)
+#
+# Actions logged only (no automation):
+#   update, merge
+#
+# Install: ./scripts/install-git-hooks.sh
+# Disable: mv .git/hooks/post-commit .git/hooks/post-commit.disabled
+# =============================================================================
+
+set -o pipefail
+
+# ---------------------------------------------------------------------------
+# Load environment variables
+# ---------------------------------------------------------------------------
+
+# Load .env.project first (project-specific, highest priority)
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || echo ".")"
+if [ -f "$REPO_ROOT/.env.project" ]; then
+    set -a
+    source "$REPO_ROOT/.env.project"
+    set +a
+fi
+
+# Load .env file (global fallback)
+if [ -f "$REPO_ROOT/.env" ]; then
+    set -a
+    source "$REPO_ROOT/.env"
+    set +a
+fi
+
+# ---------------------------------------------------------------------------
+# Configuration
+# ---------------------------------------------------------------------------
+
+# Log file for hook output and errors
+HOOK_LOG="$(git rev-parse --git-dir)/hooks/post-commit.log"
+
+# Set to "true" to run Kimi commands in the background (non-blocking commits)
+ASYNC_MODE="true"
+
+# Set to "true" to skip all Kimi calls (dry-run mode for testing)
+DRY_RUN="${OPEN_ARTEL_DRY_RUN:-false}"
+
+# Agent file for Kimi overseer (used for --agent-file if present)
+AGENT_FILE=".agents/kimi-overseer.yaml"
+
+# ---------------------------------------------------------------------------
+# Logging helper
+# ---------------------------------------------------------------------------
+
+log() {
+    local timestamp
+    timestamp="$(date '+%Y-%m-%d %H:%M:%S')"
+    echo "[$timestamp] $*" >> "$HOOK_LOG" 2>/dev/null
+}
+
+# ---------------------------------------------------------------------------
+# Parse commit message for routing headers
+# ---------------------------------------------------------------------------
+
+# Get the latest commit message
+COMMIT_MSG="$(git log -1 --pretty=%B 2>/dev/null)"
+
+if [ -z "$COMMIT_MSG" ]; then
+    exit 0
+fi
+
+# Extract routing headers using POSIX-compatible sed
+# Matches [AGENT:word], [ACTION:word], [TASK:word-with-dashes]
+AGENT="$(echo "$COMMIT_MSG" | sed -n 's/.*\[AGENT:\([a-zA-Z0-9_]*\)\].*/\1/p' | head -1)"
+ACTION="$(echo "$COMMIT_MSG" | sed -n 's/.*\[ACTION:\([a-zA-Z0-9_]*\)\].*/\1/p' | head -1)"
+TASK="$(echo "$COMMIT_MSG" | sed -n 's/.*\[TASK:\([a-zA-Z0-9_-]*\)\].*/\1/p' | head -1)"
+
+# Skip commits without routing headers
+if [ -z "$AGENT" ] || [ -z "$ACTION" ]; then
+    exit 0
+fi
+
+log "Detected: AGENT=$AGENT ACTION=$ACTION TASK=$TASK"
+
+# ---------------------------------------------------------------------------
+# Check prerequisites
+# ---------------------------------------------------------------------------
+
+# Check if kimi command is available
+if ! command -v kimi &>/dev/null; then
+    log "WARNING: kimi command not found. Skipping automation."
+    log "Install with: pipx install kimi-cli"
+    exit 0
+fi
+
+# ---------------------------------------------------------------------------
+# Kimi Print Mode helper
+# ---------------------------------------------------------------------------
+
+# run_kimi <prompt>
+# Runs a Kimi Print Mode command, optionally in the background.
+# All output is logged. Errors are caught but never block the commit.
+run_kimi() {
+    local prompt="$1"
+    local description="$2"
+
+    log "Running: $description"
+
+    # Resolve agent file path relative to repo root
+    local agent_arg=""
+    local repo_root
+    repo_root="$(git rev-parse --show-toplevel 2>/dev/null)"
+    if [ -n "$repo_root" ] && [ -f "$repo_root/$AGENT_FILE" ]; then
+        agent_arg="--agent-file $repo_root/$AGENT_FILE"
+    fi
+
+    if [ "$DRY_RUN" = "true" ]; then
+        log "DRY RUN — would execute: kimi $agent_arg --print -p \"$prompt\""
+        return 0
+    fi
+
+    # Build the kimi command with environment variables
+    # Export KIMI_API_KEY if it's set (from .env file)
+    local env_vars=""
+    if [ -n "${KIMI_API_KEY:-}" ]; then
+        env_vars="KIMI_API_KEY=\"$KIMI_API_KEY\" "
+    fi
+    
+    local cmd="${env_vars}kimi ${agent_arg} --print -p"
+
+    if [ "$ASYNC_MODE" = "true" ]; then
+        # Run in background so the commit returns immediately
+        (eval "$cmd \"$prompt\"" >> "$HOOK_LOG" 2>&1 || log "ERROR: $description failed (exit $?)") &
+        log "Started in background (PID $!)"
+    else
+        # Run synchronously (blocks until complete)
+        eval "$cmd \"$prompt\"" >> "$HOOK_LOG" 2>&1 || log "ERROR: $description failed (exit $?)"
+    fi
+}
+
+# ---------------------------------------------------------------------------
+# Chat log helper
+# ---------------------------------------------------------------------------
+
+# append_chat_entry <sender> <receiver> <topic> <message> [references]
+# Appends a timestamped entry to .ai/chats/<sender>-<receiver>-<task>.md
+# Creates the file with a header if it doesn't exist yet.
+# This provides an automatic audit trail of inter-agent communication.
+append_chat_entry() {
+    local sender="$1"
+    local receiver="$2"
+    local topic="$3"
+    local message="$4"
+    local references="${5:-}"
+
+    local repo_root
+    repo_root="$(git rev-parse --show-toplevel 2>/dev/null || echo ".")"
+    local chat_dir="$repo_root/.ai/chats"
+    local chat_file="$chat_dir/${sender}-${receiver}-${TASK}.md"
+    local timestamp
+    timestamp="$(date '+%Y-%m-%d %H:%M')"
+
+    mkdir -p "$chat_dir"
+
+    # Create file with header if it doesn't exist yet
+    if [ ! -f "$chat_file" ]; then
+        cat > "$chat_file" <<CHATEOF
+# Chat: ${sender} <-> ${receiver} — ${TASK}
+
+---
+CHATEOF
+    fi
+
+    # Append the new entry
+    cat >> "$chat_file" <<CHATEOF
+
+## ${timestamp} — ${sender} -> ${receiver}
+
+**Topic**: ${topic}
+
+${message}
+
+**References**:
+- ${references:-No additional references}
+
+---
+CHATEOF
+
+    log "Chat entry appended: $chat_file"
+}
+
+# ---------------------------------------------------------------------------
+# Route based on ACTION
+# ---------------------------------------------------------------------------
+
+case "$ACTION" in
+
+    # -----------------------------------------------------------------------
+    # SUBMIT — Agent completed work, trigger automated review
+    # -----------------------------------------------------------------------
+    submit)
+        log "ACTION: submit — triggering review for $TASK from $AGENT"
+
+        REVIEW_PROMPT="You are reviewing a code submission for task $TASK from agent $AGENT.
+
+Your review process:
+1. Read the task brief from .ai/tasks/$TASK.md to understand the acceptance criteria.
+2. Run: git diff HEAD~1 -- to see what changed in this commit.
+3. Check each acceptance criterion — mark as MET or UNMET.
+4. Check file boundary compliance against .ai/boundaries.md — verify all modified files are within $AGENT's domain.
+5. Check the commit message format follows [AGENT:x] [ACTION:y] [TASK:z] convention.
+
+Write your review to .ai/reviews/$TASK-review.md using the structure from .ai/templates/review.md.
+Set the verdict to APPROVED, CHANGES_REQUESTED, or REJECTED with specific findings.
+
+If the task file .ai/tasks/$TASK.md does not exist, write a note to the review file explaining the task brief was not found."
+
+        run_kimi "$REVIEW_PROMPT" "Review $TASK submission from $AGENT"
+
+        # Log chat entry: agent submitted work for review
+        append_chat_entry "$AGENT" "kimi" "Work submitted for review" \
+            "Agent $AGENT has submitted work for $TASK. Commit: $(git rev-parse --short HEAD 2>/dev/null || echo 'unknown')." \
+            ".ai/tasks/$TASK.md"
+
+        # Context monitoring: check health after submit (non-blocking)
+        CONTEXT_MONITOR="$(git rev-parse --show-toplevel)/scripts/kimi-context-monitor.sh"
+        if [ -x "$CONTEXT_MONITOR" ]; then
+            ("$CONTEXT_MONITOR" check >> "$HOOK_LOG" 2>&1 || true) &
+            log "Context health check started in background (PID $!)"
+        fi
+        ;;
+
+    # -----------------------------------------------------------------------
+    # APPROVE — Reviewer approved work, trigger merge to pre-mortal
+    # -----------------------------------------------------------------------
+    approve)
+        log "ACTION: approve — triggering merge for $TASK ($AGENT branch)"
+
+        MERGE_PROMPT="The reviewer has approved task $TASK. Perform the following steps:
+
+1. Check if branch $AGENT/$TASK exists. If not, check for branches matching $AGENT/$TASK-* pattern.
+2. Switch to the pre-mortal branch: git checkout pre-mortal
+3. Merge the agent branch with: git merge $AGENT/$TASK --no-ff -m '[AGENT:kimi] [ACTION:merge] [TASK:$TASK] Approved and merged to pre-mortal'
+4. If there are merge conflicts, do NOT force-resolve. Instead, write a report to .ai/reports/$TASK-merge-conflict.md and abort the merge.
+5. If merge succeeds, update .ai/status.md to mark $TASK as DONE.
+6. Check .ai/tasks/ for any tasks that depend on $TASK (look for 'Depends on: $TASK'). If found, note them as now unblocked.
+7. Switch back to the original branch.
+
+If any step fails, log the error but do not leave the repository in a broken state."
+
+        run_kimi "$MERGE_PROMPT" "Merge $TASK to pre-mortal"
+
+        # Log chat entry: reviewer approved work
+        append_chat_entry "$AGENT" "submitter" "Work approved" \
+            "Reviewer $AGENT approved $TASK. Merging to pre-mortal." \
+            ".ai/reviews/$TASK-review.md"
+        ;;
+
+    # -----------------------------------------------------------------------
+    # REPORT — Agent generated a report, update sprint reports
+    # -----------------------------------------------------------------------
+    report)
+        log "ACTION: report — updating reports for $TASK"
+
+        REPORT_PROMPT="An agent ($AGENT) has submitted a report commit for $TASK.
+
+1. Read the full commit message: git log -1 --pretty=%B
+2. Extract the key information: what was done, decisions made, issues encountered.
+3. Append a structured summary to .ai/reports/sprint-current.md with:
+   - Date and time
+   - Agent name
+   - Task ID
+   - Summary of the report content
+4. If .ai/reports/sprint-current.md does not exist, create it with a header."
+
+        run_kimi "$REPORT_PROMPT" "Update reports for $TASK from $AGENT"
+        ;;
+
+    # -----------------------------------------------------------------------
+    # REJECT — Reviewer rejected work, log feedback (no automation needed
+    # beyond what the reviewer already wrote)
+    # -----------------------------------------------------------------------
+    reject)
+        log "ACTION: reject — $AGENT rejected $TASK (feedback should be in .ai/reviews/)"
+
+        # Log chat entry: reviewer rejected work
+        append_chat_entry "$AGENT" "submitter" "Submission rejected" \
+            "Reviewer $AGENT rejected $TASK. See review for required changes." \
+            ".ai/reviews/$TASK-review.md"
+        ;;
+
+    # -----------------------------------------------------------------------
+    # EVALUATE — Trigger sprint evaluation report
+    # -----------------------------------------------------------------------
+    evaluate)
+        log "ACTION: evaluate — generating sprint evaluation report"
+
+        EVAL_SCRIPT="$(git rev-parse --show-toplevel)/scripts/generate-evaluation.sh"
+
+        if [ -f "$EVAL_SCRIPT" ]; then
+            if [ "$DRY_RUN" = "true" ]; then
+                log "DRY RUN — would execute: $EVAL_SCRIPT --baseline"
+            elif [ "$ASYNC_MODE" = "true" ]; then
+                ("$EVAL_SCRIPT" --baseline >> "$HOOK_LOG" 2>&1 || log "ERROR: Evaluation failed (exit $?)") &
+                log "Started evaluation in background (PID $!)"
+            else
+                "$EVAL_SCRIPT" --baseline >> "$HOOK_LOG" 2>&1 || log "ERROR: Evaluation failed (exit $?)"
+            fi
+        else
+            log "WARNING: Evaluation script not found at $EVAL_SCRIPT"
+        fi
+        ;;
+
+    # -----------------------------------------------------------------------
+    # DELEGATE — Task assigned to another agent, log chat entry
+    # -----------------------------------------------------------------------
+    delegate)
+        log "ACTION: delegate — $AGENT delegated $TASK"
+
+        # Log chat entry: task delegated to target agent
+        append_chat_entry "$AGENT" "target" "Task delegated" \
+            "Agent $AGENT delegated $TASK. Check .ai/instructions/ for assignment details." \
+            ".ai/instructions/"
+        ;;
+
+    # -----------------------------------------------------------------------
+    # UPDATE, MERGE — No automation triggered
+    # -----------------------------------------------------------------------
+    update|merge)
+        log "ACTION: $ACTION — no automation triggered (informational only)"
+        ;;
+
+    # -----------------------------------------------------------------------
+    # Unknown action
+    # -----------------------------------------------------------------------
+    *)
+        log "WARNING: Unknown ACTION '$ACTION' in commit. Skipping."
+        ;;
+esac
+
+# ---------------------------------------------------------------------------
+# Session management integration
+# ---------------------------------------------------------------------------
+# Auto-create a Kimi session when a new sprint starts (delegate action on
+# a SPRINT task). Auto-archive the session when the sprint completes.
+
+SESSION_MANAGER="$(git rev-parse --show-toplevel)/scripts/kimi-session-manager.sh"
+
+check_sprint_start() {
+    [ -f "$SESSION_MANAGER" ] || return 0
+
+    # Only trigger on delegate actions that look like sprint starts
+    # e.g. [AGENT:kimi] [ACTION:delegate] [TASK:SPRINT-3] ...
+    if echo "$TASK" | grep -qiE "^SPRINT"; then
+        local sprint_id
+        sprint_id=$(echo "$TASK" | sed 's/SPRINT-//i')
+        local session_name="sprint-${sprint_id}"
+
+        log "Sprint start detected: $TASK — creating session '$session_name'"
+
+        if [ "$DRY_RUN" = "true" ]; then
+            log "DRY RUN — would execute: $SESSION_MANAGER create $session_name --sprint $sprint_id"
+        else
+            "$SESSION_MANAGER" create "$session_name" --sprint "$sprint_id" >> "$HOOK_LOG" 2>&1 || \
+                log "WARNING: Failed to create session '$session_name'"
+        fi
+    fi
+}
+
+# ---------------------------------------------------------------------------
+# Sprint completion detection
+# ---------------------------------------------------------------------------
+# After any action, check if all tasks in .ai/status.md are DONE.
+# If so, automatically trigger evaluation and archive the session.
+
+check_sprint_completion() {
+    local status_file="$(git rev-parse --show-toplevel)/.ai/status.md"
+    local eval_script="$(git rev-parse --show-toplevel)/scripts/generate-evaluation.sh"
+
+    [ -f "$status_file" ] || return 0
+    [ -f "$eval_script" ] || return 0
+
+    # Count active tasks (non-DONE) in the Active Sprint table
+    local active_tasks
+    active_tasks=$(grep -cE '\|\s*(TASK-|—)\s*\|.*\|\s*(IN_PROGRESS|PENDING|BLOCKED)' "$status_file" 2>/dev/null || echo "0")
+
+    # Count DONE tasks
+    local done_tasks
+    done_tasks=$(grep -cE '\|\s*(TASK-|—)\s*\|.*\|\s*DONE' "$status_file" 2>/dev/null || echo "0")
+
+    # If there are DONE tasks and no active tasks, sprint is complete
+    if [ "$done_tasks" -gt 0 ] && [ "$active_tasks" -eq 0 ]; then
+        log "Sprint completion detected: $done_tasks tasks DONE, 0 active"
+
+        # Archive the current session if session manager is available
+        if [ -f "$SESSION_MANAGER" ]; then
+            # Find the current active session name
+            local current_session=""
+            for sf in "$(git rev-parse --show-toplevel)/.ai/sessions/active"/*.json; do
+                [ -f "$sf" ] || continue
+                current_session="$(basename "$sf" .json)"
+                break
+            done
+
+            if [ -n "$current_session" ]; then
+                log "Archiving session '$current_session' on sprint completion..."
+                if [ "$DRY_RUN" = "true" ]; then
+                    log "DRY RUN — would execute: $SESSION_MANAGER archive $current_session"
+                else
+                    "$SESSION_MANAGER" archive "$current_session" >> "$HOOK_LOG" 2>&1 || \
+                        log "WARNING: Failed to archive session '$current_session'"
+                fi
+            fi
+        fi
+
+        # Only auto-evaluate if this isn't already an evaluate action
+        if [ "$ACTION" != "evaluate" ]; then
+            log "Auto-triggering sprint evaluation..."
+            if [ "$DRY_RUN" = "true" ]; then
+                log "DRY RUN — would execute: $eval_script --baseline"
+            elif [ "$ASYNC_MODE" = "true" ]; then
+                ("$eval_script" --baseline >> "$HOOK_LOG" 2>&1 || log "ERROR: Auto-evaluation failed") &
+                log "Started auto-evaluation in background (PID $!)"
+            else
+                "$eval_script" --baseline >> "$HOOK_LOG" 2>&1 || log "ERROR: Auto-evaluation failed"
+            fi
+        fi
+    fi
+}
+
+# Run sprint start check (only for delegate actions)
+case "$ACTION" in
+    delegate)
+        check_sprint_start
+        ;;
+esac
+
+# Run sprint completion check (only for merge/approve actions)
+case "$ACTION" in
+    approve|merge)
+        check_sprint_completion
+
+        # Context monitoring: auto-compact after approve/merge (non-blocking)
+        CONTEXT_MONITOR="$(git rev-parse --show-toplevel)/scripts/kimi-context-monitor.sh"
+        if [ -x "$CONTEXT_MONITOR" ]; then
+            ("$CONTEXT_MONITOR" auto-compact >> "$HOOK_LOG" 2>&1 || true) &
+            log "Context auto-compact check started in background (PID $!)"
+        fi
+        ;;
+esac
+
+# Always exit 0 — never block a commit
+exit 0
+
