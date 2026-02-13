@@ -4,10 +4,9 @@ Last updated: 2026-02-13
 
 ## Current Phase
 
-**Phase 5: Polish + Deployment prep.** Core agent system, bridge, Supabase persistence,
-and AgentManager all complete. YAML-driven NPCs spawn automatically. Builder dashboard
-prototype added. Next priorities: player state persistence, deployment to Railway, or
-NPC speech bubble GUI.
+**Phase 5: Polish + Deployment prep COMPLETE.** Sprint 4 finished: speech bubbles (TASK-015),
+conversation log (TASK-016), Railway deployment config (TASK-017). Core agent system fully
+functional with GUI polish. Ready for Railway deployment (human step: create project, set env vars).
 
 ## Sprint Overview
 
@@ -31,13 +30,21 @@ Tasks organized by sprint. See `.ai/tasks/README.md` for full index with links.
 | TASK-013 | Player State Persistence via Supabase | cursor | IN PROGRESS |
 | TASK-014 | Build AgentManager + YAML Config Loader | cursor | DONE |
 
+## Completed Sprint 4 — Polish + Deploy
+
+| ID | Title | Agent | Status |
+|----|-------|-------|--------|
+| TASK-015 | NPC Speech Bubble GUI | cursor | DONE |
+| TASK-016 | Agent Conversation Log GUI | cursor | DONE |
+| TASK-017 | Deploy to Railway | cursor | DONE |
+
 ## Next — Sprint 4: Polish + Deploy
 
 | ID | Title | Agent | Status |
 |----|-------|-------|--------|
-| TASK-015 | NPC Speech Bubble GUI | cursor | PENDING |
-| TASK-016 | Agent Conversation Log GUI | cursor | PENDING |
-| TASK-017 | Deploy to Railway | cursor | PENDING |
+| TASK-015 | NPC Speech Bubble GUI | cursor | DONE |
+| TASK-016 | Agent Conversation Log GUI | cursor | DONE |
+| TASK-017 | Deploy to Railway | cursor | DONE |
 
 **Recommended order**: 015 → 016 → 017 (deploy with all GUI polish in place).
 
@@ -125,7 +132,8 @@ Tasks organized by sprint. See `.ai/tasks/README.md` for full index with links.
 
 | Task | Agent | Verdict | Date | Review File |
 |------|-------|---------|------|-------------|
-| TASK-012+014 | cursor | **APPROVED** | 2026-02-12 | (this review) |
+| TASK-015-017 | cursor | **APPROVED** | 2026-02-13 | `.ai/reviews/TASK-015-016-017-review.md` |
+| TASK-012+014 | cursor | **APPROVED** | 2026-02-12 | `.ai/reviews/TASK-012-014-review.md` |
 | TASK-001-009 | cursor | **APPROVED** | 2026-02-12 | `.ai/reviews/001-009-review.md` |
 | TASK-008 | cursor | **APPROVED** | 2026-02-11 | `.ai/reviews/008-review.md` |
 
