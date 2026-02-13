@@ -56,6 +56,7 @@ Tasks organized by sprint. See `.ai/tasks/README.md` for full index with links.
 
 | ID | Title | Agent | Date |
 |----|-------|-------|------|
+| — | Complete system narrative: layer-by-layer integration story (idea 13) | claude-code | 2026-02-13 |
 | — | Unified system synthesis: gap analysis + 6 fresh proposals (idea 12) | claude-code | 2026-02-13 |
 | — | Reorganize tasks folder into sprint-based structure | claude-code | 2026-02-13 |
 | — | Context/Rendering/SharedDB idea doc (idea 11) | claude-code | 2026-02-13 |
@@ -117,6 +118,7 @@ Tasks organized by sprint. See `.ai/tasks/README.md` for full index with links.
 - `.ai/idea/10a-agent-evaluation-implementation-plan.md` — Evaluation schema, examiner NPC, profiles, task assignment, dashboard
 - `.ai/idea/11-context-rendering-shared-db.md` — Context=lifespan, time=rendering, shared Supabase
 - `.ai/idea/12-unified-system-synthesis.md` — Gap analysis, lifecycle loop, 6 fresh ideas
+- `.ai/idea/13-complete-system-narrative.md` — Complete system: layers, data architecture, NPC prompt anatomy
 - `.ai/idea/plugins/` — 10 plugin ideas (Cursor): builder-dashboard, quest-log, day-night-cycle, etc.
 
 ## Recent Reviews
