@@ -44,6 +44,7 @@ This folder holds project vision, research, feature ideas, implementation plans,
 | [08-api-as-identity-npcs.md](08-api-as-identity-npcs.md) | API-as-Identity: NPC personas built around API access (Photographer=DALL-E, Musician=Suno), token-gated economy, four-stage NPC progression. |
 | [09-npc-social-memory-fragments.md](09-npc-social-memory-fragments.md) | NPC social feed (Instagram clone), associative memory via semantic tag recall, Fragment quest system (past/future), environment-driven personality. |
 | [10-agent-evaluation-arena.md](10-agent-evaluation-arena.md) | In-game agent benchmarking, performance-driven task assignment, improvement tracking, paid evaluation service for external agents. |
+| [11-context-rendering-shared-db.md](11-context-rendering-shared-db.md) | Context length = NPC lifespan, time as AI-restyled tilesets ("rendering"), shared Supabase for entire ecosystem. |
 
 ### Implementation plans
 

@@ -9,81 +9,55 @@ and AgentManager all complete. YAML-driven NPCs spawn automatically. Builder das
 prototype added. Next priorities: player state persistence, deployment to Railway, or
 NPC speech bubble GUI.
 
-## Active Sprint — Player Persistence
+## Sprint Overview
 
-| ID | Title | Agent | Priority | Status |
-|----|-------|-------|----------|--------|
-| TASK-013 | Player State Persistence via Supabase | cursor | P2-Medium | IN PROGRESS |
+Tasks organized by sprint. See `.ai/tasks/README.md` for full index with links.
 
-## Completed Sprint — Persistence + AgentManager (ALL DONE)
+| Sprint | Phase | Focus | Tasks | Status |
+|--------|-------|-------|-------|--------|
+| [Sprint 0](tasks/sprint-0-environment/) | 0 | Environment setup | 001–005 | DONE |
+| [Sprint 1](tasks/sprint-1-core-agent/) | 3–4 | Core agent system | 006–009 | DONE |
+| [Sprint 2](tasks/sprint-2-llm-gateway/) | 3.5 | Multi-provider LLM | 010–011 | BACKLOG |
+| **[Sprint 3](tasks/sprint-3-persistence/)** | **5** | **Persistence + AgentManager** | **012–014** | **ACTIVE** |
+| [Sprint 4](tasks/sprint-4-polish-deploy/) | 5 | Polish + deploy | 015–017 | NEXT |
+| [Sprint 5](tasks/sprint-5-api-identity-social/) | 6 | API-as-Identity + social | 018–021 | BACKLOG |
+| [Sprint 6](tasks/sprint-6-evaluation-arena/) | 7 | Evaluation arena | 022–026 | BACKLOG |
 
-| ID | Title | Agent | Priority | Status |
-|----|-------|-------|----------|--------|
-| TASK-012 | Supabase Agent Memory Persistence | cursor | P1-High | DONE |
-| TASK-014 | Build AgentManager + YAML Config Loader | cursor | P1-High | DONE |
+## Active Sprint 3 — Persistence + Agent Management
 
-TASK-012: `SupabaseAgentMemory` with write-behind buffer, graceful fallback, `createAgentMemory()` factory.
-TASK-014: `AgentManager` loads YAML configs, wires subsystems, spawns via `AgentNpcEvent` + `spawnContext` pattern. Builder dashboard bonus (`spawnAgentAt()`).
+| ID | Title | Agent | Status |
+|----|-------|-------|--------|
+| TASK-012 | Supabase Agent Memory Persistence | cursor | DONE |
+| TASK-013 | Player State Persistence via Supabase | cursor | IN PROGRESS |
+| TASK-014 | Build AgentManager + YAML Config Loader | cursor | DONE |
 
-## Previous Sprint — Core Agent System (ALL DONE)
+## Next — Sprint 4: Polish + Deploy
 
-| ID | Title | Agent | Priority | Status |
-|----|-------|-------|----------|--------|
-| TASK-009 | Build GameChannelAdapter (bridge) | cursor | P0-Critical | DONE |
-| TASK-006 | Build PerceptionEngine | cursor | P0-Critical | DONE |
-| TASK-007 | Build Skill System (5 MVP skills) | cursor | P0-Critical | DONE |
-| TASK-008 | Build AgentRunner (core LLM loop) | cursor | P0-Critical | DONE |
+| ID | Title | Agent | Status |
+|----|-------|-------|--------|
+| TASK-015 | NPC Speech Bubble GUI | cursor | PENDING |
+| TASK-016 | Agent Conversation Log GUI | cursor | PENDING |
+| TASK-017 | Deploy to Railway | cursor | PENDING |
 
-## Phase 0: Environment Setup (ALL DONE)
+**Recommended order**: 015 → 016 → 017 (deploy with all GUI polish in place).
 
-| ID | Title | Agent | Priority | Status |
-|----|-------|-------|----------|--------|
-| TASK-001 | Scaffold RPGJS v4 project from sample2 | cursor | P0-Critical | DONE |
-| TASK-002 | Verify RPGJS dev server runs | cursor | P0-Critical | DONE |
-| TASK-003 | Define TypeScript interfaces for all integration points | cursor | P0-Critical | DONE |
-| TASK-004 | Build test NPC with patrol route and player interaction | cursor | P1-High | DONE |
-| TASK-005 | LLM Integration Feasibility Test | cursor | P0-Critical | DONE |
+## Unscheduled Backlog
 
-## Next Sprint — Polish + Deploy (queued after TASK-013)
-
-| ID | Title | Agent | Priority | Status |
-|----|-------|-------|----------|--------|
-| TASK-015 | NPC Speech Bubble GUI | cursor | P0-Critical | PENDING |
-| TASK-016 | Agent Conversation Log GUI | cursor | P1-High | PENDING |
-| TASK-017 | Deploy to Railway | cursor | P0-Critical | PENDING |
-
-**Recommended order**: TASK-015 → TASK-016 → TASK-017 (deploy with all GUI polish in place).
-
-TASK-015: Floating speech bubbles above NPC sprites (`rpgAttachToSprite`). Three-tier speech: modal for action-key, bubble for proximity/idle. Replaces blocking `showText()` for ambient interactions.
-TASK-016: Side panel ('L' key) showing per-NPC conversation history. Reads from existing `IAgentMemory`. Filter by NPC, timestamps, scrollable.
-TASK-017: Railway deployment. Health check endpoint, `railway.toml`, Dockerfile HEALTHCHECK, CORS prep. Human prerequisite: create Railway project + set env vars.
-
-## Backlog
-
-| ID | Phase | Title | Agent | Priority |
-|----|-------|-------|-------|----------|
-| TASK-018 | Phase 6 | Photographer NPC + Image Generation Skill (API-as-Identity Stage 2) | cursor | P1 |
-| TASK-019 | Phase 6 | NPC Content Store + Semantic Tagging + Social Posts | cursor | P1 |
-| TASK-020 | Phase 6 | Associative Recall + Environment-Driven Memory | cursor | P1 |
-| TASK-021 | Phase 6 | Lovable Feed UI + Instagram Bridge | lovable | P2 |
-| TASK-010 | Phase 3.5 | Multi-Provider LLM Gateway | cursor | P1 |
-| TASK-011 | Phase 3.5 | GitHub Copilot CLI Provider Adapter | cursor | P2 |
-| — | Phase 5 | End-to-end integration testing | cursor | P0 |
-| — | Phase 5 | Agent personality configuration + diverse sprites | cursor | P1 |
-| — | Phase 5 | Builder dashboard polish (Cursor started in gui-design) | cursor | P2 |
-| — | Phase 5 | Session recorder / NPC jobs (Cursor idea doc) | cursor | P2 |
-| — | Phase 6+ | Fragment Quest System (past/future fragments, starter choice) | cursor | P2 |
-| TASK-022 | Phase 7 | Evaluation Schema + Test Definitions | cursor | P2 |
-| TASK-023 | Phase 7 | Examiner NPC + Test Runner | cursor | P2 |
-| TASK-024 | Phase 7 | Agent Performance Profiles + Tracking | cursor | P2 |
-| TASK-025 | Phase 7 | Performance-Driven Task Assignment | cursor | P2 |
-| TASK-026 | Phase 7 | Evaluation Dashboard | lovable | P2 |
-| — | Phase 6 | Architecture documentation | claude-code | P2 |
+| Title | Agent | Priority |
+|-------|-------|----------|
+| End-to-end integration testing | cursor | P0 |
+| Agent personality configuration + diverse sprites | cursor | P1 |
+| Builder dashboard polish | cursor | P2 |
+| Session recorder / NPC jobs | cursor | P2 |
+| Fragment Quest System (past/future, starter choice) | cursor | P2 |
+| Architecture documentation | claude-code | P2 |
 
 ## Recently Completed
 
 | ID | Title | Agent | Date |
 |----|-------|-------|------|
+| — | Reorganize tasks folder into sprint-based structure | claude-code | 2026-02-13 |
+| — | Context/Rendering/SharedDB idea doc (idea 11) | claude-code | 2026-02-13 |
 | — | Agent Evaluation Arena impl plan + TASK-022/023/024/025/026 briefs | claude-code | 2026-02-13 |
 | — | Agent Evaluation Arena idea doc (benchmarking + paid service) | claude-code | 2026-02-13 |
 | — | NPC Social + Associative Memory + Fragments vision + TASK-019/020/021 briefs | claude-code | 2026-02-13 |
@@ -140,6 +114,7 @@ TASK-017: Railway deployment. Health check endpoint, `railway.toml`, Dockerfile 
 - `.ai/idea/09a-social-memory-fragments-implementation-plan.md` — ContentStore + tagging + recall + feed impl plan
 - `.ai/idea/10-agent-evaluation-arena.md` — Agent benchmarking, performance tracking, paid evaluation service
 - `.ai/idea/10a-agent-evaluation-implementation-plan.md` — Evaluation schema, examiner NPC, profiles, task assignment, dashboard
+- `.ai/idea/11-context-rendering-shared-db.md` — Context=lifespan, time=rendering, shared Supabase
 - `.ai/idea/plugins/` — 10 plugin ideas (Cursor): builder-dashboard, quest-log, day-night-cycle, etc.
 
 ## Recent Reviews
@@ -150,7 +125,7 @@ TASK-017: Railway deployment. Health check endpoint, `railway.toml`, Dockerfile 
 | TASK-001-009 | cursor | **APPROVED** | 2026-02-12 | `.ai/reviews/001-009-review.md` |
 | TASK-008 | cursor | **APPROVED** | 2026-02-11 | `.ai/reviews/008-review.md` |
 
-**TASK-012+014 Approval (2026-02-12):** SupabaseAgentMemory implements IAgentMemory with write-behind buffer, correct error handling, graceful fallback. AgentManager implements IAgentManager with YAML loading, skill wiring, bridge registration via spawnContext pattern. Clever solution for `createDynamicEvent` limitation. Builder dashboard bonus. Minor notes: player.ts still has scripted NPC spawn config alongside AgentManager (acceptable hybrid). TASK-001-009 archived to `.ai/tasks/archive/`.
+**TASK-012+014 Approval (2026-02-12):** SupabaseAgentMemory implements IAgentMemory with write-behind buffer, correct error handling, graceful fallback. AgentManager implements IAgentManager with YAML loading, skill wiring, bridge registration via spawnContext pattern. Clever solution for `createDynamicEvent` limitation. Builder dashboard bonus. Minor notes: player.ts still has scripted NPC spawn config alongside AgentManager (acceptable hybrid). Tasks organized in `.ai/tasks/` by sprint folder.
 
 ## Open Issues
 
