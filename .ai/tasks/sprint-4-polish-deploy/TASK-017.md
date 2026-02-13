@@ -3,7 +3,8 @@
 - **Status**: PENDING
 - **Assigned**: cursor
 - **Priority**: P0-Critical
-- **Phase**: 6 (Deployment)
+- **Phase**: 5 (Deployment)
+- **Sprint**: 4 (Polish + Deploy)
 - **Type**: Create + Modify
 - **Depends on**: TASK-012 (Supabase client), TASK-014 (AgentManager)
 - **Blocks**: Nothing
@@ -16,8 +17,8 @@ deployment. Railway is our chosen platform — it supports Docker deployments, d
 port assignment, and environment variable management.
 
 The project already has a working `Dockerfile` (multi-stage, Node 18). The main gaps
-are: a health check endpoint for Railway monitoring, CORS tightening for production,
-and a `railway.toml` config for build/deploy settings.
+are: a health check endpoint for Railway monitoring, CORS configuration for the Lovable
+frontend, and a `railway.toml` config for build/deploy settings.
 
 ### Objective
 
@@ -27,15 +28,7 @@ Environment variables for Moonshot API and Supabase are configured via Railway d
 
 ### Specifications
 
-**Create files:**
-- `railway.toml` — Railway deployment configuration
-- `main/server.ts` — Server hook for health check + CORS config (~40 lines)
-
-**Modify files:**
-- `Dockerfile` — Add health check instruction, ensure PORT env var used
-- `package.json` — Add `engines.node` pin to 18 (match Dockerfile)
-
-**Railway Config (`railway.toml`):**
+**Create:** `railway.toml` — Railway deployment configuration
 
 ```toml
 [build]
@@ -50,67 +43,133 @@ restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
 ```
 
-**Health Check Endpoint (`main/server.ts`):**
+**Create:** `main/server.ts` — Server hook for health check + CORS
 
-RPGJS v4 exposes the Express app via server hooks. Add a `/health` route:
+This file doesn't exist yet. RPGJS auto-loads `main/server.ts` as a server module hook.
+The hook interface provides `onStart(engine: RpgServerEngine)` where `engine.app` is the
+Express instance.
+
+**Research-confirmed**: `engine.app` is set at
+`docs/rpgjs-reference/packages/server/src/express/server.ts` line 63:
+`rpgGame.app = app`. The Express app is available in the `onStart` hook.
 
 ```typescript
-import { RpgServer, RpgServerEngine } from '@rpgjs/server'
+import { RpgServerEngine } from '@rpgjs/server'
 
-const server: RpgServer = {
+const server = {
   onStart(engine: RpgServerEngine) {
-    // Access the underlying Express app
-    const app = engine.app  // or engine.io?.httpServer equivalent
+    const app = engine.app
 
-    // Health check for Railway
-    app.get('/health', (req, res) => {
-      res.status(200).json({
-        status: 'ok',
-        uptime: process.uptime(),
-        timestamp: new Date().toISOString()
+    if (app) {
+      // Health check endpoint for Railway
+      app.get('/health', (_req, res) => {
+        res.status(200).json({
+          status: 'ok',
+          uptime: Math.round(process.uptime()),
+          timestamp: new Date().toISOString()
+        })
       })
-    })
 
-    console.log('[Server] Health check endpoint registered at /health')
+      console.log('[Server] Health check registered at /health')
+    } else {
+      console.warn('[Server] Express app not available — health check not registered')
+    }
   }
 }
 
 export default server
 ```
 
-> **Note**: The exact way to access Express may vary. Check RPGJS v4 server hook
-> API — it may be `engine.app`, `engine.server`, or require importing the Express
-> instance from `@rpgjs/server`. The reference code is at
-> `docs/rpgjs-reference/packages/server/src/express/server.ts`. If direct Express
-> access isn't available through hooks, create a minimal Express middleware that
-> intercepts `/health` before RPGJS handles the request.
+**Research-confirmed PORT handling**: RPGJS reads PORT at
+`docs/rpgjs-reference/packages/server/src/express/server.ts` line 30:
+```typescript
+const PORT = process.env.PORT || expressConfig.port || 3000
+```
 
-**Dockerfile Updates:**
+Railway sets `PORT` dynamically. RPGJS already respects `process.env.PORT`.
+No code change needed for port binding.
+
+**Research-confirmed CORS handling**: RPGJS Express server applies CORS at
+`docs/rpgjs-reference/packages/server/src/express/server.ts` line 47:
+```typescript
+app.use(cors(expressConfig.cors))
+```
+
+And Socket.IO CORS at lines 37-42:
+```typescript
+const io = new Server(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    },
+    ...(expressConfig.socketIo || {})
+})
+```
+
+For MVP, the default `origin: "*"` is acceptable. When the Lovable frontend URL
+is known, tighten via `rpg.toml`:
+
+```toml
+# Future: tighten CORS when Lovable URL is known
+# [express.socketIo.cors]
+# origin = "https://your-app.lovable.app"
+```
+
+**Modify:** `Dockerfile`
+
+Current Dockerfile (15 lines, works but needs health check + PORT):
 
 ```dockerfile
-# Ensure PORT is used (not hardcoded 3000)
+FROM node:18 as build
+WORKDIR /build
+ADD . /build
+RUN npm i
+ENV NODE_ENV=production
+RUN npm run build
+
+FROM node:18-alpine
+WORKDIR /game
+COPY --from=build /build/dist ./dist
+COPY --from=build /build/package*.json ./
+ENV NODE_ENV=production
+RUN npm i
+EXPOSE 3000
+CMD npm start
+```
+
+Updated Dockerfile:
+
+```dockerfile
+FROM node:18 as build
+WORKDIR /build
+ADD . /build
+RUN npm i
+ENV NODE_ENV=production
+RUN npm run build
+
+FROM node:18-alpine
+WORKDIR /game
+COPY --from=build /build/dist ./dist
+COPY --from=build /build/package*.json ./
+ENV NODE_ENV=production
+RUN npm i
+
+# Railway assigns PORT dynamically; default to 3000 for local Docker
 ENV PORT=3000
 EXPOSE $PORT
 
-# Add health check
+# Health check for container orchestrators
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:$PORT/health || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT}/health || exit 1
+
+CMD npm start
 ```
 
-**CORS Configuration (in `main/server.ts` or via `rpg.toml`):**
+Changes:
+1. `ENV PORT=3000` with `EXPOSE $PORT` (Railway overrides PORT at runtime)
+2. `HEALTHCHECK` instruction using wget (alpine has wget, not curl)
 
-For MVP, keep CORS open (`*`). When the Lovable frontend URL is known, tighten:
-
-```toml
-# rpg.toml (if RPGJS supports it)
-[express.socketIo.cors]
-origin = "https://your-lovable-app.lovable.app"
-methods = ["GET", "POST"]
-```
-
-Or configure via server hook if `rpg.toml` doesn't support nested Socket.IO config.
-
-**Package.json Engine Pin:**
+**Modify:** `package.json` — Add engine pin
 
 ```json
 {
@@ -127,43 +186,73 @@ Or configure via server hook if `rpg.toml` doesn't support nested Socket.IO conf
 3. Set environment variables:
    - `NODE_ENV` = `production`
    - `MOONSHOT_API_KEY` = your Moonshot API key (required for AI NPCs)
-   - `SUPABASE_URL` = your Supabase project URL (optional)
+   - `SUPABASE_URL` = your Supabase project URL (optional for MVP)
    - `SUPABASE_SERVICE_ROLE_KEY` = your Supabase service role key (optional)
-   - **Do NOT set `PORT`** — Railway assigns it dynamically via `PORT` env var
+   - **Do NOT set `PORT`** — Railway assigns it dynamically
 4. Deploy and verify health check passes
+5. Test: open `https://your-app.up.railway.app` in browser
+
+### Verification Steps
+
+After deployment, test these:
+
+```bash
+# 1. Health check
+curl https://your-app.up.railway.app/health
+# Expected: {"status":"ok","uptime":123,"timestamp":"2026-02-14T..."}
+
+# 2. Game loads (open in browser)
+# Expected: RPGJS canvas renders, player spawns on simplemap
+
+# 3. NPCs respond (requires MOONSHOT_API_KEY)
+# Expected: Walk to Elder Theron, press Space, get LLM response
+
+# 4. Graceful degradation without Supabase
+# Expected: Game works with in-memory fallback if SUPABASE_URL not set
+```
 
 ### Acceptance Criteria
 
 - [ ] `railway.toml` exists with build and deploy configuration
 - [ ] `main/server.ts` registers `/health` endpoint returning `{ status: 'ok' }`
-- [ ] Dockerfile uses `$PORT` env var (not hardcoded 3000)
-- [ ] Dockerfile includes HEALTHCHECK instruction
+- [ ] Server hook uses `engine.app` (confirmed API) for Express access
+- [ ] Dockerfile uses `$PORT` env var (not hardcoded)
+- [ ] Dockerfile includes HEALTHCHECK instruction using wget
+- [ ] `package.json` has `engines.node: "18"`
 - [ ] `npm run build` succeeds in clean environment
 - [ ] `npm start` starts the server and responds on `$PORT`
 - [ ] `/health` returns 200 OK
 - [ ] Game loads in browser when pointed at Railway URL
 - [ ] NPCs spawn and respond (with valid `MOONSHOT_API_KEY`)
 - [ ] Graceful fallback when Supabase env vars are missing
+- [ ] No secrets hardcoded in code or config files
 - [ ] `npx tsc --noEmit` passes
 
 ### Do NOT
 
 - Set up CI/CD pipelines (Railway auto-deploys from the connected branch)
 - Add authentication or login — public access for MVP
-- Configure custom domains (use Railway's default `*.up.railway.app` domain)
+- Configure custom domains (use Railway's default `*.up.railway.app`)
 - Add monitoring/alerting beyond the health check (future enhancement)
-- Modify the game logic — this task is infrastructure only
+- Modify game logic — this task is infrastructure only
 - Hardcode any secrets in code or config files
+- Install curl in the alpine image — use wget (already available)
+- Add `rpg.toml` CORS restrictions for MVP (keep `origin: "*"`)
 
 ### Reference
 
-- Existing Dockerfile: `Dockerfile`
-- RPGJS build output: `dist/server/main.mjs` + `dist/client/`
-- Express server source: `docs/rpgjs-reference/packages/server/src/express/server.ts`
-- Environment variables: `.env.example`
+- Existing Dockerfile: `Dockerfile` (15 lines, multi-stage Node 18)
+- Express server setup: `docs/rpgjs-reference/packages/server/src/express/server.ts`
+  - Line 30: PORT handling (`process.env.PORT || config.port || 3000`)
+  - Line 47: CORS middleware (`app.use(cors(expressConfig.cors))`)
+  - Line 63: Express app assignment (`rpgGame.app = app`)
+- Server hook interface: `docs/rpgjs-reference/packages/server/src/RpgServer.ts`
+  - `onStart(engine: RpgServerEngine)`, `onStep(engine)`, `auth(engine, socket)`
+- Sample server hook: `docs/rpgjs-reference/packages/sample2/main/server.ts`
+- rpg.toml: `rpg.toml` (current config, 17 lines)
+- Environment variables: `.env` or `.env.example`
 - Supabase client (graceful fallback): `src/config/supabase.ts`
 - LLM client (API key resolution): `src/agents/core/LLMClient.ts`
-- RPGJS deployment docs: `docs/rpgjs-guide.md`
 
 ### Handoff Notes
 
