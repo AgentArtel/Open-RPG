@@ -56,6 +56,7 @@ Tasks organized by sprint. See `.ai/tasks/README.md` for full index with links.
 
 | ID | Title | Agent | Date |
 |----|-------|-------|------|
+| — | Unified system synthesis: gap analysis + 6 fresh proposals (idea 12) | claude-code | 2026-02-13 |
 | — | Reorganize tasks folder into sprint-based structure | claude-code | 2026-02-13 |
 | — | Context/Rendering/SharedDB idea doc (idea 11) | claude-code | 2026-02-13 |
 | — | Agent Evaluation Arena impl plan + TASK-022/023/024/025/026 briefs | claude-code | 2026-02-13 |
@@ -115,6 +116,7 @@ Tasks organized by sprint. See `.ai/tasks/README.md` for full index with links.
 - `.ai/idea/10-agent-evaluation-arena.md` — Agent benchmarking, performance tracking, paid evaluation service
 - `.ai/idea/10a-agent-evaluation-implementation-plan.md` — Evaluation schema, examiner NPC, profiles, task assignment, dashboard
 - `.ai/idea/11-context-rendering-shared-db.md` — Context=lifespan, time=rendering, shared Supabase
+- `.ai/idea/12-unified-system-synthesis.md` — Gap analysis, lifecycle loop, 6 fresh ideas
 - `.ai/idea/plugins/` — 10 plugin ideas (Cursor): builder-dashboard, quest-log, day-night-cycle, etc.
 
 ## Recent Reviews

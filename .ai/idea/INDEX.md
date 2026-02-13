@@ -45,6 +45,7 @@ This folder holds project vision, research, feature ideas, implementation plans,
 | [09-npc-social-memory-fragments.md](09-npc-social-memory-fragments.md) | NPC social feed (Instagram clone), associative memory via semantic tag recall, Fragment quest system (past/future), environment-driven personality. |
 | [10-agent-evaluation-arena.md](10-agent-evaluation-arena.md) | In-game agent benchmarking, performance-driven task assignment, improvement tracking, paid evaluation service for external agents. |
 | [11-context-rendering-shared-db.md](11-context-rendering-shared-db.md) | Context length = NPC lifespan, time as AI-restyled tilesets ("rendering"), shared Supabase for entire ecosystem. |
+| [12-unified-system-synthesis.md](12-unified-system-synthesis.md) | **System synthesis**: gap analysis across all ideas, unified lifecycle loop, fresh proposals (NPC social graph, player reputation, dreams, chronicler, emergent economy). |
 
 ### Implementation plans
 
