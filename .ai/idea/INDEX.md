@@ -42,6 +42,7 @@ This folder holds project vision, research, feature ideas, implementation plans,
 | [06-supabase-persistence.md](06-supabase-persistence.md) | Supabase as persistence: agent memory, player state, semantic search (pgvector). |
 | [07-session-recorder-workflow-npc-jobs.md](07-session-recorder-workflow-npc-jobs.md) | Record player sessions as logs, label them as workflows, assign workflows to NPCs as repeatable daily jobs. |
 | [08-api-as-identity-npcs.md](08-api-as-identity-npcs.md) | API-as-Identity: NPC personas built around API access (Photographer=DALL-E, Musician=Suno), token-gated economy, four-stage NPC progression. |
+| [09-npc-social-memory-fragments.md](09-npc-social-memory-fragments.md) | NPC social feed (Instagram clone), associative memory via semantic tag recall, Fragment quest system (past/future), environment-driven personality. |
 
 ### Implementation plans
 
@@ -51,6 +52,7 @@ This folder holds project vision, research, feature ideas, implementation plans,
 | [06a-supabase-implementation-plan.md](06a-supabase-implementation-plan.md) | How to add Supabase persistence (agent memory + player state). |
 | [07a-session-recorder-implementation-plan.md](07a-session-recorder-implementation-plan.md) | How to build session recorder, workflow labeling, and NPC job replay (phased). |
 | [08a-api-powered-skills-implementation-plan.md](08a-api-powered-skills-implementation-plan.md) | How to add DALL-E image generation skill + Photographer NPC (Stage 2 proof). |
+| [09a-social-memory-fragments-implementation-plan.md](09a-social-memory-fragments-implementation-plan.md) | ContentStore + semantic tagging + associative recall + Lovable feed UI + fragment system. |
 
 ### Plugins
 

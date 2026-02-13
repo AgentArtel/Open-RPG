@@ -63,18 +63,23 @@ TASK-017: Railway deployment. Health check endpoint, `railway.toml`, Dockerfile 
 | ID | Phase | Title | Agent | Priority |
 |----|-------|-------|-------|----------|
 | TASK-018 | Phase 6 | Photographer NPC + Image Generation Skill (API-as-Identity Stage 2) | cursor | P1 |
+| TASK-019 | Phase 6 | NPC Content Store + Semantic Tagging + Social Posts | cursor | P1 |
+| TASK-020 | Phase 6 | Associative Recall + Environment-Driven Memory | cursor | P1 |
+| TASK-021 | Phase 6 | Lovable Feed UI + Instagram Bridge | lovable | P2 |
 | TASK-010 | Phase 3.5 | Multi-Provider LLM Gateway | cursor | P1 |
 | TASK-011 | Phase 3.5 | GitHub Copilot CLI Provider Adapter | cursor | P2 |
 | — | Phase 5 | End-to-end integration testing | cursor | P0 |
 | — | Phase 5 | Agent personality configuration + diverse sprites | cursor | P1 |
 | — | Phase 5 | Builder dashboard polish (Cursor started in gui-design) | cursor | P2 |
 | — | Phase 5 | Session recorder / NPC jobs (Cursor idea doc) | cursor | P2 |
+| — | Phase 6+ | Fragment Quest System (past/future fragments, starter choice) | cursor | P2 |
 | — | Phase 6 | Architecture documentation | claude-code | P2 |
 
 ## Recently Completed
 
 | ID | Title | Agent | Date |
 |----|-------|-------|------|
+| — | NPC Social + Associative Memory + Fragments vision + TASK-019/020/021 briefs | claude-code | 2026-02-13 |
 | — | API-as-Identity vision doc + TASK-018 brief (Photographer NPC) | claude-code | 2026-02-13 |
 | — | Task briefs for TASK-015/016/017 (speech bubble, conv log, Railway) | claude-code | 2026-02-12 |
 | TASK-014 | AgentManager + YAML config + AgentNpcEvent + builder dashboard | cursor | 2026-02-12 |
@@ -124,6 +129,8 @@ TASK-017: Railway deployment. Health check endpoint, `railway.toml`, Dockerfile 
 - `.ai/idea/07-session-recorder-workflow-npc-jobs.md` — Session recorder / NPC jobs (Cursor)
 - `.ai/idea/08-api-as-identity-npcs.md` — API-as-Identity NPC vision (token economy, four-stage progression)
 - `.ai/idea/08a-api-powered-skills-implementation-plan.md` — DALL-E skill + Photographer NPC impl plan
+- `.ai/idea/09-npc-social-memory-fragments.md` — NPC social feed, associative recall, fragment quests
+- `.ai/idea/09a-social-memory-fragments-implementation-plan.md` — ContentStore + tagging + recall + feed impl plan
 - `.ai/idea/plugins/` — 10 plugin ideas (Cursor): builder-dashboard, quest-log, day-night-cycle, etc.
 
 ## Recent Reviews
