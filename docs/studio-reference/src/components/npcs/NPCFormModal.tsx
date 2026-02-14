@@ -1,14 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Modal } from '@/components/ui-custom/Modal';
-import { FormInput } from '@/components/forms/FormInput';
-import { FormSelect } from '@/components/forms/FormSelect';
-import { FormTextarea } from '@/components/forms/FormTextarea';
-import { FormToggle } from '@/components/forms/FormToggle';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import type { Tables } from '@/integrations/supabase/types';
+import { gameDb } from '@/lib/gameSchema';
 
-interface NPCFormState {
+interface AgentConfig {
   id: string;
   name: string;
   graphic: string;
@@ -21,198 +17,308 @@ interface NPCFormState {
   enabled: boolean;
 }
 
-interface ApiIntegration {
-  skill_name: string;
-  name: string;
-  required_item_id: string;
-}
-
 interface NPCFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: NPCFormState) => void;
-  editingNpc: Tables<'agent_configs'> | null;
-  apiIntegrations: ApiIntegration[];
+  onSave: (data: Omit<AgentConfig, 'id'> & { id: string }) => void;
+  initialData?: AgentConfig | null;
 }
+
+const MODEL_OPTIONS = [
+  'kimi-k2-0711-preview',
+  'gemini-2.5-flash',
+  'gemini-2.5-pro',
+];
 
 const GAME_SKILLS = ['move', 'say', 'look', 'emote', 'wait'];
-const MODEL_OPTIONS = [
-  { value: 'kimi-k2-0711-preview', label: 'Kimi K2' },
-  { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
-  { value: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro' },
-];
-const GRAPHIC_OPTIONS = [
-  { value: 'male', label: 'Male 🧙‍♂️' },
-  { value: 'female', label: 'Female 🧙‍♀️' },
-];
 
-function slugify(s: string) {
-  return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_]+/g, '-')
+    .replace(/-+/g, '-');
 }
 
-function defaultState(): NPCFormState {
-  return {
-    id: '', name: '', graphic: 'male', personality: '',
-    model: { idle: 'kimi-k2-0711-preview', conversation: 'kimi-k2-0711-preview' },
-    skills: ['move', 'say', 'look', 'emote', 'wait'],
-    spawn: { map: 'simplemap', x: 5, y: 5 },
-    behavior: { idleInterval: 15000, patrolRadius: 3, greetOnProximity: true },
-    inventory: [], enabled: true,
-  };
-}
+export const NPCFormModal: React.FC<NPCFormModalProps> = ({
+  isOpen,
+  onClose,
+  onSave,
+  initialData,
+}) => {
+  const isEditing = !!initialData;
 
-function npcToState(npc: Tables<'agent_configs'>): NPCFormState {
-  const model = npc.model as { idle?: string; conversation?: string } | null;
-  const spawn = npc.spawn as { map?: string; x?: number; y?: number } | null;
-  const behavior = npc.behavior as { idleInterval?: number; patrolRadius?: number; greetOnProximity?: boolean } | null;
-  return {
-    id: npc.id, name: npc.name, graphic: npc.graphic, personality: npc.personality,
-    model: { idle: model?.idle || 'kimi-k2-0711-preview', conversation: model?.conversation || 'kimi-k2-0711-preview' },
-    skills: npc.skills || [],
-    spawn: { map: spawn?.map || 'simplemap', x: spawn?.x ?? 5, y: spawn?.y ?? 5 },
-    behavior: { idleInterval: behavior?.idleInterval ?? 15000, patrolRadius: behavior?.patrolRadius ?? 3, greetOnProximity: behavior?.greetOnProximity ?? true },
-    inventory: npc.inventory || [], enabled: npc.enabled,
-  };
-}
+  // Form state
+  const [name, setName] = useState('');
+  const [id, setId] = useState('');
+  const [graphic, setGraphic] = useState('female');
+  const [personality, setPersonality] = useState('');
+  const [idleModel, setIdleModel] = useState(MODEL_OPTIONS[0]);
+  const [conversationModel, setConversationModel] = useState(MODEL_OPTIONS[0]);
+  const [skills, setSkills] = useState<string[]>([...GAME_SKILLS]);
+  const [spawnMap, setSpawnMap] = useState('simplemap');
+  const [spawnX, setSpawnX] = useState(200);
+  const [spawnY, setSpawnY] = useState(200);
+  const [idleInterval, setIdleInterval] = useState(15000);
+  const [patrolRadius, setPatrolRadius] = useState(3);
+  const [greetOnProximity, setGreetOnProximity] = useState(true);
+  const [inventory, setInventory] = useState<string[]>([]);
+  const [enabled, setEnabled] = useState(true);
 
-export const NPCFormModal: React.FC<NPCFormModalProps> = ({ isOpen, onClose, onSave, editingNpc, apiIntegrations }) => {
-  const isEdit = !!editingNpc;
-  const [form, setForm] = useState<NPCFormState>(defaultState);
+  // Fetch API integrations for dynamic skill checkboxes
+  const { data: apiIntegrations = [] } = useQuery({
+    queryKey: ['game-api-integrations'],
+    queryFn: async () => {
+      const { data, error } = await gameDb()
+        .from('api_integrations')
+        .select('skill_name, name, required_item_id')
+        .eq('enabled', true);
+      if (error) throw error;
+      return (data || []) as { skill_name: string; name: string; required_item_id: string }[];
+    },
+  });
 
+  // Reset form when modal opens
   useEffect(() => {
-    if (isOpen) setForm(editingNpc ? npcToState(editingNpc) : defaultState());
-  }, [isOpen, editingNpc]);
+    if (!isOpen) return;
+    if (initialData) {
+      setName(initialData.name);
+      setId(initialData.id);
+      setGraphic(initialData.graphic);
+      setPersonality(initialData.personality);
+      const m = initialData.model as any;
+      setIdleModel(m?.idle || MODEL_OPTIONS[0]);
+      setConversationModel(m?.conversation || MODEL_OPTIONS[0]);
+      setSkills(initialData.skills || [...GAME_SKILLS]);
+      const s = initialData.spawn as any;
+      setSpawnMap(s?.map || 'simplemap');
+      setSpawnX(s?.x ?? 200);
+      setSpawnY(s?.y ?? 200);
+      const b = initialData.behavior as any;
+      setIdleInterval(b?.idleInterval ?? 15000);
+      setPatrolRadius(b?.patrolRadius ?? 3);
+      setGreetOnProximity(b?.greetOnProximity ?? true);
+      setInventory(initialData.inventory || []);
+      setEnabled(initialData.enabled);
+    } else {
+      setName('');
+      setId('');
+      setGraphic('female');
+      setPersonality('');
+      setIdleModel(MODEL_OPTIONS[0]);
+      setConversationModel(MODEL_OPTIONS[0]);
+      setSkills([...GAME_SKILLS]);
+      setSpawnMap('simplemap');
+      setSpawnX(200);
+      setSpawnY(200);
+      setIdleInterval(15000);
+      setPatrolRadius(3);
+      setGreetOnProximity(true);
+      setInventory([]);
+      setEnabled(true);
+    }
+  }, [isOpen, initialData]);
 
-  const set = <K extends keyof NPCFormState>(k: K, v: NPCFormState[K]) => setForm(f => ({ ...f, [k]: v }));
-
-  // Auto-slugify id from name on create
+  // Auto-slug id from name
   useEffect(() => {
-    if (!isEdit) set('id', slugify(form.name));
-  }, [form.name, isEdit]);
+    if (!isEditing && name) {
+      setId(slugify(name));
+    }
+  }, [name, isEditing]);
 
-  // Build inventory from API skill selections
-  const apiSkillItemMap = useMemo(() => {
-    const m: Record<string, string> = {};
-    apiIntegrations.forEach(i => { m[i.skill_name] = i.required_item_id; });
-    return m;
-  }, [apiIntegrations]);
-
-  const toggleSkill = (skill: string) => {
-    setForm(f => {
-      const has = f.skills.includes(skill);
-      const newSkills = has ? f.skills.filter(s => s !== skill) : [...f.skills, skill];
-      // Auto-manage inventory for api skills
-      const itemId = apiSkillItemMap[skill];
-      let newInv = [...f.inventory];
-      if (itemId) {
-        if (has) newInv = newInv.filter(i => i !== itemId);
-        else if (!newInv.includes(itemId)) newInv.push(itemId);
+  // Toggle a skill and manage inventory tokens
+  const toggleSkill = (skillName: string) => {
+    const apiSkill = apiIntegrations.find((i) => i.skill_name === skillName);
+    if (skills.includes(skillName)) {
+      setSkills((prev) => prev.filter((s) => s !== skillName));
+      if (apiSkill) {
+        setInventory((prev) => prev.filter((t) => t !== apiSkill.required_item_id));
       }
-      return { ...f, skills: newSkills, inventory: newInv };
+    } else {
+      setSkills((prev) => [...prev, skillName]);
+      if (apiSkill && !inventory.includes(apiSkill.required_item_id)) {
+        setInventory((prev) => [...prev, apiSkill.required_item_id]);
+      }
+    }
+  };
+
+  const handleSubmit = () => {
+    if (!name.trim() || !id.trim()) return;
+    onSave({
+      id,
+      name: name.trim(),
+      graphic,
+      personality,
+      model: { idle: idleModel, conversation: conversationModel },
+      skills,
+      spawn: { map: spawnMap, x: spawnX, y: spawnY },
+      behavior: { idleInterval, patrolRadius, greetOnProximity },
+      inventory,
+      enabled,
     });
   };
 
-  const handleSave = () => {
-    if (!form.name.trim() || !form.id.trim()) return;
-    onSave(form);
-  };
+  const inputCls =
+    'w-full px-4 py-2.5 bg-dark-200 border border-white/10 rounded-lg text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-green/50';
+  const labelCls = 'text-xs text-white/50 uppercase tracking-wider mb-1.5 block';
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={isEdit ? 'Edit NPC' : 'Create NPC'} description={isEdit ? 'Update NPC configuration' : 'Configure a new AI NPC'} size="lg">
-      <div className="space-y-6 max-h-[65vh] overflow-y-auto pr-1">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={isEditing ? 'Edit NPC' : 'Create NPC'}
+      description={isEditing ? 'Update this NPC\'s configuration' : 'Define a new AI NPC for the game'}
+      size="xl"
+    >
+      <div className="max-h-[70vh] overflow-y-auto space-y-5 pr-1">
         {/* Identity */}
-        <Section title="Identity">
-          <div className="grid grid-cols-2 gap-4">
-            <FormInput label="Name" value={form.name} onChange={v => set('name', v)} placeholder="Town Guard" />
-            <FormInput label="ID" value={form.id} onChange={v => !isEdit && set('id', v)} placeholder="town-guard" disabled={isEdit} helperText={isEdit ? 'Cannot change ID' : 'Auto-generated from name'} />
+        <fieldset className="space-y-3">
+          <legend className="text-sm font-medium text-green mb-2">Identity</legend>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>Name</label>
+              <input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder="Elder Theron" />
+            </div>
+            <div>
+              <label className={labelCls}>ID</label>
+              <input className={inputCls} value={id} onChange={(e) => !isEditing && setId(e.target.value)} readOnly={isEditing} placeholder="auto-generated" />
+            </div>
           </div>
-          <FormSelect label="Graphic" value={form.graphic} options={GRAPHIC_OPTIONS} onChange={v => set('graphic', v)} />
-        </Section>
+          <div>
+            <label className={labelCls}>Graphic</label>
+            <select className={inputCls} value={graphic} onChange={(e) => setGraphic(e.target.value)}>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
+          </div>
+          <div>
+            <label className={labelCls}>Personality (System Prompt)</label>
+            <textarea className={`${inputCls} min-h-[100px]`} value={personality} onChange={(e) => setPersonality(e.target.value)} placeholder="You are a wise village elder..." rows={4} />
+          </div>
+        </fieldset>
 
-        {/* AI */}
-        <Section title="AI Configuration">
-          <FormTextarea label="Personality" value={form.personality} onChange={v => set('personality', v)} placeholder="You are a friendly town guard..." rows={3} />
-          <div className="grid grid-cols-2 gap-4">
-            <FormSelect label="Idle Model" value={form.model.idle} options={MODEL_OPTIONS} onChange={v => set('model', { ...form.model, idle: v })} />
-            <FormSelect label="Conversation Model" value={form.model.conversation} options={MODEL_OPTIONS} onChange={v => set('model', { ...form.model, conversation: v })} />
+        {/* Model */}
+        <fieldset className="space-y-3">
+          <legend className="text-sm font-medium text-green mb-2">Model</legend>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>Idle Model</label>
+              <select className={inputCls} value={idleModel} onChange={(e) => setIdleModel(e.target.value)}>
+                {MODEL_OPTIONS.map((m) => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className={labelCls}>Conversation Model</label>
+              <select className={inputCls} value={conversationModel} onChange={(e) => setConversationModel(e.target.value)}>
+                {MODEL_OPTIONS.map((m) => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
+            </div>
           </div>
-        </Section>
+        </fieldset>
 
         {/* Skills */}
-        <Section title="Skills">
-          <label className="text-xs text-white/40 uppercase tracking-wider block mb-2">Game Skills</label>
-          <div className="flex flex-wrap gap-2 mb-4">
-            {GAME_SKILLS.map(s => (
-              <SkillChip key={s} label={s} active={form.skills.includes(s)} onClick={() => toggleSkill(s)} />
+        <fieldset className="space-y-3">
+          <legend className="text-sm font-medium text-green mb-2">Skills</legend>
+          <div className="flex flex-wrap gap-2">
+            {GAME_SKILLS.map((skill) => (
+              <label key={skill} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-dark-200 border border-white/10 cursor-pointer hover:border-green/30 transition-colors">
+                <input type="checkbox" checked={skills.includes(skill)} onChange={() => toggleSkill(skill)} className="accent-green" />
+                <span className="text-xs text-white/70">{skill}</span>
+              </label>
             ))}
           </div>
           {apiIntegrations.length > 0 && (
             <>
-              <label className="text-xs text-white/40 uppercase tracking-wider block mb-2">API Skills</label>
+              <p className="text-[10px] text-white/40 uppercase tracking-wider mt-2">API Skills</p>
               <div className="flex flex-wrap gap-2">
-                {apiIntegrations.map(i => (
-                  <SkillChip key={i.skill_name} label={i.name} active={form.skills.includes(i.skill_name)} onClick={() => toggleSkill(i.skill_name)} />
+                {apiIntegrations.map((integ) => (
+                  <label key={integ.skill_name} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-dark-200 border border-white/10 cursor-pointer hover:border-green/30 transition-colors">
+                    <input type="checkbox" checked={skills.includes(integ.skill_name)} onChange={() => toggleSkill(integ.skill_name)} className="accent-green" />
+                    <span className="text-xs text-white/70">{integ.name}</span>
+                    <span className="text-[10px] text-white/30">({integ.skill_name})</span>
+                  </label>
                 ))}
               </div>
             </>
           )}
-        </Section>
+        </fieldset>
 
         {/* Spawn */}
-        <Section title="Spawn Location">
-          <div className="grid grid-cols-3 gap-4">
-            <FormInput label="Map" value={form.spawn.map} onChange={v => set('spawn', { ...form.spawn, map: v })} placeholder="simplemap" />
-            <FormInput label="X" value={String(form.spawn.x)} onChange={v => set('spawn', { ...form.spawn, x: Number(v) || 0 })} type="number" />
-            <FormInput label="Y" value={String(form.spawn.y)} onChange={v => set('spawn', { ...form.spawn, y: Number(v) || 0 })} type="number" />
+        <fieldset className="space-y-3">
+          <legend className="text-sm font-medium text-green mb-2">Spawn Location</legend>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className={labelCls}>Map</label>
+              <input className={inputCls} value={spawnMap} onChange={(e) => setSpawnMap(e.target.value)} placeholder="simplemap" />
+            </div>
+            <div>
+              <label className={labelCls}>X</label>
+              <input className={inputCls} type="number" value={spawnX} onChange={(e) => setSpawnX(Number(e.target.value))} />
+            </div>
+            <div>
+              <label className={labelCls}>Y</label>
+              <input className={inputCls} type="number" value={spawnY} onChange={(e) => setSpawnY(Number(e.target.value))} />
+            </div>
           </div>
-        </Section>
+        </fieldset>
 
         {/* Behavior */}
-        <Section title="Behavior">
-          <div className="grid grid-cols-2 gap-4">
-            <FormInput label="Idle Interval (ms)" value={String(form.behavior.idleInterval)} onChange={v => set('behavior', { ...form.behavior, idleInterval: Number(v) || 15000 })} type="number" />
-            <FormInput label="Patrol Radius" value={String(form.behavior.patrolRadius)} onChange={v => set('behavior', { ...form.behavior, patrolRadius: Number(v) || 3 })} type="number" />
+        <fieldset className="space-y-3">
+          <legend className="text-sm font-medium text-green mb-2">Behavior</legend>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className={labelCls}>Idle Interval (ms)</label>
+              <input className={inputCls} type="number" value={idleInterval} onChange={(e) => setIdleInterval(Number(e.target.value))} />
+            </div>
+            <div>
+              <label className={labelCls}>Patrol Radius</label>
+              <input className={inputCls} type="number" value={patrolRadius} onChange={(e) => setPatrolRadius(Number(e.target.value))} />
+            </div>
+            <div className="flex items-end pb-1">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={greetOnProximity} onChange={(e) => setGreetOnProximity(e.target.checked)} className="accent-green" />
+                <span className="text-xs text-white/70">Greet on Proximity</span>
+              </label>
+            </div>
           </div>
-          <FormToggle label="Greet on Proximity" checked={form.behavior.greetOnProximity} onChange={v => set('behavior', { ...form.behavior, greetOnProximity: v })} />
-        </Section>
+        </fieldset>
 
-        {/* Other */}
-        <Section title="Other">
-          <FormInput label="Inventory" value={form.inventory.join(', ')} onChange={v => set('inventory', v.split(',').map(s => s.trim()).filter(Boolean))} helperText="Comma-separated item IDs. Auto-managed by API skill selection." />
-          <FormToggle label="Enabled" checked={form.enabled} onChange={v => set('enabled', v)} />
-        </Section>
+        {/* Inventory */}
+        {inventory.length > 0 && (
+          <fieldset className="space-y-2">
+            <legend className="text-sm font-medium text-green mb-2">Inventory (auto-managed)</legend>
+            <div className="flex flex-wrap gap-2">
+              {inventory.map((token) => (
+                <span key={token} className="px-3 py-1 rounded-full bg-green/10 text-green text-xs">
+                  {token}
+                </span>
+              ))}
+            </div>
+          </fieldset>
+        )}
+
+        {/* Enabled */}
+        <div className="flex items-center gap-3">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} className="accent-green" />
+            <span className="text-sm text-white/70">Enabled</span>
+          </label>
+          <span className="text-xs text-white/30">(disabled NPCs don't load in the game)</span>
+        </div>
       </div>
 
-      <div className="flex justify-end gap-3 pt-4 mt-4 border-t border-white/5">
+      {/* Footer */}
+      <div className="flex justify-end gap-3 pt-5 border-t border-white/5 mt-5">
         <Button variant="ghost" onClick={onClose}>Cancel</Button>
-        <Button className="bg-green text-dark hover:bg-green-light" onClick={handleSave} disabled={!form.name.trim() || !form.id.trim()}>
-          {isEdit ? 'Save Changes' : 'Create NPC'}
+        <Button className="bg-green text-dark hover:bg-green-light" onClick={handleSubmit} disabled={!name.trim() || !id.trim()}>
+          {isEditing ? 'Save Changes' : 'Create NPC'}
         </Button>
       </div>
     </Modal>
   );
 };
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <h4 className="text-sm font-semibold text-white/70 mb-3">{title}</h4>
-      <div className="space-y-3">{children}</div>
-    </div>
-  );
-}
-
-function SkillChip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border',
-        active ? 'bg-green/20 text-green border-green/40' : 'bg-dark-200 text-white/50 border-white/5 hover:border-white/10'
-      )}
-    >
-      {label}
-    </button>
-  );
-}

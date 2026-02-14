@@ -8,8 +8,9 @@ import { WorkflowPreview } from '@/components/dashboard/WorkflowPreview';
 import { ExecutionChart } from '@/components/dashboard/ExecutionChart';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Zap, Play, CheckCircle, Clock, Plus, Sparkles, ArrowRight } from 'lucide-react';
+import { Zap, Play, CheckCircle, Clock, Plus, Sparkles, ArrowRight, Users, Puzzle, MessageSquare, Globe } from 'lucide-react';
 import { toast } from 'sonner';
+import { gameDb } from '@/lib/gameSchema';
 
 interface DashboardProps {
   onNavigate: (page: string) => void;
@@ -53,6 +54,25 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       const { data, error } = await supabase.from('studio_executions').select('*').order('started_at', { ascending: true });
       if (error) throw error;
       return data as any[];
+    },
+  });
+
+  // Game stats — from game schema
+  const { data: gameStats } = useQuery({
+    queryKey: ['game-dashboard-stats'],
+    queryFn: async () => {
+      const [npcRes, msgRes, intRes, playerRes] = await Promise.all([
+        gameDb().from('agent_configs').select('id', { count: 'exact', head: true }).eq('enabled', true),
+        gameDb().from('agent_memory').select('id', { count: 'exact', head: true }).eq('role', 'user'),
+        gameDb().from('api_integrations').select('id', { count: 'exact', head: true }).eq('enabled', true),
+        gameDb().from('player_state').select('player_id', { count: 'exact', head: true }),
+      ]);
+      return {
+        activeNpcs: npcRes.count ?? 0,
+        playerMessages: msgRes.count ?? 0,
+        apiIntegrations: intRes.count ?? 0,
+        onlinePlayers: playerRes.count ?? 0,
+      };
     },
   });
 
@@ -128,6 +148,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
             <StatCard title="Avg Duration" value={`${avgDuration}s`} subtitle="Per execution" trend="down" trendValue={`${avgDuration}s`} icon={<Clock className="w-5 h-5" />} />
           </>
         )}
+      </div>
+
+      {/* Game Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <StatCard title="Active NPCs" value={String(gameStats?.activeNpcs ?? 0)} subtitle="In game world" icon={<Users className="w-5 h-5" />} />
+        <StatCard title="Player Messages" value={String(gameStats?.playerMessages ?? 0)} subtitle="Total conversations" icon={<MessageSquare className="w-5 h-5" />} />
+        <StatCard title="API Integrations" value={String(gameStats?.apiIntegrations ?? 0)} subtitle="Enabled skills" icon={<Puzzle className="w-5 h-5" />} />
+        <StatCard title="Online Players" value={String(gameStats?.onlinePlayers ?? 0)} subtitle="Currently active" icon={<Globe className="w-5 h-5" />} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
