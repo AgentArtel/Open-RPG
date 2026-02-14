@@ -8,13 +8,15 @@ This folder holds **all instructions and prompts for Lovable** (Agent Artel Stud
 |------|--------|
 | **VISION-studio-game-architecture.md** | Start here — the big picture: what the game is, what Studio's role is, how data flows, what to build and why |
 | **TASK-game-schema-integration.md** | Detailed task brief: NPC Builder, Integrations page, dashboard stats, field mappings, acceptance criteria |
+| **NPC-BUILDER-PLAN.md** | **Canonical spec** for the NPC Builder: corrected schema, to-do checklist, success metrics. This is the single source of truth. |
 | **LOVABLE-PROMPTS.md** | Copy/paste prompts for Lovable (migration SQL + Parts 1–4) |
 
 ## Reading Order
 
 1. **VISION** first — understand the architecture and why Studio exists
 2. **TASK** second — detailed specs for the first set of features
-3. **PROMPTS** third — paste into Lovable when ready to build
+3. **NPC-BUILDER-PLAN** — the corrected, canonical NPC Builder spec (schema=game everywhere)
+4. **PROMPTS** fourth — paste into Lovable when ready to build
 
 ## Flow
 

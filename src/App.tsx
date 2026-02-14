@@ -12,12 +12,13 @@ import { Settings } from '@/pages/Settings';
 import { AgentLibrary } from '@/pages/AgentLibrary';
 import { WorkflowEditorPage } from '@/pages/WorkflowEditorPage';
 import { ShowcasePage } from '@/pages/ShowcasePage';
-import { NPCs } from '@/pages/NPCs';
+import { NpcBuilder } from '@/pages/NPCs';
+import { Integrations } from '@/pages/Integrations';
 import { cn } from '@/lib/utils';
 
 const queryClient = new QueryClient();
 
-type Page = 'dashboard' | 'workflows' | 'executions' | 'credentials' | 'templates' | 'settings' | 'editor' | 'showcase' | 'npcs';
+type Page = 'dashboard' | 'workflows' | 'npcs' | 'integrations' | 'executions' | 'credentials' | 'templates' | 'settings' | 'editor' | 'showcase';
 
 const MOBILE_BREAKPOINT = 768;
 
@@ -39,11 +40,12 @@ const App = () => {
     switch (currentPage) {
       case 'dashboard': return <Dashboard onNavigate={onNavigate} />;
       case 'workflows': return <WorkflowList onNavigate={onNavigate} />;
+      case 'npcs': return <NpcBuilder onNavigate={onNavigate} />;
+      case 'integrations': return <Integrations onNavigate={onNavigate} />;
       case 'executions': return <ExecutionHistory onNavigate={onNavigate} />;
       case 'credentials': return <Credentials onNavigate={onNavigate} />;
       case 'templates': return <AgentLibrary onNavigate={onNavigate} />;
       case 'settings': return <Settings onNavigate={onNavigate} />;
-      case 'npcs': return <NPCs onNavigate={onNavigate} />;
       case 'editor': return <WorkflowEditorPage onNavigate={onNavigate} />;
       case 'showcase': return <ShowcasePage />;
       default: return <Dashboard onNavigate={onNavigate} />;

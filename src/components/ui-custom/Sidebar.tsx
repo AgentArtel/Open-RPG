@@ -1,18 +1,19 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { SidebarItem } from './SidebarItem';
-import { 
-  LayoutDashboard, 
-  Workflow, 
-  PlayCircle, 
-  Key, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Workflow,
+  PlayCircle,
+  Key,
+  Settings,
   Sparkles,
   ChevronLeft,
   ChevronRight,
   Edit3,
   LayoutGrid,
-  Users
+  Users,
+  Puzzle
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -26,8 +27,9 @@ interface SidebarProps {
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'workflows', label: 'Workflows', icon: Workflow },
-  { id: 'editor', label: 'Workflow Editor', icon: Edit3 },
   { id: 'npcs', label: 'NPCs', icon: Users },
+  { id: 'integrations', label: 'Integrations', icon: Puzzle },
+  { id: 'editor', label: 'Workflow Editor', icon: Edit3 },
   { id: 'executions', label: 'Executions', icon: PlayCircle },
   { id: 'credentials', label: 'Credentials', icon: Key },
   { id: 'templates', label: 'Templates', icon: Sparkles },
