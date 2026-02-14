@@ -43,7 +43,7 @@ Tasks organized by sprint. See `.ai/tasks/README.md` for full index with links.
 
 | ID | Title | Agent | Status |
 |----|-------|-------|--------|
-| TASK-018b | Supabase Agent Config (Database-First) | cursor | REVIEW |
+| TASK-018b | Supabase Agent Config (Database-First) | cursor | DONE |
 | TASK-018a | Modular Skill Plugin System | cursor | PENDING |
 | TASK-018 | Photographer NPC + Gemini Image Generation | cursor | PENDING |
 | TASK-019 | Content Store + tagging | cursor | PENDING |
@@ -74,6 +74,7 @@ Supabase brief: `.ai/briefs/supabase-game-integration-now.md`.
 | ID | Title | Agent | Date |
 |----|-------|-------|------|
 | TASK-018b | Supabase Agent Config (DB-first, per-map, enabled) | cursor | 2026-02-14 |
+| TASK-013 | Player State Persistence via Supabase | cursor | 2026-02-14 |
 | TASK-013 | Player State Persistence via Supabase | cursor | 2026-02-14 |
 | — | Sprint 5 research and implementation plan | cursor | 2026-02-14 |
 | — | Repo README rewrite (quickstart, architecture, troubleshooting) | cursor | 2026-02-14 |
