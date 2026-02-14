@@ -20,21 +20,21 @@ export const NPCs: React.FC<NPCsProps> = ({ onNavigate }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingNpc, setEditingNpc] = useState<Tables<'agent_configs'> | null>(null);
 
-  // Fetch NPCs
+  // Fetch NPCs — game schema (same data the RPGJS game server uses)
   const { data: npcs = [], isLoading } = useQuery({
-    queryKey: ['agent_configs'],
+    queryKey: ['game', 'agent_configs'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('agent_configs').select('*').order('name');
+      const { data, error } = await supabase.schema('game').from('agent_configs').select('*').order('name');
       if (error) throw error;
       return data;
     },
   });
 
-  // Fetch API integrations for skill checkboxes
+  // Fetch API integrations for skill checkboxes — game schema
   const { data: apiIntegrations = [] } = useQuery({
-    queryKey: ['api_integrations'],
+    queryKey: ['game', 'api_integrations'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('api_integrations').select('skill_name,name,required_item_id').eq('enabled', true);
+      const { data, error } = await supabase.schema('game').from('api_integrations').select('skill_name,name,required_item_id').eq('enabled', true);
       if (error) throw error;
       return data;
     },
@@ -57,15 +57,15 @@ export const NPCs: React.FC<NPCsProps> = ({ onNavigate }) => {
       };
       const isEdit = !!editingNpc;
       if (isEdit) {
-        const { error } = await supabase.from('agent_configs').update(payload).eq('id', form.id);
+        const { error } = await supabase.schema('game').from('agent_configs').update(payload).eq('id', form.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('agent_configs').insert(payload);
+        const { error } = await supabase.schema('game').from('agent_configs').insert(payload);
         if (error) throw error;
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['agent_configs'] });
+      queryClient.invalidateQueries({ queryKey: ['game', 'agent_configs'] });
       toast.success(editingNpc ? 'NPC updated' : 'NPC created');
       setIsModalOpen(false);
       setEditingNpc(null);
@@ -75,11 +75,11 @@ export const NPCs: React.FC<NPCsProps> = ({ onNavigate }) => {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('agent_configs').delete().eq('id', id);
+      const { error } = await supabase.schema('game').from('agent_configs').delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['agent_configs'] });
+      queryClient.invalidateQueries({ queryKey: ['game', 'agent_configs'] });
       toast.success('NPC deleted');
     },
     onError: (err: any) => toast.error(err.message || 'Failed to delete NPC'),
@@ -87,10 +87,10 @@ export const NPCs: React.FC<NPCsProps> = ({ onNavigate }) => {
 
   const toggleMutation = useMutation({
     mutationFn: async (npc: Tables<'agent_configs'>) => {
-      const { error } = await supabase.from('agent_configs').update({ enabled: !npc.enabled }).eq('id', npc.id);
+      const { error } = await supabase.schema('game').from('agent_configs').update({ enabled: !npc.enabled }).eq('id', npc.id);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['agent_configs'] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['game', 'agent_configs'] }),
     onError: (err: any) => toast.error(err.message || 'Failed to toggle NPC'),
   });
 
