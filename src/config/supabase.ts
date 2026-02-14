@@ -18,8 +18,13 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
 const LOG_PREFIX = '[Supabase]'
 
+// SupabaseClient generic: <Database, SchemaName, Schema, ...>
+// We use the "game" schema (migration 009), so the third type param is "game".
+// Consumers that accept SupabaseClient<any, string, any> will work fine.
+type GameClient = SupabaseClient<any, 'game'>
+
 // Module-level cache — created once, reused for the process lifetime
-let client: SupabaseClient | null = null
+let client: GameClient | null = null
 let initAttempted = false
 
 /**
@@ -27,7 +32,7 @@ let initAttempted = false
  *
  * @returns The SupabaseClient if env vars are configured, or null if missing.
  */
-export function getSupabaseClient(): SupabaseClient | null {
+export function getSupabaseClient(): GameClient | null {
   // Only attempt init once — avoid repeated warnings on every call
   if (initAttempted) return client
 
@@ -52,6 +57,9 @@ export function getSupabaseClient(): SupabaseClient | null {
         autoRefreshToken: false,
         persistSession: false,
       },
+      // All game tables live in the "game" schema (migration 009).
+      // Every .from() and .rpc() call uses this schema automatically.
+      db: { schema: 'game' },
     })
     console.log(`${LOG_PREFIX} Client initialized for ${url}`)
     return client

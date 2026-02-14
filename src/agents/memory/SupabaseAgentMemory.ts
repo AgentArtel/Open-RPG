@@ -21,8 +21,12 @@
  * @see supabase/migrations/001_agent_memory.sql — table schema
  */
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { IAgentMemory, MemoryEntry, MemoryRole } from './types'
+
+/** Accept any schema variant of SupabaseClient (game, public, etc.) */
+type AnySupabaseClient = SupabaseClient<any, string>
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -62,7 +66,7 @@ export interface SupabaseAgentMemoryOptions {
 
 export class SupabaseAgentMemory implements IAgentMemory {
   private readonly agentId: string
-  private readonly supabase: SupabaseClient
+  private readonly supabase: AnySupabaseClient
   private readonly maxBufferSize: number
 
   /** Rolling conversation buffer (source of truth for reads). */
@@ -79,7 +83,7 @@ export class SupabaseAgentMemory implements IAgentMemory {
 
   constructor(
     agentId: string,
-    supabase: SupabaseClient,
+    supabase: AnySupabaseClient,
     options?: SupabaseAgentMemoryOptions
   ) {
     this.agentId = agentId

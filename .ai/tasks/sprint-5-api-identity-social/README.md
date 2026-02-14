@@ -9,13 +9,14 @@ Supabase database-first agent config (source of truth), modular skill plugin sys
 (proof of API-as-Identity), NPC content store with semantic tagging, associative recall
 for environment-driven memory, and the Lovable social feed UI.
 
-**Supabase-first**: Agent config is loaded from Supabase (`agent_configs` table) when
-configured; YAML fallback when Supabase is unavailable. This establishes the database as
-the source of truth so the Studio and all future agents/skills/items start in DB.
+**Supabase-first**: Agent config is loaded from Supabase (`game.agent_configs`) when
+configured; YAML fallback when Supabase is unavailable. All game persistence lives in the
+**`game`** schema (migration 009); client uses `db: { schema: 'game' }`. See `docs/supabase-schema.md`.
 
 | Task | Title | Agent | Status |
 |------|-------|-------|--------|
-| TASK-018b | Supabase Agent Config (Database-First) | cursor | REVIEW |
+| TASK-018b | Supabase Agent Config (Database-First) | cursor | DONE |
+| — | Game schema isolation (009, client, docs, PostgREST) | cursor | DONE |
 | TASK-018a | Modular Skill Plugin System | cursor | PENDING |
 | TASK-018 | Photographer NPC + Gemini Image Generation | cursor | PENDING |
 | TASK-019 | NPC Content Store + Semantic Tagging + Social Posts | cursor | PENDING |
@@ -35,3 +36,7 @@ the source of truth so the Studio and all future agents/skills/items start in DB
 > PM-directed cross-boundary edit (2026-02-14): Added TASK-018b (Supabase agent config,
 > database-first) as first task in sprint. Supabase is the source of truth for agent
 > config when configured; YAML fallback preserved.
+>
+> Game schema isolation (2026-02-14): Migration 009 creates isolated `game` schema with
+> all tables/RPCs; client uses `db: { schema: 'game' }`. Expose `game` in Dashboard and run
+> `ALTER ROLE authenticator SET pgrst.db_schemas = 'public, game'; NOTIFY pgrst, 'reload schema';` for persistence.

@@ -44,6 +44,7 @@ Tasks organized by sprint. See `.ai/tasks/README.md` for full index with links.
 | ID | Title | Agent | Status |
 |----|-------|-------|--------|
 | TASK-018b | Supabase Agent Config (Database-First) | cursor | DONE |
+| — | Game schema isolation (009, client schema, docs) | cursor | DONE |
 | TASK-018a | Modular Skill Plugin System | cursor | PENDING |
 | TASK-018 | Photographer NPC + Gemini Image Generation | cursor | PENDING |
 | TASK-019 | Content Store + tagging | cursor | PENDING |
@@ -51,6 +52,7 @@ Tasks organized by sprint. See `.ai/tasks/README.md` for full index with links.
 | TASK-021 | Lovable feed integration | lovable | PENDING |
 
 **Recommended order**: 018b → 018a → 018 → 019 → then 020 (cursor) + 021 (lovable) in parallel.
+**Game schema**: All game tables and RPCs live in the `game` schema (migration 009). Client uses `db: { schema: 'game' }`. See `docs/supabase-schema.md`.
 Cursor Sprint 5 research plan: `.cursor/plans/sprint_5_research_and_plan_abbdc987.plan.md`.
 Architecture brief: `.ai/briefs/modular-skill-plugin-architecture.md`.
 Supabase brief: `.ai/briefs/supabase-game-integration-now.md`.
@@ -73,6 +75,7 @@ Supabase brief: `.ai/briefs/supabase-game-integration-now.md`.
 
 | ID | Title | Agent | Date |
 |----|-------|-------|------|
+| — | Game schema isolation (009, game schema, client db.schema, docs, PostgREST) | cursor | 2026-02-14 |
 | TASK-018b | Supabase Agent Config (DB-first, per-map, enabled) | cursor | 2026-02-14 |
 | TASK-013 | Player State Persistence via Supabase | cursor | 2026-02-14 |
 | TASK-013 | Player State Persistence via Supabase | cursor | 2026-02-14 |
@@ -116,10 +119,11 @@ Supabase brief: `.ai/briefs/supabase-game-integration-now.md`.
   Env vars: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
 - **Agent Management**: **Supabase-first, per-map.** When `SUPABASE_URL` and
   `SUPABASE_SERVICE_ROLE_KEY` are set, `AgentManager` loads agent config from the
-  `agent_configs` table (via RPC `get_agent_configs_for_map(mapId)` — only rows for
+  `game.agent_configs` table (via RPC `game.get_agent_configs_for_map(mapId)` — only rows for
   that map with `enabled = true`); otherwise it falls back to YAML in `src/config/agents/`.
-  Toggle NPCs with `enabled` in DB. `AgentNpcEvent` is the generic RpgEvent for all AI NPCs.
-  See `docs/supabase-schema.md` and `.ai/briefs/supabase-game-integration-now.md`.
+  All game persistence (agent_memory, player_state, agent_configs, api_integrations) lives in the
+  **`game`** schema (migration 009); client uses `db: { schema: 'game' }`. Toggle NPCs with `enabled` in DB.
+  `AgentNpcEvent` is the generic RpgEvent for all AI NPCs. See `docs/supabase-schema.md` and `.ai/briefs/supabase-game-integration-now.md`.
 - **Deployment**: Railway (RPGJS game server) + Lovable (frontend iframe embed).
 - **Structure**: Flat `main/` directory matching RPGJS v4 autoload conventions.
 - **Plugins**: `@rpgjs/default-gui`, `@rpgjs/plugin-emotion-bubbles`, `@rpgjs/gamepad`.

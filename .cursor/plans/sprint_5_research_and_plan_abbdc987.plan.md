@@ -30,8 +30,8 @@ Sprint 5 has a strict dependency order:
 
 **Supabase and migrations**
 
-- [getSupabaseClient](src/config/supabase.ts) returns a singleton or null; graceful degradation is the established pattern.
-- Only one migration exists: [001_agent_memory.sql](supabase/migrations/001_agent_memory.sql). TASK-019 adds `003_npc_content.sql` (npc_content, content_tags, npc_posts).
+- [getSupabaseClient](src/config/supabase.ts) returns a singleton or null with `db: { schema: 'game' }`; all game persistence uses the **`game`** schema (migration 009). Graceful degradation when env vars missing.
+- Migrations 001–008 created tables in `public` (legacy). [009_game_schema.sql](supabase/migrations/009_game_schema.sql) creates isolated `game` schema (agent_memory, player_state, agent_configs, api_integrations, get_agent_configs_for_map). TASK-019 will add npc_content, content_tags, npc_posts in `game` (or follow 009 pattern).
 
 **Perception and recall**
 

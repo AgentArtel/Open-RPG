@@ -13,7 +13,11 @@
  * @see src/config/supabase.ts — Supabase client singleton
  */
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 import type { SupabaseClient } from '@supabase/supabase-js'
+
+/** Accept any schema variant of SupabaseClient (game, public, etc.) */
+type AnySupabaseClient = SupabaseClient<any, string>
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -60,13 +64,13 @@ interface PlayerStateRow {
 // ---------------------------------------------------------------------------
 
 export class PlayerStateManager {
-  private readonly supabase: SupabaseClient | null
+  private readonly supabase: AnySupabaseClient | null
 
   /**
    * @param supabase — The Supabase client, or null if persistence is unavailable.
    *   When null, all methods no-op gracefully.
    */
-  constructor(supabase: SupabaseClient | null) {
+  constructor(supabase: AnySupabaseClient | null) {
     this.supabase = supabase
 
     if (supabase) {
