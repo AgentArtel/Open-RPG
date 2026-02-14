@@ -57,10 +57,13 @@ Cursor Sprint 5 research plan: `.cursor/plans/sprint_5_research_and_plan_abbdc98
 |-------|-------|----------|
 | End-to-end integration testing | cursor | P0 |
 | Agent personality configuration + diverse sprites | cursor | P1 |
+| LLM Gateway refactor → Agent Artel Studio (see note below) | cursor | P1 |
 | Builder dashboard polish | cursor | P2 |
 | Session recorder / NPC jobs | cursor | P2 |
 | Fragment Quest System (past/future, starter choice) | cursor | P2 |
 | Architecture documentation | claude-code | P2 |
+
+**Sprint 2 (LLM Gateway) — deferred to Agent Artel Studio:** The current hardcoded `LLMClient` (Moonshot-only) works fine for now. When Agent Artel Studio is ready, refactor into a provider-agnostic `LLMGateway` with provider registry, tier-based routing (idle/conversation/reasoning/reflection), and fallback chains — managed through the Studio UI rather than YAML config. TASK-010/011 briefs remain as reference for the gateway architecture. Sprint 2 stays BACKLOG until Studio is available.
 
 ## Recently Completed
 
