@@ -40,4 +40,7 @@ Before committing any changes, verify:
 - [ ] Metrics (`.ai/metrics/*.json`) committed when meaningful data accumulates
 - [ ] Session data committed when sessions complete or are archived
 
+## Documentation
+- [ ] If this change affects quickstart, commands, env vars, deployment, or repo structure: README.md updated (or ticketed for sprint-end update)
+
 **Note**: See `.ai/issues/active-issues.md` Issue #6 for full runtime file tracking policy.
