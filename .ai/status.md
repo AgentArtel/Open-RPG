@@ -43,13 +43,15 @@ Tasks organized by sprint. See `.ai/tasks/README.md` for full index with links.
 
 | ID | Title | Agent | Status |
 |----|-------|-------|--------|
-| TASK-018 | Photographer NPC (API-as-Identity) | cursor | PENDING |
+| TASK-018a | Modular Skill Plugin System | cursor | PENDING |
+| TASK-018 | Photographer NPC + Gemini Image Generation | cursor | PENDING |
 | TASK-019 | Content Store + tagging | cursor | PENDING |
 | TASK-020 | Associative recall + social feed | cursor | PENDING |
 | TASK-021 | Lovable feed integration | lovable | PENDING |
 
-**Recommended order**: 018 → 019 → then 020 (cursor) + 021 (lovable) in parallel.
+**Recommended order**: 018a → 018 → 019 → then 020 (cursor) + 021 (lovable) in parallel.
 Cursor Sprint 5 research plan: `.cursor/plans/sprint_5_research_and_plan_abbdc987.plan.md`.
+Architecture brief: `.ai/briefs/modular-skill-plugin-architecture.md`.
 
 ## Unscheduled Backlog
 

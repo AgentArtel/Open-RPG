@@ -110,7 +110,7 @@ We extract three ideas (Discovery, Scoping, Capability Negotiation) without MCP'
 - Static barrel file (`plugins.ts`)
 - `AgentManager` reads barrel instead of hardcoded map
 - `skillPlugin` exports on all 5 existing skills
-- `generate_image` skill (DALL-E) as first API skill
+- `generate_image` skill (Gemini) as first API skill
 - `AgentConfig.inventory` + item granting in `onInit()`
 - `ImageGenToken` database item
 
