@@ -138,6 +138,7 @@ Cursor Sprint 5 research plan: `.cursor/plans/sprint_5_research_and_plan_abbdc98
 - `.ai/idea/11-context-rendering-shared-db.md` — Context=lifespan, time=rendering, shared Supabase
 - `.ai/idea/12-unified-system-synthesis.md` — Gap analysis, lifecycle loop, 6 fresh ideas
 - `.ai/idea/13-complete-system-narrative.md` — Complete system: layers, data architecture, NPC prompt anatomy
+- `.ai/idea/14-modular-skill-plugin-architecture.md` — MCP-inspired skill plugins, item-gated access, in-character capability negotiation
 - `.ai/idea/plugins/` — 10 plugin ideas (Cursor): builder-dashboard, quest-log, day-night-cycle, etc.
 
 ## Recent Reviews
