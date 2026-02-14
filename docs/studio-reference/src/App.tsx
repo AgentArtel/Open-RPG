@@ -12,11 +12,12 @@ import { Settings } from '@/pages/Settings';
 import { AgentLibrary } from '@/pages/AgentLibrary';
 import { WorkflowEditorPage } from '@/pages/WorkflowEditorPage';
 import { ShowcasePage } from '@/pages/ShowcasePage';
+import { NPCs } from '@/pages/NPCs';
 import { cn } from '@/lib/utils';
 
 const queryClient = new QueryClient();
 
-type Page = 'dashboard' | 'workflows' | 'executions' | 'credentials' | 'templates' | 'settings' | 'editor' | 'showcase';
+type Page = 'dashboard' | 'workflows' | 'executions' | 'credentials' | 'templates' | 'settings' | 'editor' | 'showcase' | 'npcs';
 
 const MOBILE_BREAKPOINT = 768;
 
@@ -42,6 +43,7 @@ const App = () => {
       case 'credentials': return <Credentials onNavigate={onNavigate} />;
       case 'templates': return <AgentLibrary onNavigate={onNavigate} />;
       case 'settings': return <Settings onNavigate={onNavigate} />;
+      case 'npcs': return <NPCs onNavigate={onNavigate} />;
       case 'editor': return <WorkflowEditorPage onNavigate={onNavigate} />;
       case 'showcase': return <ShowcasePage />;
       default: return <Dashboard onNavigate={onNavigate} />;
