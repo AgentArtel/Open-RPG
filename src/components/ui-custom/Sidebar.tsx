@@ -11,7 +11,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Edit3,
-  LayoutGrid
+  LayoutGrid,
+  Users
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -26,6 +27,7 @@ const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'workflows', label: 'Workflows', icon: Workflow },
   { id: 'editor', label: 'Workflow Editor', icon: Edit3 },
+  { id: 'npcs', label: 'NPCs', icon: Users },
   { id: 'executions', label: 'Executions', icon: PlayCircle },
   { id: 'credentials', label: 'Credentials', icon: Key },
   { id: 'templates', label: 'Templates', icon: Sparkles },
