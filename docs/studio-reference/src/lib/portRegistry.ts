@@ -92,7 +92,8 @@ export function isValidConnection(fromPortId: string, toPortId: string): boolean
   const fromPort = getPortDefinition(fromPortId);
   const toPort = getPortDefinition(toPortId);
   if (!fromPort || !toPort) return false;
-  return fromPort.compatibleWith.includes(toPort.type);
+  // Bidirectional check: either port lists the other as compatible
+  return fromPort.compatibleWith.includes(toPort.type) || toPort.compatibleWith.includes(fromPort.type);
 }
 
 export function getPortOffset(

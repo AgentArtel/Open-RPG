@@ -68,7 +68,7 @@ import { useExecution } from '@/hooks/useExecution';
 import { useToast } from '@/hooks/useToast';
 
 // Utilities
-import { getPortPosition, screenToCanvas } from '@/lib/canvasUtils';
+import { getPortPosition, screenToCanvas, generateConnectionId } from '@/lib/canvasUtils';
 import type { PortType } from '@/lib/portRegistry';
 import type { NodeData, Connection, NodeType } from '@/types';
 
@@ -308,6 +308,10 @@ export const WorkflowEditorPage: React.FC<WorkflowEditorPageProps> = ({ onNaviga
     handleMouseMove: handleConnectionMouseMove,
     endConnection,
     tempLine,
+    isDrawing: isConnectionDrawing,
+    snappedPort,
+    compatiblePorts,
+    drawState: connectionDrawState,
   } = useConnectionDraw({
     transform: getCanvasTransform(canvasRef.current),
     nodes,
@@ -560,7 +564,6 @@ export const WorkflowEditorPage: React.FC<WorkflowEditorPageProps> = ({ onNaviga
         'memory': { title: 'Memory', subtitle: 'Chat memory' },
       };
       const meta = titleMap[nodeType] || { title: nodeType.charAt(0).toUpperCase() + nodeType.slice(1), subtitle: 'New node' };
-      // Offset new nodes so they don't stack on top of each other
       const offsetIndex = nodes.length;
       const baseX = 300 + (offsetIndex % 4) * 260;
       const baseY = 200 + Math.floor(offsetIndex / 4) * 160;
@@ -572,14 +575,55 @@ export const WorkflowEditorPage: React.FC<WorkflowEditorPageProps> = ({ onNaviga
         subtitle: meta.subtitle,
         isConfigured: false,
       };
+
+      let newConnections = [...connections];
+
+      // Auto-connect: if adding memory/tool node, connect to nearest AI Agent
+      const isToolType = nodeType === 'http-tool' || nodeType === 'code-tool' || nodeType === 'custom-tool';
+      const isMemoryType = nodeType === 'memory';
+
+      if (isToolType || isMemoryType) {
+        const agents = nodes.filter(n => n.type === 'ai-agent');
+        if (agents.length > 0) {
+          // Find nearest agent
+          let nearestAgent = agents[0];
+          let nearestDist = Infinity;
+          for (const agent of agents) {
+            const dx = agent.position.x - baseX;
+            const dy = agent.position.y - baseY;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < nearestDist) {
+              nearestDist = dist;
+              nearestAgent = agent;
+            }
+          }
+
+          const targetPort = isMemoryType ? 'memory' : 'tool';
+          const alreadyConnected = connections.some(
+            c => c.to === nearestAgent.id && c.toPort === targetPort && c.fromPort === 'output'
+          );
+
+          if (!alreadyConnected || isToolType) {
+            newConnections.push({
+              id: generateConnectionId(),
+              from: newNode.id,
+              to: nearestAgent.id,
+              fromPort: 'output',
+              toPort: targetPort,
+            });
+            showInfo(`Auto-connected to ${nearestAgent.title}`);
+          }
+        }
+      }
+
       pushState(
-        { nodes: [...nodes, newNode], connections },
+        { nodes: [...nodes, newNode], connections: newConnections },
         'add-node'
       );
       setIsNodePaletteOpen(false);
       showSuccess(`${newNode.title} added`);
     },
-    [nodes, connections, pushState, showSuccess]
+    [nodes, connections, pushState, showSuccess, showInfo]
   );
 
   const handleDeleteSelected = useCallback(() => {
@@ -822,6 +866,7 @@ export const WorkflowEditorPage: React.FC<WorkflowEditorPageProps> = ({ onNaviga
       onConnectionStart={() => {}}
       onConnectionEnd={() => {}}
       tempConnection={tempLine}
+      isSnapped={!!snappedPort}
       onMouseMove={handleCanvasMouseMove}
       onMouseUp={handleCanvasMouseUp}
       onMouseDown={handleCanvasMouseDown}
@@ -862,6 +907,9 @@ export const WorkflowEditorPage: React.FC<WorkflowEditorPageProps> = ({ onNaviga
               executionStatus={getNodeStatus(node.id)}
               connectedToolCount={node.type === 'ai-agent' ? connections.filter(c => c.to === node.id && c.toPort === 'tool').length : 0}
               hasMemory={node.type === 'ai-agent' ? connections.some(c => c.to === node.id && c.toPort === 'memory') : false}
+              isConnectionDrawing={isConnectionDrawing}
+              highlightedPorts={compatiblePorts.map(p => ({ nodeId: p.nodeId, portId: p.portId }))}
+              snappedPortId={snappedPort?.nodeId === node.id ? snappedPort.portId : null}
               onClick={handleNodeClick(node.id)}
               onDragStart={(e, nodeId) => startNodeDrag(e, nodeId, node.position)}
               onPortMouseDown={handlePortMouseDown}

@@ -3,6 +3,7 @@ import React from 'react';
 interface TempConnectionLineProps {
   from: { x: number; y: number };
   to: { x: number; y: number };
+  isSnapped?: boolean;
 }
 
 /**
@@ -12,6 +13,7 @@ interface TempConnectionLineProps {
 export const TempConnectionLine: React.FC<TempConnectionLineProps> = ({
   from,
   to,
+  isSnapped = false,
 }) => {
   // Calculate control points for bezier curve
   const dx = to.x - from.x;
@@ -53,11 +55,11 @@ export const TempConnectionLine: React.FC<TempConnectionLineProps> = ({
       <path
         d={pathD}
         fill="none"
-        stroke="#22c55e"
-        strokeWidth="2"
-        strokeDasharray="5,5"
+        stroke={isSnapped ? '#4ade80' : '#22c55e'}
+        strokeWidth={isSnapped ? 3 : 2}
+        strokeDasharray={isSnapped ? 'none' : '5,5'}
         filter="url(#temp-glow)"
-        className="animate-pulse"
+        className={isSnapped ? '' : 'animate-pulse'}
       />
 
       {/* Start point indicator */}
@@ -73,10 +75,11 @@ export const TempConnectionLine: React.FC<TempConnectionLineProps> = ({
       <circle
         cx={to.x}
         cy={to.y}
-        r="4"
-        fill="#22c55e"
+        r={isSnapped ? 6 : 4}
+        fill={isSnapped ? '#4ade80' : '#22c55e'}
         stroke="#fff"
         strokeWidth="2"
+        className={isSnapped ? 'animate-pulse' : ''}
       />
     </svg>
   );

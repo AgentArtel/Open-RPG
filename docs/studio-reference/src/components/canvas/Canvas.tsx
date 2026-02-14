@@ -16,6 +16,8 @@ interface CanvasProps {
   onConnectionEnd: (nodeId: string, portId: string) => void;
   /** Temporary connection line while dragging */
   tempConnection?: { from: { x: number; y: number }; to: { x: number; y: number } } | null;
+  /** Whether the temp connection is snapped to a port */
+  isSnapped?: boolean;
   children: React.ReactNode;
   className?: string;
   /** Called when mouse moves on canvas - for drag/connection updates */
@@ -35,6 +37,7 @@ export const Canvas: React.FC<CanvasProps> = ({
   onConnectionStart: _onConnectionStart,
   onConnectionEnd: _onConnectionEnd,
   tempConnection,
+  isSnapped = false,
   children,
   className = '',
   onMouseMove,
@@ -177,7 +180,7 @@ export const Canvas: React.FC<CanvasProps> = ({
 
         {/* Temporary connection line (drawn inside transform so it scales) */}
         {tempConnection && (
-          <TempConnectionLine from={tempConnection.from} to={tempConnection.to} />
+          <TempConnectionLine from={tempConnection.from} to={tempConnection.to} isSnapped={isSnapped} />
         )}
       </div>
 

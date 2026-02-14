@@ -35,8 +35,8 @@ export function canvasToScreen(
 export function getPortPosition(
   nodePosition: { x: number; y: number },
   portType: 'input' | 'output' | 'tool' | 'memory',
-  nodeWidth: number = 200,
-  nodeHeight: number = 80
+  nodeWidth: number = 220,
+  nodeHeight: number = 100
 ): { x: number; y: number } {
   switch (portType) {
     case 'input':

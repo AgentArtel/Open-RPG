@@ -4,6 +4,11 @@ import { Check, Bot, MessageSquare, Database, Globe, Code2, Webhook, Sparkles, I
 import type { NodeData } from '@/types';
 import type { PortType } from '@/lib/portRegistry';
 
+interface HighlightedPort {
+  nodeId: string;
+  portId: string;
+}
+
 interface CanvasNodeProps {
   data: NodeData;
   isSelected?: boolean;
@@ -11,6 +16,9 @@ interface CanvasNodeProps {
   executionStatus?: 'waiting' | 'running' | 'success' | 'error' | 'skipped';
   connectedToolCount?: number;
   hasMemory?: boolean;
+  isConnectionDrawing?: boolean;
+  highlightedPorts?: HighlightedPort[];
+  snappedPortId?: string | null;
   onClick?: (e?: React.MouseEvent) => void;
   onDragStart?: (e: React.MouseEvent, nodeId: string) => void;
   onPortMouseDown?: (e: React.MouseEvent, portId: string, portType: PortType) => void;
@@ -48,6 +56,13 @@ const nodeColors: Record<string, string> = {
   'gemini-vision': 'text-amber-400',
 };
 
+const portGlowColors: Record<string, string> = {
+  input: 'shadow-[0_0_12px_rgba(34,197,94,0.6)]',
+  output: 'shadow-[0_0_12px_rgba(34,197,94,0.6)]',
+  tool: 'shadow-[0_0_12px_rgba(168,85,247,0.6)]',
+  memory: 'shadow-[0_0_12px_rgba(59,130,246,0.6)]',
+};
+
 export const CanvasNode: React.FC<CanvasNodeProps> = ({
   data,
   isSelected = false,
@@ -55,6 +70,9 @@ export const CanvasNode: React.FC<CanvasNodeProps> = ({
   executionStatus = 'waiting',
   connectedToolCount = 0,
   hasMemory = false,
+  isConnectionDrawing = false,
+  highlightedPorts = [],
+  snappedPortId = null,
   onClick,
   onDragStart,
   onPortMouseDown,
@@ -64,11 +82,17 @@ export const CanvasNode: React.FC<CanvasNodeProps> = ({
   const Icon = nodeIcons[data.type] || Bot;
   const iconColor = nodeColors[data.type] || 'text-white';
 
+  const isPortHighlighted = useCallback((portId: string) => {
+    return highlightedPorts.some(p => p.nodeId === data.id && p.portId === portId);
+  }, [highlightedPorts, data.id]);
+
+  const isPortSnapped = useCallback((portId: string) => {
+    return snappedPortId === portId;
+  }, [snappedPortId]);
+
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    // Only start drag on left mouse button and not on ports
     if (e.button !== 0) return;
     if ((e.target as HTMLElement).closest('.port-handle')) return;
-
     e.stopPropagation();
     onDragStart?.(e, data.id);
   }, [data.id, onDragStart]);
@@ -85,12 +109,51 @@ export const CanvasNode: React.FC<CanvasNodeProps> = ({
     onPortMouseUp?.(e, portId, portType);
   }, [onPortMouseUp]);
 
-  // Determine border style based on state
   const getBorderStyle = () => {
     if (executionStatus === 'error') return 'border-danger shadow-[0_0_0_1px_rgba(229,77,77,0.4),0_0_12px_rgba(229,77,77,0.15)]';
     if (isSelected) return 'border-green shadow-glow';
     if (isRunning) return 'border-green animate-pulse-glow';
     return 'border-white/10 hover:border-green/30 hover:shadow-glow';
+  };
+
+  const renderPort = (portId: string, portType: PortType, positionClasses: string, borderColor: string) => {
+    const highlighted = isConnectionDrawing && isPortHighlighted(portId);
+    const snapped = isConnectionDrawing && isPortSnapped(portId);
+    const dimmed = isConnectionDrawing && !highlighted && !isPortHighlighted(portId);
+
+    return (
+      <div className={cn('absolute group', positionClasses)}>
+        {/* Invisible larger hit area - 32px */}
+        <div
+          className="port-handle absolute inset-0 w-8 h-8 -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2 cursor-crosshair z-10"
+          onMouseDown={(e) => handlePortMouseDown(e, portId, portType)}
+          onMouseUp={(e) => handlePortMouseUp(e, portId, portType)}
+        />
+        {/* Visual port circle - 20px */}
+        <div
+          className={cn(
+            'port-handle w-5 h-5 rounded-full bg-dark-100 border-2 cursor-crosshair transition-all duration-150',
+            borderColor,
+            highlighted && !snapped && 'scale-125 animate-pulse',
+            highlighted && portGlowColors[portType],
+            snapped && 'scale-150 !border-green !bg-green/30',
+            snapped && 'shadow-[0_0_16px_rgba(34,197,94,0.8)]',
+            dimmed && 'opacity-30',
+            !isConnectionDrawing && 'hover:scale-125 hover:shadow-glow',
+          )}
+        />
+        {/* Label */}
+        <span className={cn(
+          'absolute text-[9px] text-white/40 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none',
+          portType === 'input' && '-top-5 left-1/2 -translate-x-1/2',
+          portType === 'output' && '-bottom-5 left-1/2 -translate-x-1/2',
+          portType === 'tool' && 'top-1/2 -right-10 -translate-y-1/2',
+          portType === 'memory' && 'top-1/2 -left-14 -translate-y-1/2',
+        )}>
+          {portType === 'input' ? 'Input' : portType === 'output' ? 'Output' : portType === 'tool' ? 'Tool' : 'Memory'}
+        </span>
+      </div>
+    );
   };
 
   return (
@@ -178,54 +241,16 @@ export const CanvasNode: React.FC<CanvasNodeProps> = ({
       )}
 
       {/* Input port (top) */}
-      <div className="absolute -top-2 left-1/2 -translate-x-1/2 group">
-        <div
-          className="port-handle w-4 h-4 rounded-full bg-dark-100 border-2 border-white/30 cursor-crosshair hover:border-green hover:scale-125 hover:shadow-glow transition-all"
-          onMouseDown={(e) => handlePortMouseDown(e, 'input', 'input')}
-          onMouseUp={(e) => handlePortMouseUp(e, 'input', 'input')}
-        />
-        <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-[9px] text-white/40 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-          Input
-        </span>
-      </div>
+      {renderPort('input', 'input', '-top-2.5 left-1/2 -translate-x-1/2', 'border-white/30')}
 
       {/* Output port (bottom) */}
-      <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 group">
-        <div
-          className="port-handle w-4 h-4 rounded-full bg-dark-100 border-2 border-green cursor-crosshair hover:scale-125 hover:shadow-glow transition-all"
-          onMouseDown={(e) => handlePortMouseDown(e, 'output', 'output')}
-          onMouseUp={(e) => handlePortMouseUp(e, 'output', 'output')}
-        />
-        <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[9px] text-white/40 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-          Output
-        </span>
-      </div>
+      {renderPort('output', 'output', '-bottom-2.5 left-1/2 -translate-x-1/2', 'border-green')}
 
       {/* Side ports for AI agents */}
       {data.type === 'ai-agent' && (
         <>
-          {/* Tool port (right) */}
-          <div className="absolute top-1/2 -right-2 -translate-y-1/2 group">
-            <div
-              className="port-handle w-3 h-3 rounded-full bg-dark-100 border-2 border-purple-400 cursor-crosshair hover:scale-125 hover:shadow-[0_0_8px_rgba(168,85,247,0.5)] transition-all"
-              onMouseDown={(e) => handlePortMouseDown(e, 'tool', 'tool')}
-              onMouseUp={(e) => handlePortMouseUp(e, 'tool', 'tool')}
-            />
-            <span className="absolute top-1/2 -right-10 -translate-y-1/2 text-[9px] text-white/40 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-              Tool
-            </span>
-          </div>
-          {/* Memory port (left) */}
-          <div className="absolute top-1/3 -left-2 -translate-y-1/2 group">
-            <div
-              className="port-handle w-3 h-3 rounded-full bg-dark-100 border-2 border-blue-400 cursor-crosshair hover:scale-125 hover:shadow-[0_0_8px_rgba(59,130,246,0.5)] transition-all"
-              onMouseDown={(e) => handlePortMouseDown(e, 'memory', 'memory')}
-              onMouseUp={(e) => handlePortMouseUp(e, 'memory', 'memory')}
-            />
-            <span className="absolute top-1/2 -left-12 -translate-y-1/2 text-[9px] text-white/40 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-              Memory
-            </span>
-          </div>
+          {renderPort('tool', 'tool', 'top-1/2 -right-2.5 -translate-y-1/2', 'border-purple-400')}
+          {renderPort('memory', 'memory', 'top-1/3 -left-2.5 -translate-y-1/2', 'border-blue-400')}
         </>
       )}
     </div>
