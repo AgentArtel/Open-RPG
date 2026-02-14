@@ -158,6 +158,7 @@ Supabase brief: `.ai/briefs/supabase-game-integration-now.md`.
 
 | Task | Agent | Verdict | Date | Review File |
 |------|-------|---------|------|-------------|
+| — | cursor | **APPROVED** | 2026-02-14 | `.ai/reviews/TASK-018b-game-schema-review.md` |
 | TASK-015-017 | cursor | **APPROVED** | 2026-02-13 | `.ai/reviews/TASK-015-016-017-review.md` |
 | TASK-012+014 | cursor | **APPROVED** | 2026-02-12 | `.ai/reviews/TASK-012-014-review.md` |
 | TASK-001-009 | cursor | **APPROVED** | 2026-02-12 | `.ai/reviews/001-009-review.md` |
