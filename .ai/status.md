@@ -45,7 +45,7 @@ Tasks organized by sprint. See `.ai/tasks/README.md` for full index with links.
 |----|-------|-------|--------|
 | TASK-018b | Supabase Agent Config (Database-First) | cursor | DONE |
 | — | Game schema isolation (009, client schema, docs) | cursor | DONE |
-| TASK-018a | Modular Skill Plugin System | cursor | PENDING |
+| TASK-018a | Modular Skill Plugin System | cursor | **REVIEW** |
 | TASK-018 | Photographer NPC + Gemini Image Generation | cursor | PENDING |
 | TASK-019 | Content Store + tagging | cursor | PENDING |
 | TASK-020 | Associative recall + social feed | cursor | PENDING |
