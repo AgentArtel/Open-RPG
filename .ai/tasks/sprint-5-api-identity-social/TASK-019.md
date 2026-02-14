@@ -10,7 +10,7 @@
 
 ### Context
 
-When NPCs create content (images via DALL-E, text, conversations), that content
+When NPCs create content (images via Gemini, text, conversations), that content
 disappears. There's no way to recall it, browse it, or build on it. This task
 creates the storage and tagging infrastructure that makes NPC-created content
 persistent, searchable, and shareable.
@@ -34,7 +34,7 @@ integration into the `generate_image` skill.
 
 **Modify files:**
 - `src/agents/perception/PerceptionEngine.ts` — Add `extractTags()` method
-- `src/agents/skills/skills/generate-image.ts` — Store content + tags after DALL-E call
+- `src/agents/skills/skills/generate-image.ts` — Store content + tags after image-generation call
 - Skill registration entry point — Register `create_post` skill
 
 **Database Schema (`003_npc_content.sql`):**
@@ -102,7 +102,7 @@ extractTags(snapshot: PerceptionSnapshot): string[] {
 
 **generate_image Integration:**
 
-After DALL-E returns a URL, store in ContentStore:
+After the image-generation API returns a URL, store in ContentStore:
 
 ```typescript
 const perceptionTags = perceptionEngine.extractTags(currentSnapshot)
@@ -143,7 +143,7 @@ export const createPostSkill: IAgentSkill = {
 - [ ] `ContentStore.recall()` returns content ranked by tag overlap count
 - [ ] `ContentStore.createPost()` creates a post linked to content
 - [ ] `PerceptionEngine.extractTags()` returns deduplicated tag array from snapshot
-- [ ] `generate_image` skill auto-stores content + tags after successful DALL-E call
+- [ ] `generate_image` skill auto-stores content + tags after successful image-generation call
 - [ ] `create_post` skill registered and available in YAML config
 - [ ] Graceful degradation: no crash when Supabase is unavailable
 - [ ] `rpgjs build` passes
@@ -155,7 +155,7 @@ export const createPostSkill: IAgentSkill = {
 - Implement the recall injection into AgentRunner (that's TASK-020)
 - Add fragment tables or skills (future task)
 - Use pgvector embeddings — simple tag counting is sufficient for MVP
-- Download/persist DALL-E images to Supabase Storage (post-MVP)
+- Download/persist generated images to Supabase Storage (post-MVP; we use Gemini for image gen)
 - Build real Instagram API integration (deferred)
 
 ### Reference

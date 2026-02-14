@@ -42,6 +42,18 @@ import { setSpawnContext } from './spawnContext'
 
 const LOG_PREFIX = '[AgentManager]'
 
+/** Snapshot of one agent's conversation for the conversation log GUI. */
+export interface ConversationSnapshot {
+  agentId: string
+  npcName: string
+  messages: Array<{
+    role: 'user' | 'assistant'
+    content: string
+    timestamp: number
+    metadata?: Record<string, unknown>
+  }>
+}
+
 /** Internal: instance plus adapter and contextProvider for spawn wiring. */
 type ManagedInstance = AgentInstance & {
   adapter: IGameChannelAdapter
@@ -262,6 +274,35 @@ export class AgentManager implements IAgentManager {
     })
     console.log(`${LOG_PREFIX} [Builder] Spawned ${configId} on ${map.id} at (${x}, ${y})`)
     return true
+  }
+
+  /**
+   * Snapshot of one agent's conversation for the conversation log GUI.
+   */
+  getConversationsForPlayer(playerId: string): ConversationSnapshot[] {
+    const result: ConversationSnapshot[] = []
+    for (const [agentId, agent] of this.agents) {
+      const messages = agent.memory.getAllMessages()
+      const relevant = messages.filter(
+        (m) =>
+          (m.role === 'user' && m.metadata?.playerId === playerId) ||
+          m.role === 'assistant'
+      )
+      if (relevant.length > 0) {
+        const snapshotMessages = relevant.slice(-50).map((m) => ({
+          role: m.role as 'user' | 'assistant',
+          content: m.content,
+          timestamp: m.timestamp,
+          metadata: m.metadata,
+        }))
+        result.push({
+          agentId,
+          npcName: agent.config.name,
+          messages: snapshotMessages,
+        })
+      }
+    }
+    return result
   }
 
   getAgent(agentId: string): AgentInstance | undefined {

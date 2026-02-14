@@ -12,6 +12,10 @@ modules = [
     name = "builder-dashboard"
     bind = "b"
 
+[inputs.conversation-log]
+    name = "conversation-log"
+    bind = "l"
+
 [start]
     map = 'simplemap'
     graphic = 'hero'

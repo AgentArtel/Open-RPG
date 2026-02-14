@@ -51,7 +51,7 @@ simulation/game data, so the world visually evolves without requiring new art as
 1. **Metrics drive style**: Aggregate game data (player activity, NPC mood averages,
    economy health, season/cycle counters) into a style vector
 2. **AI restyling**: Feed the existing tileset PNGs + style vector to an image model
-   (DALL-E, Stable Diffusion) with instructions like "restyle this tileset to feel
+   (Gemini image generation, or other) with instructions like "restyle this tileset to feel
    [darker/warmer/decayed/flourishing]"
 3. **Hot-swap tilesets**: Replace the active tileset images at runtime or between
    sessions. RPGJS loads tilesets from files — swapping the PNG changes the world
@@ -66,7 +66,7 @@ The village looks the same structurally but feels different over time:
 
 - **PerceptionEngine** (TASK-006): Already extracts environmental state. This state
   feeds the style vector.
-- **Photographer NPC** (TASK-018): Uses DALL-E already. Same pipeline for tileset
+- **Photographer NPC** (TASK-018): Uses Gemini for image gen. Same pipeline for tileset
   restyling (img2img or style transfer endpoint).
 - **Content Store** (TASK-019): Restyled tilesets ARE content — store versions with
   tags so the world can "recall" past visual states.

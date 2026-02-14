@@ -11,6 +11,7 @@ import SkillTestNpcEvent from './events/skill-test-npc'
 import AgentNpcEvent from './events/AgentNpcEvent'
 import { agentManager, setAgentNpcEventClass } from '../src/agents/core'
 import { testLLMCall } from '../src/agents/core/llm-test'
+import { createPlayerStateManager } from '../src/persistence'
 
 // ---------------------------------------------------------------------------
 // Builder Dashboard — Scripted NPC Registry
@@ -56,6 +57,13 @@ setAgentNpcEventClass(AgentNpcEvent)
  */
 const npcSpawnedOnMap: Set<string> = new Set()
 
+// ---------------------------------------------------------------------------
+// TASK-013: Player State Persistence
+// Create a PlayerStateManager once at module load. If Supabase is not
+// configured, the manager no-ops (load returns null, save skips silently).
+// ---------------------------------------------------------------------------
+const playerStateManager = createPlayerStateManager()
+
 /**
  * Toggle which NPCs spawn on the map. Set to false to disable and reduce clutter.
  */
@@ -73,7 +81,7 @@ const NPC_SPAWN_CONFIG = {
 } as const
 
 const player: RpgPlayerHooks = {
-    onConnected(player: RpgPlayer) {
+    async onConnected(player: RpgPlayer) {
         player.name = 'YourName'
         player.setComponentsTop(Components.text('{name}'))
 
@@ -92,6 +100,45 @@ const player: RpgPlayerHooks = {
                 const message = err instanceof Error ? err.message : String(err)
                 console.error('[LLM-Test] ❌ Failed:', message)
             })
+
+        // -----------------------------------------------------------------
+        // TASK-013: Restore player state from Supabase (if available)
+        // Load saved position/map. If found, changeMap to saved location.
+        // If not found or Supabase is unavailable, player starts at default.
+        // -----------------------------------------------------------------
+        try {
+            const savedState = await playerStateManager.loadPlayer(player.id)
+            if (savedState && savedState.mapId) {
+                // Restore name if saved
+                if (savedState.name) {
+                    player.name = savedState.name
+                    player.setComponentsTop(Components.text('{name}'))
+                }
+
+                // Move player to saved map and position
+                try {
+                    await player.changeMap(savedState.mapId, {
+                        x: savedState.positionX,
+                        y: savedState.positionY,
+                    })
+                    console.log(
+                        `[PlayerState] Restored "${player.id}" to ` +
+                            `map=${savedState.mapId} (${savedState.positionX}, ${savedState.positionY})`
+                    )
+                } catch (mapErr) {
+                    // Map might not exist anymore — log and let default spawn happen
+                    const msg = mapErr instanceof Error ? mapErr.message : String(mapErr)
+                    console.warn(
+                        `[PlayerState] Failed to restore map "${savedState.mapId}" ` +
+                            `for "${player.id}": ${msg} — using default spawn`
+                    )
+                }
+            }
+        } catch (err) {
+            // Never let state restore crash the connection
+            const msg = err instanceof Error ? err.message : String(err)
+            console.error(`[PlayerState] Restore error for "${player.id}":`, msg)
+        }
     },
     onInput(player: RpgPlayer, { input }) {
         if (input == Control.Back) {
@@ -176,6 +223,16 @@ const player: RpgPlayerHooks = {
                 console.error('[Builder] Error opening dashboard:', err)
             }
         }
+
+        if (input === 'conversation-log') {
+            try {
+                const conversations = agentManager.getConversationsForPlayer(player.id)
+                const gui = player.gui('conversation-log')
+                gui.open({ conversations }, { blockPlayerInput: false })
+            } catch (err) {
+                console.error('[ConversationLog] Error opening:', err)
+            }
+        }
     },
     async onJoinMap(player: RpgPlayer) {
         // Spawn NPCs on the starting map if they haven't been spawned yet.
@@ -237,7 +294,38 @@ const player: RpgPlayerHooks = {
         await player.showText('Welcome! Walk around to find the NPCs.')
         await player.showText('Press the action key (Space or Enter) when facing an NPC to talk.')
         player.setVariable('AFTER_INTRO', true)
-    }
+    },
+
+    // -----------------------------------------------------------------
+    // TASK-013: Save player state on disconnect
+    // Fire-and-forget — we don't await so disconnect isn't blocked.
+    // If Supabase is unavailable the manager no-ops silently.
+    // -----------------------------------------------------------------
+    onDisconnected(player: RpgPlayer) {
+        try {
+            const map = player.getCurrentMap<RpgMap>()
+            const mapId = map?.id ?? 'simplemap'
+
+            playerStateManager
+                .savePlayer({
+                    playerId: player.id,
+                    name: player.name ?? 'Player',
+                    mapId,
+                    positionX: player.position.x,
+                    positionY: player.position.y,
+                    direction: (player as unknown as { direction?: number }).direction ?? 0,
+                    stateData: {},
+                })
+                .catch((err: unknown) => {
+                    const msg = err instanceof Error ? err.message : String(err)
+                    console.error(`[PlayerState] Save on disconnect failed for "${player.id}":`, msg)
+                })
+        } catch (err) {
+            // Never let save logic crash the disconnect flow
+            const msg = err instanceof Error ? err.message : String(err)
+            console.error(`[PlayerState] Disconnect handler error for "${player.id}":`, msg)
+        }
+    },
 }
 
 export default player

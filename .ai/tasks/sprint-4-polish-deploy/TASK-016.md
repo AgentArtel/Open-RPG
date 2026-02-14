@@ -1,6 +1,6 @@
 ## TASK-016: Agent Conversation Log GUI
 
-- **Status**: PENDING
+- **Status**: DONE
 - **Assigned**: cursor
 - **Priority**: P1-High
 - **Phase**: 5 (Polish)
@@ -376,4 +376,5 @@ Both `InMemoryAgentMemory` and `SupabaseAgentMemory` need to implement this.
 
 ### Handoff Notes
 
-_(To be filled by implementer)_
+- Implemented: AgentRunner stores user message with `metadata.playerId` when `event.player` exists; AgentManager `getConversationsForPlayer()` + `ConversationSnapshot`; `main/gui/conversation-log.vue` (L key, tabs, blockPlayerInput: false); rpg.toml keybind; player.ts onInput. Build passes. Conversation data persisted to Supabase when configured. Product decision: in-game log panel not required for MVP; data will be streamed to external dashboard. Panel (L key) remains available if needed.
+- **Orchestrator review (2026-02-13):** PASS. Note: assistant messages are not tagged per-player, so all NPC responses show for every player; acceptable MVP limitation.

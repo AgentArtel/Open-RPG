@@ -1,6 +1,6 @@
 ## TASK-013: Player State Persistence via Supabase
 
-- **Status**: IN PROGRESS
+- **Status**: DONE
 - **Assigned**: cursor
 - **Priority**: P2-Medium
 - **Phase**: 5 (Player Persistence)
@@ -124,15 +124,15 @@ onDisconnected(player: RpgPlayer) {
 
 ### Acceptance Criteria
 
-- [ ] SQL migration creates `player_state` table with auto-updating `updated_at`
-- [ ] `PlayerStateManager.savePlayer()` upserts player state
-- [ ] `PlayerStateManager.loadPlayer()` retrieves saved state
-- [ ] `main/player.ts` saves state on `onDisconnected`
-- [ ] `main/player.ts` restores state on `onConnected`/`onJoinMap`
-- [ ] Player position persists across browser refresh (manual test)
-- [ ] No crash when Supabase is unavailable (graceful skip)
-- [ ] `rpgjs build` passes
-- [ ] `npx tsc --noEmit` passes
+- [x] SQL migration creates `player_state` table with auto-updating `updated_at`
+- [x] `PlayerStateManager.savePlayer()` upserts player state
+- [x] `PlayerStateManager.loadPlayer()` retrieves saved state
+- [x] `main/player.ts` saves state on `onDisconnected`
+- [x] `main/player.ts` restores state on `onConnected`/`onJoinMap`
+- [x] Player position persists across browser refresh (manual test)
+- [x] No crash when Supabase is unavailable (graceful skip)
+- [x] `rpgjs build` passes
+- [x] `npx tsc --noEmit` passes
 
 ### Do NOT
 
@@ -154,4 +154,17 @@ onDisconnected(player: RpgPlayer) {
 
 ### Handoff Notes
 
-_(To be filled by implementer)_
+**Implemented by Cursor (commit d145283, 2026-02-14).**
+
+Files created:
+- `src/persistence/PlayerStateManager.ts` (195 lines) — save/load/delete with Supabase, graceful null-client no-op
+- `src/persistence/index.ts` (32 lines) — barrel exports + `createPlayerStateManager()` factory
+- `supabase/migrations/002_player_state.sql` (36 lines) — table, trigger, comment
+- `src/persistence/VERIFICATION.md` — manual test instructions
+- `src/persistence/test-manual.ts` — DB round-trip test script
+- `src/persistence/test-edge-cases.ts` — edge case tests
+
+Files modified:
+- `main/player.ts` — `onConnected` loads state and restores map/position; `onDisconnected` saves state fire-and-forget
+
+Implementation matches spec exactly. Direction accessed via cast `(player as unknown as { direction?: number }).direction ?? 0` since RpgPlayer typing doesn't expose it directly. All errors caught — never crashes.
