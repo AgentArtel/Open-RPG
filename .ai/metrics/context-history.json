@@ -211,5 +211,23 @@
     "session_age_hours": 0,
     "file_operations": 0,
     "status": "WARNING"
+  },
+  {
+    "timestamp": "2026-02-13T23:49:12Z",
+    "session": "unknown",
+    "token_count": 30701,
+    "file_size_bytes": 75225,
+    "session_age_hours": 0,
+    "file_operations": 0,
+    "status": "WARNING"
+  },
+  {
+    "timestamp": "2026-02-13T23:51:58Z",
+    "session": "unknown",
+    "token_count": 30701,
+    "file_size_bytes": 75225,
+    "session_age_hours": 0,
+    "file_operations": 0,
+    "status": "WARNING"
   }
 ]
