@@ -2,8 +2,8 @@
 
 ## Overview
 
-Add the first API-powered skill (image generation via DALL-E/gpt-image-1) to prove
-the API-as-Identity pattern. One new skill, one new NPC, one new inventory token.
+Add the first API-powered skill (image generation via **Gemini API**) to prove
+the API-as-Identity pattern. One new skill, one new NPC, one new inventory token. We use **Gemini** for all image, video, and sound generation; **Kimi** for chat/LLM only.
 
 ---
 
@@ -33,17 +33,17 @@ Register in the database autoload directory so RPGJS picks it up automatically.
 **File:** `src/agents/skills/skills/generate-image.ts`
 
 ```typescript
-import OpenAI from 'openai'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 import type { IAgentSkill, SkillResult, GameContext } from '../types'
 
-// Lazy-init OpenAI client (separate from Moonshot LLM client)
-let openaiClient: OpenAI | null = null
-function getOpenAIClient(): OpenAI | null {
-  if (openaiClient) return openaiClient
-  const key = process.env.OPENAI_API_KEY
+// Lazy-init Gemini client (separate from Moonshot LLM client; we use Gemini for image/video/sound)
+let geminiClient: GoogleGenerativeAI | null = null
+function getGeminiClient(): GoogleGenerativeAI | null {
+  if (geminiClient) return geminiClient
+  const key = process.env.GEMINI_API_KEY
   if (!key) return null
-  openaiClient = new OpenAI({ apiKey: key })
-  return openaiClient
+  geminiClient = new GoogleGenerativeAI(key)
+  return geminiClient
 }
 
 export const generateImageSkill: IAgentSkill = {
@@ -78,8 +78,8 @@ export const generateImageSkill: IAgentSkill = {
       }
     }
 
-    // Check OpenAI client available
-    const client = getOpenAIClient()
+    // Check Gemini client available
+    const client = getGeminiClient()
     if (!client) {
       return {
         success: false,
@@ -99,16 +99,8 @@ export const generateImageSkill: IAgentSkill = {
     }
 
     try {
-      const response = await client.images.generate({
-        model: 'dall-e-3',
-        prompt,
-        n: 1,
-        size: '1024x1024',
-        quality: 'standard',
-        style,
-      })
-
-      const imageUrl = response.data[0]?.url
+      // Call Gemini image generation API (see https://ai.google.dev/gemini-api/docs/image-generation); implement per SDK docs and return image URL
+      const imageUrl: string | null = null // TODO: replace with actual Gemini image API call
       if (!imageUrl) {
         return {
           success: false,
@@ -212,7 +204,7 @@ behavior:
 
 Add:
 ```
-OPENAI_API_KEY=           # Required for Photographer NPC (DALL-E image generation)
+GEMINI_API_KEY=           # Required for Photographer NPC (Gemini image generation); we use Gemini for image/video/sound
 ```
 
 ---
@@ -233,22 +225,22 @@ Track calls in a simple in-memory Map. Reset on window expiry.
 
 ## Step 7: Test Flow
 
-1. Set `OPENAI_API_KEY` in `.env`
+1. Set `GEMINI_API_KEY` in `.env`
 2. Start dev server
 3. Walk to Clara's spawn location
 4. Press action key → Clara greets you
-5. Describe an image → Clara calls DALL-E
+5. Describe an image → Clara calls Gemini (image generation)
 6. Clara hands back result with in-character dialogue
 7. Check player variables for stored photo URL
-8. Test without `OPENAI_API_KEY` → graceful degradation
+8. Test without `GEMINI_API_KEY` → graceful degradation
 9. Test content policy violation → appropriate NPC response
 
 ---
 
 ## Architecture Notes
 
-- **OpenAI client is separate from Moonshot LLM client** — different API keys, different base URLs
+- **Gemini client is separate from Moonshot LLM client** — we use Gemini for image/video/sound, Kimi for chat
 - **Token gating checks `hasItem` on the NPC event**, not the player
-- **Image URLs are temporary** (DALL-E URLs expire after ~1 hour) — post-MVP should download and store in Supabase Storage
+- **Image URLs may be temporary** — post-MVP should download and store in Supabase Storage when needed
 - **Player photos stored in variables** for MVP simplicity — post-MVP could use proper inventory items
 - **The LLM decides when to call `generate_image`** — we don't force it. The NPC should converse first, then generate when ready.

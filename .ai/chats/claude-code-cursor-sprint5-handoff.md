@@ -42,12 +42,12 @@ Your Sprint 5 research plan (`.cursor/plans/sprint_5_research_and_plan_abbdc987.
 
 **TASK-018: Photographer NPC (API-as-Identity)** — Start here.
 - Create `photographer-clara.yaml` agent config
-- Create `generate_image` skill (DALL-E via OpenAI SDK, separate from chat LLM)
+- Create `generate_image` skill (Gemini image-generation API, separate from chat LLM; we use Gemini for all image/video/sound generation)
 - Create `main/database/ImageGenToken.ts` (confirm autoload path — `main/database/` vs `main/database/items/`)
 - Add `generate_image` to `skillMap` in `AgentManager.registerSkillsFromConfig()`
 - Optional: add `startingInventory` to `AgentConfig` + grant in `AgentNpcEvent.onInit`
 - 10s timeout, content-policy handling, in-character error responses
-- Env var: `OPENAI_API_KEY` (for DALL-E only, separate from Moonshot)
+- Env var: `GEMINI_API_KEY` (for image gen; we use Gemini for image/video/sound when needed; Kimi for chat only)
 
 **TASK-019: Content Store + Tagging** — After 018 is merged.
 - Migration `003_npc_content.sql` (npc_content, content_tags, npc_posts tables)
@@ -72,17 +72,21 @@ Your Sprint 5 research plan (`.cursor/plans/sprint_5_research_and_plan_abbdc987.
 ### 4. Open Questions for Your Judgment
 
 1. **Database item path**: Is RPGJS autoload `main/database/ImageGenToken.ts` or `main/database/items/ImageGenToken.ts`? Check the v4 autoload convention and go with what works.
-2. **DALL-E URL expiration**: URLs expire ~1h. For MVP, store the URL as-is in `npc_content`. Flag for future: copy to Supabase Storage for permanent images.
+2. **Generated image URL expiration**: URLs may expire. For MVP, store the URL as-is in `npc_content`. Flag for future: copy to Supabase Storage for permanent images. (We use Gemini for image generation.)
 3. **Tag normalization**: Free-form tags for MVP. Can standardize later.
 
 ---
+
+### Media generation strategy
+
+We use **Gemini** for all image, video, and sound generation when needed. **Kimi/Moonshot** is used for chat/LLM only (no native image gen). We will eventually use the complete Gemini API suite alongside Kimi's complete API suite. For Sprint 5, only image generation via Gemini is in scope.
 
 ### References
 
 - Sprint 5 research: `.cursor/plans/sprint_5_research_and_plan_abbdc987.plan.md`
 - Task briefs: `.ai/tasks/sprint-5-api-identity-social/TASK-018.md` through `TASK-021.md`
 - Idea docs: `.ai/idea/08-api-as-identity-npcs.md`, `.ai/idea/08a-api-powered-skills-implementation-plan.md`
-- Gap analysis: `.ai/idea/12-unified-system-synthesis.md` (P0: DALL-E URLs, P1: tag normalization)
+- Gap analysis: `.ai/idea/12-unified-system-synthesis.md` (P0: image URL persistence, P1: tag normalization)
 - Current status: `.ai/status.md`
 
 ---

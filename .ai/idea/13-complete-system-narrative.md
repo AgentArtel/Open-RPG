@@ -80,9 +80,9 @@ After:  "Welcome back. Last time you asked about the mountain path."
 This is the biggest conceptual leap. Before this layer, NPCs only talk. After
 it, they produce real artifacts:
 
-- **The Photographer (Clara)** generates images via DALL-E when players describe
+- **The Photographer (Clara)** generates images via **Gemini** when players describe
   scenes. "Can you capture the sunset over the village?" → Clara calls
-  `generate_image` → real image appears, stored permanently in Supabase Storage,
+  `generate_image` → real image appears (Gemini), stored permanently in Supabase Storage,
   tagged with what's in it.
 
 - **Content Store** holds everything NPCs create. Every image, every post, every

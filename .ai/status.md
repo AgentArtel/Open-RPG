@@ -132,7 +132,7 @@ Architecture brief: `.ai/briefs/modular-skill-plugin-architecture.md`.
 - `.ai/idea/06-supabase-persistence.md` — Supabase persistence
 - `.ai/idea/07-session-recorder-workflow-npc-jobs.md` — Session recorder / NPC jobs (Cursor)
 - `.ai/idea/08-api-as-identity-npcs.md` — API-as-Identity NPC vision (token economy, four-stage progression)
-- `.ai/idea/08a-api-powered-skills-implementation-plan.md` — DALL-E skill + Photographer NPC impl plan
+- `.ai/idea/08a-api-powered-skills-implementation-plan.md` — Gemini image skill + Photographer NPC impl plan
 - `.ai/idea/09-npc-social-memory-fragments.md` — NPC social feed, associative recall, fragment quests
 - `.ai/idea/09a-social-memory-fragments-implementation-plan.md` — ContentStore + tagging + recall + feed impl plan
 - `.ai/idea/10-agent-evaluation-arena.md` — Agent benchmarking, performance tracking, paid evaluation service

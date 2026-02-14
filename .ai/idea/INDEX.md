@@ -41,7 +41,7 @@ This folder holds project vision, research, feature ideas, implementation plans,
 | [05-multi-provider-llm-gateway.md](05-multi-provider-llm-gateway.md) | Provider-agnostic LLM gateway: route by tier (e.g. Copilot idle, Kimi conversation). |
 | [06-supabase-persistence.md](06-supabase-persistence.md) | Supabase as persistence: agent memory, player state, semantic search (pgvector). |
 | [07-session-recorder-workflow-npc-jobs.md](07-session-recorder-workflow-npc-jobs.md) | Record player sessions as logs, label them as workflows, assign workflows to NPCs as repeatable daily jobs. |
-| [08-api-as-identity-npcs.md](08-api-as-identity-npcs.md) | API-as-Identity: NPC personas built around API access (Photographer=DALL-E, Musician=Suno), token-gated economy, four-stage NPC progression. |
+| [08-api-as-identity-npcs.md](08-api-as-identity-npcs.md) | API-as-Identity: NPC personas built around API access (Photographer=Gemini image, Musician=Suno/Udio custom, Seer=Gemini video or Runway custom), token-gated economy, four-stage NPC progression. Gemini for image/video/sound; Kimi for chat; custom integrations for music etc. |
 | [09-npc-social-memory-fragments.md](09-npc-social-memory-fragments.md) | NPC social feed (Instagram clone), associative memory via semantic tag recall, Fragment quest system (past/future), environment-driven personality. |
 | [10-agent-evaluation-arena.md](10-agent-evaluation-arena.md) | In-game agent benchmarking, performance-driven task assignment, improvement tracking, paid evaluation service for external agents. |
 | [11-context-rendering-shared-db.md](11-context-rendering-shared-db.md) | Context length = NPC lifespan, time as AI-restyled tilesets ("rendering"), shared Supabase for entire ecosystem. |
@@ -56,7 +56,7 @@ This folder holds project vision, research, feature ideas, implementation plans,
 | [05a-multi-provider-implementation-plan.md](05a-multi-provider-implementation-plan.md) | How to implement the multi-provider LLM gateway (builds on LLMClient). |
 | [06a-supabase-implementation-plan.md](06a-supabase-implementation-plan.md) | How to add Supabase persistence (agent memory + player state). |
 | [07a-session-recorder-implementation-plan.md](07a-session-recorder-implementation-plan.md) | How to build session recorder, workflow labeling, and NPC job replay (phased). |
-| [08a-api-powered-skills-implementation-plan.md](08a-api-powered-skills-implementation-plan.md) | How to add DALL-E image generation skill + Photographer NPC (Stage 2 proof). |
+| [08a-api-powered-skills-implementation-plan.md](08a-api-powered-skills-implementation-plan.md) | How to add Gemini image generation skill + Photographer NPC (Stage 2 proof). We use Gemini for image/video/sound; Kimi for chat. |
 | [09a-social-memory-fragments-implementation-plan.md](09a-social-memory-fragments-implementation-plan.md) | ContentStore + semantic tagging + associative recall + Lovable feed UI + fragment system. |
 | [10a-agent-evaluation-implementation-plan.md](10a-agent-evaluation-implementation-plan.md) | Evaluation schema, examiner NPC, profiles, task assignment, dashboard (TASK-022–026). |
 

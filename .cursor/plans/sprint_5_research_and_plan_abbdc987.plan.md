@@ -51,7 +51,7 @@ Sprint 5 has a strict dependency order:
 
 ### 1.3 Gaps and Risks (from idea docs)
 
-- **12-unified-system-synthesis.md** (P0): “Supabase Storage for images” — add to TASK-018 or follow-up; DALL-E URLs expire ~1h, so MVP stores URL in player variable and in npc_content; persistent images = Supabase Storage later.
+- **12-unified-system-synthesis.md** (P0): “Supabase Storage for images” — add to TASK-018 or follow-up; Generated image URLs may expire, so MVP stores URL in player variable and in npc_content; persistent images = Supabase Storage later. We use Gemini for image (and eventually video/sound) generation; Kimi for chat only.
 - **12-unified-system-synthesis.md** (P1): “Tag normalization” — add to TASK-019 or later; MVP uses free-form tags.
 - **TASK-018**: Rate limiting is explicitly out of scope (“add as separate issue/task”); 10s timeout and in-character errors are in scope.
 - **TASK-021**: Real Instagram API is deferred; feed UI only needs `approved` and `posted_externally` flags.
@@ -72,7 +72,7 @@ Sprint 5 has a strict dependency order:
 | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | Task specs                                  | [.ai/tasks/sprint-5-api-identity-social/](.ai/tasks/sprint-5-api-identity-social/) — TASK-018, 019, 020, 021, README               |
 | API-as-Identity vision                      | [.ai/idea/08-api-as-identity-npcs.md](.ai/idea/08-api-as-identity-npcs.md)                                                         |
-| Implementation (DALL-E + Clara)             | [.ai/idea/08a-api-powered-skills-implementation-plan.md](.ai/idea/08a-api-powered-skills-implementation-plan.md)                   |
+| Implementation (Gemini image + Clara)      | [.ai/idea/08a-api-powered-skills-implementation-plan.md](.ai/idea/08a-api-powered-skills-implementation-plan.md)                   |
 | Social + memory vision                      | [.ai/idea/09-npc-social-memory-fragments.md](.ai/idea/09-npc-social-memory-fragments.md)                                           |
 | Implementation (ContentStore, recall, feed) | [.ai/idea/09a-social-memory-fragments-implementation-plan.md](.ai/idea/09a-social-memory-fragments-implementation-plan.md)         |
 | Gaps and priorities                         | [.ai/idea/12-unified-system-synthesis.md](.ai/idea/12-unified-system-synthesis.md) (P0/P1 table)                                   |
@@ -89,7 +89,7 @@ Sprint 5 has a strict dependency order:
 ## 3. Recommendations
 
 1. **Order:** Implement 018 first, then 019. After 019, 020 (cursor) and 021 (lovable) can proceed in parallel.
-2. **TASK-018:** Add optional `startingInventory` to AgentConfig and grant items in AgentNpcEvent.onInit; verify RpgEvent addItem/hasItem (by id string) in RPGJS version in use. Create `main/database/` (or `main/database/items/`) and ImageGenToken; register generate_image in AgentManager skillMap; lazy-init OpenAI client for DALL-E; 10s timeout and content-policy handling as specified.
+2. **TASK-018:** Add optional `startingInventory` to AgentConfig and grant items in AgentNpcEvent.onInit; verify RpgEvent addItem/hasItem (by id string) in RPGJS version in use. Create `main/database/` (or `main/database/items/`) and ImageGenToken; register generate_image in AgentManager skillMap; lazy-init **Gemini** client for image generation (`GEMINI_API_KEY`); 10s timeout and content-policy handling as specified. We use Gemini for all image/video/sound generation; Kimi for chat only.
 3. **TASK-019:** Add migration 003_npc_content.sql; implement ContentStore (storeContent, recall with relevance, createPost, getRecentPosts); add PerceptionEngine.extractTags() using snapshot.entities and location.map (and optional time if added); wire generate_image to store content + tags after success; add create_post skill and register it; keep graceful Supabase fallback.
 4. **TASK-020:** Inject recall in AgentRunner after snapshot, before buildSystemPrompt: extractTags → recall(agentId, tags, 3) → format “Your Memories” section → pass into buildSystemPrompt (or extend buildSystemPrompt to accept optional recall block). Ensure ContentStore.recall returns relevance; handle null/empty ContentStore gracefully.
 5. **TASK-021 (Lovable):** Implement feed UI against Supabase npc_posts + npc_content; like/approve and filter by agent_id; ensure RLS allows anon read and controlled write for likes/approved; leave Instagram API for a later task.
@@ -105,9 +105,9 @@ flowchart LR
   subgraph T018
     Clara[Clara YAML]
     GenImg[generate_image skill]
-    DALL-E[DALL-E API]
+    Gemini[Gemini Image API]
     Clara --> GenImg
-    GenImg --> DALL-E
+    GenImg --> Gemini
   end
   subgraph T019
     CS[ContentStore]
