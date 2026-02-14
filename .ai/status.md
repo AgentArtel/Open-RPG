@@ -18,11 +18,11 @@ Tasks organized by sprint. See `.ai/tasks/README.md` for full index with links.
 | [Sprint 1](tasks/sprint-1-core-agent/) | 3–4 | Core agent system | 006–009 | DONE |
 | [Sprint 2](tasks/sprint-2-llm-gateway/) | 3.5 | Multi-provider LLM | 010–011 | BACKLOG |
 | **[Sprint 3](tasks/sprint-3-persistence/)** | **5** | **Persistence + AgentManager** | **012–014** | **ACTIVE** |
-| [Sprint 4](tasks/sprint-4-polish-deploy/) | 5 | Polish + deploy | 015–017 | NEXT |
-| [Sprint 5](tasks/sprint-5-api-identity-social/) | 6 | API-as-Identity + social | 018–021 | BACKLOG |
+| [Sprint 4](tasks/sprint-4-polish-deploy/) | 5 | Polish + deploy | 015–017 | DONE |
+| **[Sprint 5](tasks/sprint-5-api-identity-social/)** | **6** | **API-as-Identity + social** | **018–021** | **NEXT** |
 | [Sprint 6](tasks/sprint-6-evaluation-arena/) | 7 | Evaluation arena | 022–026 | BACKLOG |
 
-## Active Sprint 3 — Persistence + Agent Management
+## Sprint 3 — Persistence + Agent Management
 
 | ID | Title | Agent | Status |
 |----|-------|-------|--------|
@@ -38,15 +38,16 @@ Tasks organized by sprint. See `.ai/tasks/README.md` for full index with links.
 | TASK-016 | Agent Conversation Log GUI | cursor | DONE |
 | TASK-017 | Deploy to Railway | cursor | DONE |
 
-## Next — Sprint 4: Polish + Deploy
+## Next — Sprint 5: API-as-Identity + Social
 
 | ID | Title | Agent | Status |
 |----|-------|-------|--------|
-| TASK-015 | NPC Speech Bubble GUI | cursor | DONE |
-| TASK-016 | Agent Conversation Log GUI | cursor | DONE |
-| TASK-017 | Deploy to Railway | cursor | DONE |
+| TASK-018 | Photographer NPC (API-as-Identity) | cursor | PENDING |
+| TASK-019 | Content Store + tagging | cursor | PENDING |
+| TASK-020 | Associative recall + social feed | cursor | PENDING |
+| TASK-021 | Lovable feed integration | cursor | PENDING |
 
-**Recommended order**: 015 → 016 → 017 (deploy with all GUI polish in place).
+**Recommended order**: 018 → 019 → 020 → 021. See `.ai/tasks/sprint-5-api-identity-social/` for briefs.
 
 ## Unscheduled Backlog
 
@@ -136,6 +137,8 @@ Tasks organized by sprint. See `.ai/tasks/README.md` for full index with links.
 | TASK-012+014 | cursor | **APPROVED** | 2026-02-12 | `.ai/reviews/TASK-012-014-review.md` |
 | TASK-001-009 | cursor | **APPROVED** | 2026-02-12 | `.ai/reviews/001-009-review.md` |
 | TASK-008 | cursor | **APPROVED** | 2026-02-11 | `.ai/reviews/008-review.md` |
+
+**TASK-015–017 Approval (2026-02-13):** Orchestrator audit (commit 4b32195): all three tasks PASS. TASK-015: npc-bubble.vue, say skill mode/defaultSpeechMode, content policy — correct. TASK-016: conversation-log.vue, getConversationsForPlayer, L keybind — correct; note: assistant messages not per-player (MVP acceptable). TASK-017: /health, railway.toml, Dockerfile, package.json start — correct. No fixes required.
 
 **TASK-012+014 Approval (2026-02-12):** SupabaseAgentMemory implements IAgentMemory with write-behind buffer, correct error handling, graceful fallback. AgentManager implements IAgentManager with YAML loading, skill wiring, bridge registration via spawnContext pattern. Clever solution for `createDynamicEvent` limitation. Builder dashboard bonus. Minor notes: player.ts still has scripted NPC spawn config alongside AgentManager (acceptable hybrid). Tasks organized in `.ai/tasks/` by sprint folder.
 
