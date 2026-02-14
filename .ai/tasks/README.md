@@ -21,4 +21,9 @@ Tasks are organized by sprint. Each sprint folder contains the task briefs for t
 - **PENDING**: Queued next after current sprint completes
 - **BACKLOG**: Future work, not yet scheduled
 
+### When closing a sprint
+
+- Update `.ai/status.md` and task briefs to DONE.
+- If commands, env vars, deployment, quickstart, or repo structure changed this sprint, update `README.md` to match.
+
 See `.ai/status.md` for the current sprint and active task details.
