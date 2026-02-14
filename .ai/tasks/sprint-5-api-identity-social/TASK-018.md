@@ -5,9 +5,15 @@
 - **Priority**: P1-High
 - **Phase**: 6 (API-Powered Skills)
 - **Type**: Create + Modify
-- **Depends on**: TASK-007 (Skill System), TASK-014 (AgentManager)
+- **Depends on**: TASK-018a (Modular Skill Plugin System), TASK-007 (Skill System), TASK-014 (AgentManager)
 - **Blocks**: Future API service NPCs (Musician, Seer, Mailman)
 - **Human prerequisite**: Set `GEMINI_API_KEY` in `.env`
+- **New dependency**: `@google/generative-ai` (Gemini SDK for image generation)
+
+> **Note**: TASK-018a provides the plugin infrastructure (SkillPlugin types, barrel
+> file, `AgentManager` refactor, `AgentConfig.inventory`, `ImageGenToken` item).
+> This task uses that infrastructure to build the first API-backed skill and NPC.
+> PM-directed cross-boundary edit (2026-02-14).
 
 ### Context
 
@@ -29,28 +35,14 @@ API access gated by an inventory token. Graceful degradation when API is unavail
 ### Specifications
 
 **Create files:**
-- `main/database/ImageGenToken.ts` — RPGJS database item for the token (~15 lines)
-- `src/agents/skills/skills/generate-image.ts` — Image generation skill (~100 lines)
-- `src/config/agents/photographer-clara.yaml` — Photographer NPC config
+- `src/agents/skills/skills/generate-image.ts` — Image generation skill with `skillPlugin` export (~120 lines)
+- `src/config/agents/photographer-clara.yaml` — Photographer NPC config with `inventory`
 
 **Modify files:**
-- `src/agents/skills/SkillRegistry.ts` or skill registration entry point — Register `generate_image`
+- `src/agents/skills/plugins.ts` — Add one barrel export line for `generateImagePlugin`
 - `.env.example` — Add `GEMINI_API_KEY`
 
-**Token Database Item (`main/database/ImageGenToken.ts`):**
-
-```typescript
-import { Item } from '@rpgjs/database'
-
-@Item({
-  id: 'image-gen-token',
-  name: 'Mystical Lens',
-  description: 'A shimmering lens that allows the bearer to capture visions.',
-  price: 0,
-  consumable: false,
-})
-export default class ImageGenToken {}
-```
+**Note:** `ImageGenToken` database item and plugin infrastructure are provided by TASK-018a.
 
 **Image Generation Skill (`src/agents/skills/skills/generate-image.ts`):**
 
@@ -96,17 +88,9 @@ Key behaviors:
 **Token Gating Pattern:**
 
 The token check happens inside the skill's `execute()` function. The NPC must have the
-token in their inventory. For MVP, the AgentManager gives the NPC the token at spawn:
-
-```typescript
-// In AgentManager, after spawning NPC:
-if (config.startingInventory?.includes('image-gen-token')) {
-  npcEvent.addItem('image-gen-token')
-}
-```
-
-Or handle via `onInit()` in the event class. The exact approach depends on whether
-`RpgEvent` supports `addItem()` (it inherits from `RpgPlayer`, so it should).
+token in their inventory. TASK-018a handles granting inventory items at spawn via
+`AgentNpcEvent.onInit()` (using `addItem()` — `RpgEvent` inherits from `RpgPlayer`).
+Clara's YAML config includes `inventory: ['image-gen-token']`, so she spawns with the token.
 
 **Photographer Config (`src/config/agents/photographer-clara.yaml`):**
 
@@ -133,6 +117,8 @@ skills:
   - emote
   - wait
   - generate_image
+inventory:
+  - image-gen-token
 spawn:
   map: simplemap
   x: 400
@@ -161,13 +147,15 @@ Post-MVP: download images to Supabase Storage (generated image URLs may expire; 
 
 ### Acceptance Criteria
 
-- [ ] `ImageGenToken` database item exists and is autoloaded by RPGJS
 - [ ] `generate_image` skill implements `IAgentSkill` with correct parameter schema
+- [ ] `generate_image` skill exports a `skillPlugin` object (uses TASK-018a plugin system)
+- [ ] `skillPlugin` is added to `plugins.ts` barrel file (one line)
 - [ ] Skill checks for `ImageGenToken` before calling API (returns in-character refusal if missing)
-- [ ] Skill creates Gemini client from `GEMINI_API_KEY` env var (separate from Moonshot)
+- [ ] Skill creates Gemini client from `GEMINI_API_KEY` env var (separate from Moonshot LLM client)
 - [ ] Skill calls Gemini image generation API and returns image URL
 - [ ] Photo URL stored in player variable (`PHOTOS`)
-- [ ] Photographer Clara spawns from YAML config
+- [ ] Photographer Clara YAML config exists with `inventory: ['image-gen-token']`
+- [ ] Photographer Clara spawns from YAML config via AgentManager
 - [ ] Clara engages conversationally, then generates when appropriate
 - [ ] Graceful degradation when `GEMINI_API_KEY` is not set (in-character refusal)
 - [ ] Content policy violations return in-character refusal (not crash)
@@ -183,9 +171,13 @@ Post-MVP: download images to Supabase Storage (generated image URLs may expire; 
 - Make the Photographer wander autonomously (she's stationary for Stage 2)
 - Modify the LLM client or AgentRunner — the skill is self-contained
 - Add music/video/email API skills (one NPC at a time, prove the pattern first)
+- Modify plugin infrastructure (SkillPlugin types, barrel pattern, AgentManager refactor) — that's TASK-018a
+- Create `ImageGenToken` database item — that's TASK-018a
 
 ### Reference
 
+- Plugin infrastructure: TASK-018a (`.ai/tasks/sprint-5-api-identity-social/TASK-018a.md`)
+- Plugin architecture: `.ai/idea/14-modular-skill-plugin-architecture.md`
 - Feature idea: `.ai/idea/08-api-as-identity-npcs.md`
 - Implementation plan: `.ai/idea/08a-api-powered-skills-implementation-plan.md`
 - Skill interface: `src/agents/skills/types.ts` (`IAgentSkill`, `SkillResult`, `GameContext`)
@@ -195,7 +187,7 @@ Post-MVP: download images to Supabase Storage (generated image URLs may expire; 
 - Agent YAML config: `src/config/agents/elder-theron.yaml` (reference)
 - RPGJS inventory API: `docs/rpgjs-guide.md`, `@rpgjs/server` `ItemManager`
 - Gemini image generation: https://ai.google.dev/gemini-api/docs/image-generation
-- Vision doc (full context): user-provided API-as-Identity architecture doc
+- Orchestrator decisions: `.ai/chats/claude-code-cursor-plugin-architecture-response.md`
 
 ### Handoff Notes
 
