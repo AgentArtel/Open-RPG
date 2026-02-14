@@ -136,6 +136,12 @@ export interface AgentConfig {
 
   /** Behavioral tuning. */
   readonly behavior: AgentBehaviorConfig;
+
+  /**
+   * Items the NPC spawns with (granted via addItem in onInit).
+   * Used for item-gated skill access (e.g. 'image-gen-token' for generate_image).
+   */
+  readonly inventory?: ReadonlyArray<string>;
 }
 
 // ---------------------------------------------------------------------------

@@ -33,14 +33,8 @@ import { LaneQueue } from './LaneQueue'
 import { LLMClient } from './LLMClient'
 import { PerceptionEngine } from '../perception/PerceptionEngine'
 import { SkillRegistry } from '../skills/SkillRegistry'
-import {
-  moveSkill,
-  saySkill,
-  createLookSkill,
-  emoteSkill,
-  waitSkill,
-} from '../skills'
-import type { IAgentSkill } from '../skills/types'
+import * as skillPlugins from '../skills/plugins'
+import type { SkillPlugin, SkillDependencies } from '../skills/plugin'
 import { createAgentMemory } from '../memory'
 import { bridge } from '../bridge'
 import { GameChannelAdapter } from '../bridge/GameChannelAdapter'
@@ -63,6 +57,7 @@ interface AgentConfigRow {
   skills: string[] | null
   spawn: Record<string, unknown> | null
   behavior: Record<string, unknown> | null
+  inventory?: string[] | null
 }
 
 /**
@@ -107,7 +102,13 @@ function rowToAgentConfig(row: AgentConfigRow): AgentConfig | null {
     greetOnProximity: behaviorRaw && typeof behaviorRaw.greetOnProximity === 'boolean' ? behaviorRaw.greetOnProximity : true,
   }
 
-  return { id, name, graphic, personality, model, skills, spawn, behavior }
+  // Inventory — token items the NPC spawns with (enable API integrations)
+  const inventory: string[] | undefined = Array.isArray(row.inventory)
+    ? row.inventory.filter((s): s is string => typeof s === 'string')
+    : undefined
+  const inventoryOpt = inventory && inventory.length > 0 ? inventory : undefined
+
+  return { id, name, graphic, personality, model, skills, spawn, behavior, inventory: inventoryOpt }
 }
 
 /** Snapshot of one agent's conversation for the conversation log GUI. */
@@ -168,6 +169,12 @@ function parseAgentConfig(raw: unknown, filePath: string): AgentConfig | null {
     greetOnProximity: behaviorRaw && typeof behaviorRaw.greetOnProximity === 'boolean' ? behaviorRaw.greetOnProximity : true,
   }
 
+  // Inventory — simple string array of item IDs the NPC spawns with
+  const inventoryRaw = o.inventory
+  const inventory: string[] | undefined = Array.isArray(inventoryRaw)
+    ? inventoryRaw.filter((s): s is string => typeof s === 'string')
+    : undefined
+
   return {
     id,
     name,
@@ -177,31 +184,38 @@ function parseAgentConfig(raw: unknown, filePath: string): AgentConfig | null {
     skills,
     spawn,
     behavior,
+    inventory,
   }
 }
 
-/** Skill map: name → skill or factory (look needs PerceptionEngine). */
+/**
+ * Register skills from the plugin barrel based on the agent's skill list.
+ * Replaces the former hardcoded skillMap — adding a skill now requires only
+ * a new file + one barrel export line in plugins.ts.
+ */
 function registerSkillsFromConfig(
   registry: SkillRegistry,
   perception: PerceptionEngine,
   skillNames: ReadonlyArray<string>
 ): void {
-  const skillMap: Record<string, IAgentSkill | ((pe: PerceptionEngine) => IAgentSkill)> = {
-    move: moveSkill,
-    say: saySkill,
-    look: createLookSkill,
-    emote: emoteSkill,
-    wait: waitSkill,
-  }
-  for (const name of skillNames) {
-    const skillOrFactory = skillMap[name]
-    if (skillOrFactory) {
-      if (typeof skillOrFactory === 'function') {
-        registry.register(skillOrFactory(perception))
-      } else {
-        registry.register(skillOrFactory)
+  const deps: SkillDependencies = { perceptionEngine: perception }
+
+  for (const plugin of Object.values(skillPlugins) as SkillPlugin[]) {
+    if (!skillNames.includes(plugin.name)) continue
+
+    // Warn if env vars are missing but still register (in-character failure at execution)
+    if (plugin.requiresEnv) {
+      const missing = plugin.requiresEnv.filter((v) => !process.env[v])
+      if (missing.length > 0) {
+        console.warn(`${LOG_PREFIX} Skill "${plugin.name}" missing env: ${missing.join(', ')}`)
       }
     }
+
+    // Factory vs direct: if create expects args, pass deps
+    const skill = plugin.create.length > 0
+      ? (plugin.create as (d: SkillDependencies) => import('../skills/types').IAgentSkill)(deps)
+      : (plugin.create as () => import('../skills/types').IAgentSkill)()
+    registry.register(skill)
   }
 }
 

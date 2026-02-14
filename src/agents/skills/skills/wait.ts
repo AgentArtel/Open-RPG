@@ -5,6 +5,7 @@
  */
 
 import type { IAgentSkill, GameContext, SkillResult } from '../types'
+import type { SkillPlugin } from '../plugin'
 
 const DEFAULT_DURATION_MS = 2000
 const MAX_DURATION_MS = 10000
@@ -62,5 +63,12 @@ export const waitSkill: IAgentSkill = {
       }
     }
   },
+}
+
+// --- Skill Plugin (modular registration) ---
+export const skillPlugin: SkillPlugin = {
+  name: 'wait',
+  create: () => waitSkill,
+  category: 'game',
 }
 

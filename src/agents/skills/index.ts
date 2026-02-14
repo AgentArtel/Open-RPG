@@ -24,3 +24,6 @@ export type {
   ToolDefinition, // Legacy, kept for reference
 } from './types'
 
+// Plugin system types
+export type { SkillPlugin, SkillDependencies } from './plugin'
+

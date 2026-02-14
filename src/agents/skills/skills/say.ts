@@ -7,6 +7,7 @@
 
 import { inject, RpgServerEngine } from '@rpgjs/server'
 import type { IAgentSkill, GameContext, SkillResult } from '../types'
+import type { SkillPlugin } from '../plugin'
 
 /** Simple content blocklist; message containing these is not displayed. */
 const BLOCKED_PATTERNS = /profanity|slur|explicit/i
@@ -112,5 +113,12 @@ export const saySkill: IAgentSkill = {
       }
     }
   },
+}
+
+// --- Skill Plugin (modular registration) ---
+export const skillPlugin: SkillPlugin = {
+  name: 'say',
+  create: () => saySkill,
+  category: 'game',
 }
 

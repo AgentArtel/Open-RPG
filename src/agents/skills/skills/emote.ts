@@ -7,6 +7,7 @@
 
 import { EmotionBubble } from '@rpgjs/plugin-emotion-bubbles'
 import type { IAgentSkill, GameContext, SkillResult } from '../types'
+import type { SkillPlugin } from '../plugin'
 
 /**
  * Map of action strings to EmotionBubble enum values.
@@ -63,5 +64,12 @@ export const emoteSkill: IAgentSkill = {
       }
     }
   },
+}
+
+// --- Skill Plugin (modular registration) ---
+export const skillPlugin: SkillPlugin = {
+  name: 'emote',
+  create: () => emoteSkill,
+  category: 'game',
 }
 

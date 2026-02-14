@@ -9,6 +9,7 @@ import { RpgWorld, RpgPlayer } from '@rpgjs/server'
 import type { IAgentSkill, GameContext, SkillResult } from '../types'
 import type { IPerceptionEngine, PerceptionContext } from '../../perception/types'
 import type { Position } from '../../bridge/types'
+import type { SkillPlugin, SkillDependencies } from '../plugin'
 
 /**
  * Create a look skill that uses the provided PerceptionEngine.
@@ -87,5 +88,12 @@ export function createLookSkill(
       }
     },
   }
+}
+
+// --- Skill Plugin (modular registration, factory pattern) ---
+export const skillPlugin: SkillPlugin = {
+  name: 'look',
+  create: (deps: SkillDependencies) => createLookSkill(deps.perceptionEngine),
+  category: 'game',
 }
 

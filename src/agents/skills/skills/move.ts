@@ -6,6 +6,7 @@
 
 import { Move } from '@rpgjs/server'
 import type { IAgentSkill, GameContext, SkillResult } from '../types'
+import type { SkillPlugin } from '../plugin'
 
 export const moveSkill: IAgentSkill = {
   name: 'move',
@@ -78,5 +79,12 @@ export const moveSkill: IAgentSkill = {
       }
     }
   },
+}
+
+// --- Skill Plugin (modular registration) ---
+export const skillPlugin: SkillPlugin = {
+  name: 'move',
+  create: () => moveSkill,
+  category: 'game',
 }
 

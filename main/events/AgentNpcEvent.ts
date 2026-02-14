@@ -50,6 +50,20 @@ export default class AgentNpcEvent extends RpgEvent {
     this.speed = 1
     this.frequency = 200
 
+    // Grant inventory items (item-gated skill access, e.g. image-gen-token)
+    if (config.inventory && config.inventory.length > 0) {
+      for (const itemId of config.inventory) {
+        try {
+          ;(this as any).addItem(itemId)
+        } catch (err) {
+          console.warn(
+            `[AgentNpcEvent] Failed to add item "${itemId}" to ${config.id}:`,
+            err instanceof Error ? err.message : String(err)
+          )
+        }
+      }
+    }
+
     instance.contextProvider.getContext = async (event: AgentEvent): Promise<RunContext> => {
       return this.buildRunContext(event, config.id)
     }
