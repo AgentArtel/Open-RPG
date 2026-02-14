@@ -69,10 +69,9 @@ When you step back, all the ideas form a single loop:
 
 ## Part 2: The Gaps
 
-### Gap 1: DALL-E URLs Expire (Critical)
+### Gap 1: Generated Image URLs Expire (Critical)
 
-Every content pipeline breaks without persistent image storage. DALL-E returns URLs
-that expire in ~1 hour. This affects:
+Every content pipeline breaks without persistent image storage. Image-generation APIs (we use **Gemini**) may return URLs that expire. This affects:
 - Photographer NPC output (TASK-018)
 - Content Store entries (TASK-019)
 - Social feed images (TASK-021)
@@ -82,13 +81,13 @@ that expire in ~1 hour. This affects:
 **Fix**: Add a Supabase Storage step to the `generate_image` skill.
 
 ```typescript
-// In generate-image skill, after DALL-E returns:
-const dalleUrl = response.data[0].url
-const imageBuffer = await fetch(dalleUrl).then(r => r.arrayBuffer())
+// In generate-image skill, after Gemini (or other) image API returns:
+const imageUrl = response.url  // or equivalent from Gemini image API
+const imageBuffer = await fetch(imageUrl).then(r => r.arrayBuffer())
 const path = `npc-content/${agentId}/${Date.now()}.png`
 const { data } = await supabase.storage.from('npc-images').upload(path, imageBuffer)
 const permanentUrl = supabase.storage.from('npc-images').getPublicUrl(path).data.publicUrl
-// Store permanentUrl in npc_content, not the DALL-E URL
+// Store permanentUrl in npc_content, not the ephemeral API URL
 ```
 
 This should be a prerequisite step added to TASK-018 or a small standalone task.
@@ -182,7 +181,7 @@ naturally surfaces it when relevant tags match.
 
 ### Gap 4: Content Moderation (Missing)
 
-DALL-E has built-in content policy, but NPC speech doesn't. In a multiplayer
+Gemini (and other image APIs) have built-in content policy, but NPC speech doesn't. In a multiplayer
 world, NPCs could say inappropriate things. This is flagged in ideas 01 and 08
 but never addressed.
 
@@ -374,7 +373,7 @@ fragment (3-5 sentences). This dream will become a memory you carry forward.`
 
 **What this enables**:
 - Dreams become content in the ContentStore (tagged, recallable, postable)
-- The Photographer's dreams are visual → generate a DALL-E image of the dream
+- The Photographer's dreams are visual → generate a Gemini image of the dream
 - Dreams show up in the social feed as a special post type ("Clara dreamed...")
 - Past Fragments could BE dream fragments from previous lifespans
 - Players can ask NPCs "What did you dream about?" → NPC recalls dream content
@@ -510,7 +509,7 @@ After filling gaps and adding fresh ideas, the complete system looks like this:
 │                                                                  │
 │  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌───────────┐  │
 │  │ Photographer│  │    Seer    │  │  Musician  │  │ Chronicler│  │
-│  │  (DALL-E)  │  │  (Runway)  │  │  (Suno)    │  │ (Writer)  │  │
+│  │  (Gemini)   │  │(Gemini/Rwy)│  │(Suno/Udio) │  │ (Writer)  │  │
 │  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘  └─────┬─────┘  │
 │        │               │               │               │        │
 │  ┌─────▼───────────────▼───────────────▼───────────────▼─────┐  │
@@ -538,10 +537,11 @@ After filling gaps and adding fresh ideas, the complete system looks like this:
          ▼                                          ▼
 ┌─────────────────┐                      ┌─────────────────────┐
 │  Lovable Frontend│                      │   External APIs     │
-│  - Social Feed   │                      │   - DALL-E          │
-│  - Eval Dashboard│                      │   - Suno            │
-│  - Game iframe   │                      │   - Runway          │
-│  - Fragment view │                      │   - Instagram       │
+│  - Social Feed   │                      │   - Gemini (image,  │
+│  - Eval Dashboard│                      │     video, audio)   │
+│  - Game iframe   │                      │   - Kimi (chat)     │
+│  - Fragment view │                      │   - Custom: Suno,   │
+│                 │                      │     Udio, Instagram │
 └─────────────────┘                      └─────────────────────┘
 ```
 

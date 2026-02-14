@@ -76,7 +76,7 @@ create index idx_builder_placements_map on builder_placements (map_id);
 **Definitions:**
 
 - **Static object:** An `RpgEvent` that has a **graphic** (sprite) and optionally a **hitbox**, but **no or minimal logic** (no dialogue, no AI). Good for trees, rocks, chests, signs. Can use a generic `StaticObjectEvent` class that reads `graphic` (and maybe `name`/label) from spawn context or from the placement row.
-- **Object API event:** An `RpgEvent` that represents an "API-backed" object: e.g. when the player interacts, it could call an external API or trigger a webhook. For phase 2 we can add the **type** and **registry** entry; the actual API call can be a stub or a single config-driven HTTP call so the pattern is in place.
+- **Object API event:** An `RpgEvent` that represents an "API-backed" object: e.g. when the player interacts, it could call an external API or trigger a webhook. For phase 2 we can add the **type** and **registry** entry; the actual API call can be a stub or a single config-driven HTTP call so the pattern is in place. **Future:** These object APIs will connect to **Agent Artel Studio** when that is built and schemas are defined — see `.cursor/plans/object-api-agent-artel-studio-reminder.md`.
 
 **Implementation:**
 

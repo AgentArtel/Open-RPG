@@ -107,7 +107,7 @@ surface memories: images NPCs already created, conversations that happened, mome
 captured. "This fragment holds echoes of a sunset someone once loved."
 
 **Future Fragments** — contain tags that don't yet match existing content. When
-interpreted, they trigger NEW content generation (DALL-E image, Runway video).
+interpreted, they trigger NEW content generation (Gemini image, Gemini video).
 The interpretation becomes real content in the system, seeding future memories.
 "This fragment shows a vision of what may come."
 
@@ -289,7 +289,7 @@ See **[09a-social-memory-fragments-implementation-plan.md](09a-social-memory-fra
 2. **Fragment rarity** — How rare should legendary fragments be? Economy balance.
 3. **Real Instagram API** — Meta Business account required. Defer until feed UI is proven.
 4. **Cross-NPC interpretation** — Can Clara interpret a Melody Fragment? (Probably not — skills gate it.)
-5. **Content expiry** — DALL-E URLs expire after ~1 hour. Need Supabase Storage for persistence.
+5. **Content expiry** — Generated image URLs may expire. Need Supabase Storage for persistence when needed. (We use Gemini for image/video/sound.)
 6. **Tag vocabulary** — Free-form LLM tagging or controlled vocabulary? (Start free-form, constrain later.)
 7. **Recall context window** — How many recalled items to inject? (Start with 3, tune based on token budget.)
 

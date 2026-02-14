@@ -121,10 +121,10 @@ export const createPostSkill: IAgentSkill = {
 
 **Modify:** `src/agents/skills/skills/generate-image.ts`
 
-After DALL-E returns an image URL, store it in `npc_content` with auto-tags:
+After the image-generation API (Gemini) returns an image URL, store it in `npc_content` with auto-tags:
 
 ```typescript
-// After successful DALL-E call:
+// After successful image-generation call:
 const perceptionTags = perceptionEngine.extractTags(currentSnapshot)
 const contentTags = [...perceptionTags, ...extractPromptTags(prompt)]
 
@@ -138,7 +138,7 @@ await contentStore.storeContent({
 })
 ```
 
-The `extractPromptTags()` helper splits the DALL-E prompt into keywords.
+The `extractPromptTags()` helper splits the image prompt into keywords.
 For MVP, simple word extraction. Post-MVP, LLM-powered tag generation.
 
 ---
