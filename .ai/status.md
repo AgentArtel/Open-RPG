@@ -20,7 +20,7 @@ Tasks organized by sprint. See `.ai/tasks/README.md` for full index with links.
 | [Sprint 2](tasks/sprint-2-llm-gateway/) | 3.5 | Multi-provider LLM | 010–011 | BACKLOG |
 | [Sprint 3](tasks/sprint-3-persistence/) | 5 | Persistence + AgentManager | 012–014 | DONE |
 | [Sprint 4](tasks/sprint-4-polish-deploy/) | 5 | Polish + deploy | 015–017 | DONE |
-| **[Sprint 5](tasks/sprint-5-api-identity-social/)** | **6** | **API-as-Identity + social** | **018–021** | **NEXT** |
+| **[Sprint 5](tasks/sprint-5-api-identity-social/)** | **6** | **API-as-Identity + social** | **018b, 018a, 018–021** | **NEXT** |
 | [Sprint 6](tasks/sprint-6-evaluation-arena/) | 7 | Evaluation arena | 022–026 | BACKLOG |
 
 ## Completed Sprint 3 — Persistence + Agent Management
@@ -43,15 +43,17 @@ Tasks organized by sprint. See `.ai/tasks/README.md` for full index with links.
 
 | ID | Title | Agent | Status |
 |----|-------|-------|--------|
+| TASK-018b | Supabase Agent Config (Database-First) | cursor | REVIEW |
 | TASK-018a | Modular Skill Plugin System | cursor | PENDING |
 | TASK-018 | Photographer NPC + Gemini Image Generation | cursor | PENDING |
 | TASK-019 | Content Store + tagging | cursor | PENDING |
 | TASK-020 | Associative recall + social feed | cursor | PENDING |
 | TASK-021 | Lovable feed integration | lovable | PENDING |
 
-**Recommended order**: 018a → 018 → 019 → then 020 (cursor) + 021 (lovable) in parallel.
+**Recommended order**: 018b → 018a → 018 → 019 → then 020 (cursor) + 021 (lovable) in parallel.
 Cursor Sprint 5 research plan: `.cursor/plans/sprint_5_research_and_plan_abbdc987.plan.md`.
 Architecture brief: `.ai/briefs/modular-skill-plugin-architecture.md`.
+Supabase brief: `.ai/briefs/supabase-game-integration-now.md`.
 
 ## Unscheduled Backlog
 
@@ -71,6 +73,7 @@ Architecture brief: `.ai/briefs/modular-skill-plugin-architecture.md`.
 
 | ID | Title | Agent | Date |
 |----|-------|-------|------|
+| TASK-018b | Supabase Agent Config (DB-first, per-map, enabled) | cursor | 2026-02-14 |
 | TASK-013 | Player State Persistence via Supabase | cursor | 2026-02-14 |
 | — | Sprint 5 research and implementation plan | cursor | 2026-02-14 |
 | — | Repo README rewrite (quickstart, architecture, troubleshooting) | cursor | 2026-02-14 |
@@ -110,9 +113,12 @@ Architecture brief: `.ai/briefs/modular-skill-plugin-architecture.md`.
 - **LLM Provider**: Moonshot Kimi K2 (idle) + K2.5 (conversation) via `openai` SDK.
 - **Database**: Supabase (hosted Postgres + pgvector). `@supabase/supabase-js` SDK.
   Env vars: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
-- **Agent Management**: `AgentManager` singleton loads YAML from `src/config/agents/`.
-  `AgentNpcEvent` is the generic RpgEvent for all AI NPCs. `spawnContext` passes
-  config to events since `createDynamicEvent()` has no constructor args.
+- **Agent Management**: **Supabase-first, per-map.** When `SUPABASE_URL` and
+  `SUPABASE_SERVICE_ROLE_KEY` are set, `AgentManager` loads agent config from the
+  `agent_configs` table (via RPC `get_agent_configs_for_map(mapId)` — only rows for
+  that map with `enabled = true`); otherwise it falls back to YAML in `src/config/agents/`.
+  Toggle NPCs with `enabled` in DB. `AgentNpcEvent` is the generic RpgEvent for all AI NPCs.
+  See `docs/supabase-schema.md` and `.ai/briefs/supabase-game-integration-now.md`.
 - **Deployment**: Railway (RPGJS game server) + Lovable (frontend iframe embed).
 - **Structure**: Flat `main/` directory matching RPGJS v4 autoload conventions.
 - **Plugins**: `@rpgjs/default-gui`, `@rpgjs/plugin-emotion-bubbles`, `@rpgjs/gamepad`.

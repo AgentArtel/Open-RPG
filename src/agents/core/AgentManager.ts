@@ -1,9 +1,15 @@
 /**
- * AgentManager — loads YAML configs, wires subsystems, spawns AI NPCs on the map
+ * AgentManager — loads agent configs from Supabase (preferred) or YAML (fallback),
+ * wires subsystems, and spawns AI NPCs on the map.
  *
  * Implements IAgentManager. One shared LaneQueue and LLMClient for all agents.
  * Uses a mutable contextProvider per agent so that when the RpgEvent spawns it
  * can set getContext to a closure over the event (buildRunContext).
+ *
+ * Load order (Supabase-first, per-map):
+ *   1. On map load: try loadConfigsFromSupabaseForMap(mapId) — only rows for this map with enabled = true
+ *   2. On failure or missing client, fall back to loadConfigs() — reads all YAML once
+ *   Builder spawnAgentAt: if agent not registered, try loadConfigFromSupabaseById(configId), else YAML.
  */
 
 import * as fs from 'fs'
@@ -39,8 +45,70 @@ import { createAgentMemory } from '../memory'
 import { bridge } from '../bridge'
 import { GameChannelAdapter } from '../bridge/GameChannelAdapter'
 import { setSpawnContext } from './spawnContext'
+import { getSupabaseClient } from '../../config/supabase'
 
 const LOG_PREFIX = '[AgentManager]'
+
+// ---------------------------------------------------------------------------
+// Supabase row → AgentConfig mapping
+// ---------------------------------------------------------------------------
+
+/** Shape of a row from the agent_configs Supabase table. */
+interface AgentConfigRow {
+  id: string
+  name: string
+  graphic: string
+  personality: string
+  model: Record<string, unknown> | null
+  skills: string[] | null
+  spawn: Record<string, unknown> | null
+  behavior: Record<string, unknown> | null
+}
+
+/**
+ * Convert a Supabase agent_configs row into an AgentConfig.
+ * Returns null for invalid/incomplete rows (logs a warning and skips).
+ */
+function rowToAgentConfig(row: AgentConfigRow): AgentConfig | null {
+  const { id, name, graphic, personality } = row
+  if (!id || !name || !graphic || !personality) {
+    console.warn(`${LOG_PREFIX} Skipping DB row: missing id, name, graphic, or personality`)
+    return null
+  }
+
+  // Model — jsonb with idle/conversation keys
+  const modelRaw = row.model as Record<string, unknown> | undefined
+  const idle = modelRaw && typeof modelRaw.idle === 'string' ? modelRaw.idle : 'kimi-k2-0711-preview'
+  const conversation = modelRaw && typeof modelRaw.conversation === 'string' ? modelRaw.conversation : idle
+  const model: AgentModelConfig = { idle, conversation }
+
+  // Skills — text[] column
+  const skills: string[] = Array.isArray(row.skills)
+    ? row.skills.filter((s): s is string => typeof s === 'string')
+    : ['move', 'say', 'look', 'emote', 'wait']
+
+  // Spawn — jsonb with map, x, y
+  const spawnRaw = row.spawn as Record<string, unknown> | undefined
+  if (!spawnRaw || typeof spawnRaw.map !== 'string' || typeof spawnRaw.x !== 'number' || typeof spawnRaw.y !== 'number') {
+    console.warn(`${LOG_PREFIX} Skipping DB row "${id}": spawn must have map, x, y`)
+    return null
+  }
+  const spawn: AgentSpawnConfig = {
+    map: spawnRaw.map as string,
+    x: spawnRaw.x as number,
+    y: spawnRaw.y as number,
+  }
+
+  // Behavior — jsonb with idleInterval, patrolRadius, greetOnProximity
+  const behaviorRaw = row.behavior as Record<string, unknown> | undefined
+  const behavior: AgentBehaviorConfig = {
+    idleInterval: (behaviorRaw && typeof behaviorRaw.idleInterval === 'number') ? behaviorRaw.idleInterval : 15000,
+    patrolRadius: (behaviorRaw && typeof behaviorRaw.patrolRadius === 'number') ? behaviorRaw.patrolRadius : 3,
+    greetOnProximity: behaviorRaw && typeof behaviorRaw.greetOnProximity === 'boolean' ? behaviorRaw.greetOnProximity : true,
+  }
+
+  return { id, name, graphic, personality, model, skills, spawn, behavior }
+}
 
 /** Snapshot of one agent's conversation for the conversation log GUI. */
 export interface ConversationSnapshot {
@@ -148,15 +216,17 @@ export class AgentManager implements IAgentManager {
   private readonly agents = new Map<string, ManagedInstance>()
   private readonly laneQueue = new LaneQueue()
   private readonly llmClient = new LLMClient()
-  private configsLoaded = false
+  /** Set of map ids for which we've already run spawn (Supabase or YAML). */
   private readonly spawnedMaps = new Set<string>()
+  /** True after we've loaded all YAML configs (fallback path). */
+  private configsLoadedFromYaml = false
 
   async loadConfigs(configDir: string): Promise<void> {
-    if (this.configsLoaded) return
+    if (this.configsLoadedFromYaml) return
     const resolved = path.isAbsolute(configDir) ? configDir : path.join(process.cwd(), configDir)
     if (!fs.existsSync(resolved)) {
       console.warn(`${LOG_PREFIX} Config dir does not exist: ${resolved}`)
-      this.configsLoaded = true
+      this.configsLoadedFromYaml = true
       return
     }
     const files = fs.readdirSync(resolved).filter((f) => f.endsWith('.yaml') || f.endsWith('.yml'))
@@ -175,7 +245,78 @@ export class AgentManager implements IAgentManager {
         console.error(`${LOG_PREFIX} Failed to load ${filePath}:`, msg)
       }
     }
-    this.configsLoaded = true
+    this.configsLoadedFromYaml = true
+  }
+
+  /**
+   * Load agent configs from Supabase for a single map only (enabled = true, spawn.map = mapId).
+   * Returns true if Supabase was used (even if 0 rows); false if client missing or query failed.
+   */
+  async loadConfigsFromSupabaseForMap(mapId: string): Promise<boolean> {
+    const client = getSupabaseClient()
+    if (!client) {
+      console.log(`${LOG_PREFIX} Supabase client not configured — will use YAML fallback`)
+      return false
+    }
+
+    try {
+      // RPC avoids client jsonb filter quirks; returns rows where enabled and spawn.map = mapId
+      const { data, error } = await client.rpc('get_agent_configs_for_map', { p_map_id: mapId })
+
+      if (error) {
+        console.warn(`${LOG_PREFIX} Supabase query failed for map "${mapId}": ${error.message}`)
+        return false
+      }
+
+      if (!data || !Array.isArray(data)) {
+        console.warn(`${LOG_PREFIX} Supabase returned no data array for map "${mapId}"`)
+        return false
+      }
+
+      console.log(`${LOG_PREFIX} Supabase returned ${data.length} agent config(s) for map "${mapId}"`)
+
+      for (const row of data) {
+        try {
+          const config = rowToAgentConfig(row as AgentConfigRow)
+          if (config) {
+            await this.registerAgent(config)
+            console.log(`${LOG_PREFIX} Loaded config: ${config.id} from Supabase`)
+          }
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err)
+          console.error(`${LOG_PREFIX} Failed to register DB config "${row?.id}":`, msg)
+        }
+      }
+
+      return true
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      console.error(`${LOG_PREFIX} Supabase load error for map "${mapId}":`, msg)
+      return false
+    }
+  }
+
+  /**
+   * Load a single agent config from Supabase by id (enabled = true).
+   * Used by spawnAgentAt when the agent is not yet registered.
+   */
+  async loadConfigFromSupabaseById(configId: string): Promise<AgentConfig | null> {
+    const client = getSupabaseClient()
+    if (!client) return null
+
+    try {
+      const { data, error } = await client
+        .from('agent_configs')
+        .select('*')
+        .eq('id', configId)
+        .eq('enabled', true)
+        .maybeSingle()
+
+      if (error || data == null) return null
+      return rowToAgentConfig(data as AgentConfigRow)
+    } catch {
+      return null
+    }
   }
 
   async registerAgent(config: AgentConfig): Promise<AgentInstance> {
@@ -227,9 +368,13 @@ export class AgentManager implements IAgentManager {
    */
   async spawnAgentsOnMap(map: RpgMap): Promise<void> {
     if (this.spawnedMaps.has(map.id)) return
-    if (!this.configsLoaded) {
+
+    // Load configs for this map only: Supabase (filter by map + enabled) or YAML (all, once)
+    const fromSupabase = await this.loadConfigsFromSupabaseForMap(map.id)
+    if (!fromSupabase && !this.configsLoadedFromYaml) {
       await this.loadConfigs('src/config/agents')
     }
+
     if (!AgentNpcEventClass) {
       console.error(`${LOG_PREFIX} AgentNpcEvent class not set — cannot spawn. Call setAgentNpcEventClass from main/events.`)
       return
@@ -254,14 +399,24 @@ export class AgentManager implements IAgentManager {
    * Does NOT affect spawnedMaps (normal spawn-on-join is unchanged).
    */
   async spawnAgentAt(configId: string, map: RpgMap, x: number, y: number): Promise<boolean> {
-    if (!this.configsLoaded) {
-      await this.loadConfigs('src/config/agents')
+    let instance = this.agents.get(configId)
+    if (!instance) {
+      // Try Supabase first (single row by id, enabled = true)
+      const config = await this.loadConfigFromSupabaseById(configId)
+      if (config) {
+        instance = (await this.registerAgent(config)) as ManagedInstance
+      }
+      if (!instance && !this.configsLoadedFromYaml) {
+        await this.loadConfigs('src/config/agents')
+        instance = this.agents.get(configId) ?? undefined
+      } else if (!instance) {
+        instance = this.agents.get(configId) ?? undefined
+      }
     }
     if (!AgentNpcEventClass) {
       console.error(`${LOG_PREFIX} AgentNpcEvent class not set — cannot spawn.`)
       return false
     }
-    const instance = this.agents.get(configId)
     if (!instance) {
       console.warn(`${LOG_PREFIX} spawnAgentAt: no agent with id "${configId}"`)
       return false
@@ -332,7 +487,7 @@ export class AgentManager implements IAgentManager {
       await this.removeAgent(agentId)
     }
     this.spawnedMaps.clear()
-    this.configsLoaded = false
+    this.configsLoadedFromYaml = false
     console.log(`${LOG_PREFIX} Disposed`)
   }
 }
