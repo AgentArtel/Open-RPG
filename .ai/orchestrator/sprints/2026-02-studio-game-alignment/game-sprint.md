@@ -2,6 +2,7 @@
 
 > Cursor's view of the master sprint. Game repo (Open-RPG) + database tasks only.
 > Master: [master.md](master.md)
+> **One place for all tasks in order:** [.ai/tasks/sprint-2026-02-studio-game-alignment/README.md](../../../tasks/sprint-2026-02-studio-game-alignment/README.md)
 
 ---
 
@@ -14,17 +15,17 @@
 | D-3 | PostgREST exposes game schema | DONE | `pgrst.db_schemas` updated |
 | D-4 | Audit seed data accessible from Studio | TODO | Verify with a test query |
 | D-5 | Plan content store schema (migration 013+) | TODO | Design new table(s) for NPC-generated content |
-| D-6 | Migration 012: map_entities + map_metadata | TODO | Plan approved; 011-aligned grants |
+| D-6 | Migration 012: map_entities + map_metadata | TODO | [Brief](../../briefs/cursor/2026-02/TASK-D-6-migration-012-map-entities.md); 011-aligned grants |
 
 ## Game Tasks
 
 | ID | Title | Status | Game-repo task | Brief |
 |----|-------|--------|---------------|-------|
-| G-0 | Load NPC configs from Supabase | **TODO — FOUNDATION BLOCKER** | NEW | Brief TBD |
+| G-0 | Load NPC configs from Supabase | **TODO — FOUNDATION BLOCKER** | NEW | [Brief](../../briefs/cursor/2026-02/TASK-G-0-supabase-config-loading.md) |
 | G-1 | Modular Skill Plugin System | TODO | TASK-018a | [Brief](../../briefs/cursor/2026-02/TASK-G-1-modular-skill-plugin.md) |
-| tmx-enrich | Add seed NPCs to simplemap.tmx | TODO | NEW | Part of TMX sync plan |
-| G-5 | TMX parser + sync logic + CLI | TODO | NEW | Plan approved; depends D-6 + tmx-enrich |
-| G-6 | Optional auto-sync on server start | TODO | NEW | Behind SYNC_TMX_ON_START; depends G-5 |
+| tmx-enrich | Add seed NPCs to simplemap.tmx | TODO | NEW | [Brief](../../briefs/cursor/2026-02/TASK-tmx-enrich-seed-npcs-in-tmx.md) |
+| G-5 | TMX parser + sync logic + CLI | TODO | NEW | [Brief](../../briefs/cursor/2026-02/TASK-G-5-tmx-parser-sync-cli.md) |
+| G-6 | Optional auto-sync on server start | TODO | NEW | [Brief](../../briefs/cursor/2026-02/TASK-G-6-auto-sync-on-server-start.md) |
 | G-2 | Photographer NPC + Gemini | HELD (foundation gate) | TASK-018 | [Brief](../../briefs/cursor/2026-02/TASK-G-2-photographer-npc.md) |
 | G-3 | Content Store + Tagging | HELD (foundation gate) | TASK-019 | Brief TBD |
 | G-4 | Associative Recall + Social Feed | HELD (foundation gate) | TASK-020 | Brief TBD |

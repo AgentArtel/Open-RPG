@@ -3,9 +3,3 @@ node_modules
 dist/
 .DS_Store
 .vscode/
-
-# Reference docs — full content not in repo; clone upstream for local reference (see README in each)
-docs/openclaw-reference/*
-!docs/openclaw-reference/README.md
-docs/rpgjs-reference/*
-!docs/rpgjs-reference/README.md

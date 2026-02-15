@@ -32,6 +32,9 @@ export class Bridge implements IBridge {
   /** Map from event.id → { agentId, adapter }. */
   private readonly registry = new Map<string, AgentRegistration>()
 
+  /** Reverse map: agentId → current GameEvent (latest registration wins). */
+  private readonly agentIdToEvent = new Map<string, GameEvent>()
+
   // -----------------------------------------------------------------------
   // IBridge — registration
   // -----------------------------------------------------------------------
@@ -56,10 +59,12 @@ export class Bridge implements IBridge {
     if (!adapter) {
       console.warn(`${LOG_PREFIX} registerAgent called without adapter for ${agentId}. Registering ID only.`)
       this.registry.set(eventId, { agentId, adapter: createNoOpAdapter() })
+      this.agentIdToEvent.set(agentId, event)
       return
     }
 
     this.registry.set(eventId, { agentId, adapter })
+    this.agentIdToEvent.set(agentId, event)
     console.log(`${LOG_PREFIX} Registered agent "${agentId}" for event ${eventId}`)
 
     // Start the adapter's idle tick timer
@@ -76,6 +81,9 @@ export class Bridge implements IBridge {
     const reg = this.registry.get(eventId)
     if (!reg) return
 
+    if (this.agentIdToEvent.get(reg.agentId) === event) {
+      this.agentIdToEvent.delete(reg.agentId)
+    }
     console.log(`${LOG_PREFIX} Unregistering agent "${reg.agentId}" for event ${eventId}`)
     reg.adapter.dispose()
     this.registry.delete(eventId)
@@ -86,6 +94,14 @@ export class Bridge implements IBridge {
    */
   getAgentId(event: GameEvent): string | undefined {
     return this.registry.get(event.id)?.agentId
+  }
+
+  /**
+   * Look up the current GameEvent for an agent (e.g. to show UI on the NPC).
+   * Returns the most recently registered event for that agentId.
+   */
+  getEventByAgentId(agentId: string): GameEvent | undefined {
+    return this.agentIdToEvent.get(agentId)
   }
 
   // -----------------------------------------------------------------------
@@ -173,6 +189,7 @@ export class Bridge implements IBridge {
       }
     }
     this.registry.clear()
+    this.agentIdToEvent.clear()
   }
 }
 

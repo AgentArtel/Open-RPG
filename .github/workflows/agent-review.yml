@@ -2,6 +2,9 @@
 # Agent Review Pipeline — Starter Kit Template
 # =============================================================================
 #
+# DISABLED: Job runs skipped to avoid API credit usage until workflows are ready.
+# Re-enable by removing the "if: false" below from the review job.
+#
 # Automatically reviews agent commits pushed to agent branches using
 # Kimi Code CLI Print Mode. Creates review files in .ai/reviews/.
 #
@@ -28,6 +31,7 @@ permissions:
 
 jobs:
   review:
+    if: false  # DISABLED — remove this line to re-enable
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: open-rpg

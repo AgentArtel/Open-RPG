@@ -1,6 +1,6 @@
 # Cross-Project Status
 
-Last updated: 2026-02-14 (TMX sync tasks added)
+Last updated: 2026-02-15 (Wave 1 briefs written)
 
 ---
 
@@ -34,17 +34,17 @@ See [master.md](sprints/2026-02-studio-game-alignment/master.md) for full backlo
 | S-1 | NPC Builder Page | Lovable | Agent-Artel-studio | MERGED — needs verify & polish | [Brief](briefs/lovable/2026-02/TASK-S-1-npc-builder-ui.md) |
 | S-2 | Integrations Page | Lovable | Agent-Artel-studio | MERGED — needs verify & polish | [Brief](briefs/lovable/2026-02/TASK-S-2-integrations-page.md) |
 | S-3 | Dashboard Game Stats | Lovable | Agent-Artel-studio | MERGED — needs verify & polish | [Brief](briefs/lovable/2026-02/TASK-S-3-dashboard-game-stats.md) |
-| G-0 | Load NPC configs from Supabase | Cursor | Open-RPG | **TODO — FOUNDATION BLOCKER** | Brief TBD |
+| G-0 | Load NPC configs from Supabase | Cursor | Open-RPG | **TODO — FOUNDATION BLOCKER** | [Brief](briefs/cursor/2026-02/TASK-G-0-supabase-config-loading.md) |
 
 ## Approved (May Proceed)
 
 | ID | Title | Agent | Repo | Brief |
 |----|-------|-------|------|-------|
 | G-1 | Modular Skill Plugin System | Cursor | Open-RPG | [Brief](briefs/cursor/2026-02/TASK-G-1-modular-skill-plugin.md) |
-| D-6 | Migration 012: map_entities + map_metadata | Cursor | Open-RPG | TMX sync plan approved |
-| tmx-enrich | Add seed NPCs to simplemap.tmx | Cursor | Open-RPG | TMX sync plan approved |
-| G-5 | TMX parser + sync logic + CLI | Cursor | Open-RPG | TMX sync plan approved (after D-6 + tmx-enrich) |
-| G-6 | Optional auto-sync on server start | Cursor | Open-RPG | TMX sync plan approved (after G-5) |
+| D-6 | Migration 012: map_entities + map_metadata | Cursor | Open-RPG | [Brief](briefs/cursor/2026-02/TASK-D-6-migration-012-map-entities.md) |
+| tmx-enrich | Add seed NPCs to simplemap.tmx | Cursor | Open-RPG | [Brief](briefs/cursor/2026-02/TASK-tmx-enrich-seed-npcs-in-tmx.md) |
+| G-5 | TMX parser + sync logic + CLI | Cursor | Open-RPG | [Brief](briefs/cursor/2026-02/TASK-G-5-tmx-parser-sync-cli.md) (after D-6 + tmx-enrich) |
+| G-6 | Optional auto-sync on server start | Cursor | Open-RPG | [Brief](briefs/cursor/2026-02/TASK-G-6-auto-sync-on-server-start.md) (after G-5) |
 
 ## Held (Foundation Gate)
 
@@ -75,11 +75,11 @@ See [master.md](sprints/2026-02-studio-game-alignment/master.md) for full backlo
 
 ## Execution Waves
 
-### Wave 1 — In Progress
+### Wave 1 — In Progress (all briefs ready)
 - **Studio (Lovable):** S-1, S-2, S-3 — CODE MERGED, briefs reframed as verify & polish
-- **Game (Cursor):** G-0 (Load configs from Supabase) — **FOUNDATION BLOCKER**, brief to write
+- **Game (Cursor):** G-0 (Load configs from Supabase) — **FOUNDATION BLOCKER**, brief ready
 - **Game (Cursor):** G-1 (Modular Skill Plugin System) — TODO, brief ready, can run parallel with G-0
-- **Game (Cursor):** D-6 → tmx-enrich → G-5 → G-6 (TMX-to-DB sync pipeline) — plan approved
+- **Game (Cursor):** D-6 → tmx-enrich → G-5 → G-6 (TMX-to-DB sync pipeline) — all briefs ready
 - **DB (Orchestrator):** D-4 (Audit seed data + reconcile grants) — TODO
 
 ### FOUNDATION GATE — PM verifies the pipeline after G-0 + G-5 ship

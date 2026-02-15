@@ -229,5 +229,50 @@
     "session_age_hours": 0,
     "file_operations": 0,
     "status": "WARNING"
+  },
+  {
+    "timestamp": "2026-02-14T10:31:58Z",
+    "session": "unknown",
+    "token_count": 35782,
+    "file_size_bytes": 93481,
+    "session_age_hours": 0,
+    "file_operations": 0,
+    "status": "WARNING"
+  },
+  {
+    "timestamp": "2026-02-14T10:33:24Z",
+    "session": "unknown",
+    "token_count": 35782,
+    "file_size_bytes": 93481,
+    "session_age_hours": 0,
+    "file_operations": 0,
+    "status": "WARNING"
+  },
+  {
+    "timestamp": "2026-02-14T12:37:44Z",
+    "session": "unknown",
+    "token_count": 38271,
+    "file_size_bytes": 109223,
+    "session_age_hours": 0,
+    "file_operations": 0,
+    "status": "CRITICAL"
+  },
+  {
+    "timestamp": "2026-02-14T12:39:17Z",
+    "session": "unknown",
+    "token_count": 38271,
+    "file_size_bytes": 109223,
+    "session_age_hours": 0,
+    "file_operations": 0,
+    "status": "CRITICAL"
+  },
+  {
+    "timestamp": "2026-02-14T12:39:59Z",
+    "session": "unknown",
+    "token_count": 38271,
+    "file_size_bytes": 109223,
+    "session_age_hours": 0,
+    "file_operations": 0,
+    "status": "CRITICAL"
   }
 ]

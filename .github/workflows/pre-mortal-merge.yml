@@ -2,6 +2,9 @@
 # Pre-Mortal Merge Validation — Starter Kit Template
 # =============================================================================
 #
+# DISABLED: Job skipped until review automations are re-enabled.
+# Re-enable by removing the "if: false" from the validate job below.
+#
 # Validates pushes to the pre-mortal staging branch. Checks commit format,
 # coordination files, and script syntax.
 #
@@ -21,6 +24,7 @@ permissions:
 
 jobs:
   validate:
+    if: false  # DISABLED — remove this line to re-enable
     runs-on: ubuntu-latest
     timeout-minutes: 10
 

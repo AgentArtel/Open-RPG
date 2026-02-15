@@ -184,6 +184,14 @@ export interface IBridge {
   getAgentId(event: GameEvent): string | undefined;
 
   /**
+   * Look up the current GameEvent for an agent.
+   *
+   * @param agentId - The agent identifier.
+   * @returns The most recently registered RpgEvent for that agent, or `undefined`.
+   */
+  getEventByAgentId(agentId: string): GameEvent | undefined;
+
+  /**
    * Route a raw game event to the appropriate agent.
    *
    * @param event - The RpgEvent that triggered the hook.

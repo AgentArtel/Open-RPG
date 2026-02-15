@@ -2,6 +2,9 @@
 # Sprint Evaluation — Starter Kit Template
 # =============================================================================
 #
+# DISABLED: Jobs skipped to avoid API credit usage until workflows are ready.
+# Re-enable by removing the "if: false" from the check job below.
+#
 # Generates sprint evaluation reports using metrics collection and Kimi.
 # Triggers manually or on [ACTION:evaluate] commits to pre-mortal.
 #
@@ -44,6 +47,7 @@ permissions:
 
 jobs:
   check:
+    if: false  # DISABLED — remove this line to re-enable
     runs-on: ubuntu-latest
     outputs:
       should_run: ${{ steps.check.outputs.should_run }}

@@ -51,6 +51,14 @@ fi
 # Log file for hook output and errors
 HOOK_LOG="$(git rev-parse --git-dir)/hooks/post-commit.log"
 
+# Disabled by default to avoid API credit usage until workflows are ironed out.
+# Set OPEN_ARTEL_AUTOMATION_DISABLED=false to re-enable (or remove this check).
+AUTOMATION_DISABLED="${OPEN_ARTEL_AUTOMATION_DISABLED:-true}"
+if [ "$AUTOMATION_DISABLED" = "true" ]; then
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Automation disabled. Skipping Kimi calls." >> "$HOOK_LOG" 2>/dev/null
+    exit 0
+fi
+
 # Set to "true" to run Kimi commands in the background (non-blocking commits)
 ASYNC_MODE="true"
 

@@ -2,36 +2,79 @@
 
 > **Audience:** Game server (`src/`), frontend/Studio (Lovable / Agent Artel Studio), and future integrations.
 >
-> **Auth model:** The game server uses the **service_role** key (bypasses RLS). Frontend/Studio should use anon keys + RLS policies when added.
+> **Auth model:** The game server uses the **service_role** key (bypasses RLS). Studio uses the **anon** key (respects RLS / grants).
 
 ---
 
-## Schema Location
+## Multi-Schema Architecture
 
-All game server tables, functions, and RPCs live in the **`game`** schema, not `public`.
+The database uses **schema-per-domain** — each logical domain gets its own schema, and apps reach into whichever schemas they need. Schemas are like folders for tables.
 
-**Migration:** [`supabase/migrations/009_game_schema.sql`](../supabase/migrations/009_game_schema.sql)
+```
+PostgreSQL Database
+├── public        ← Supabase built-ins + Studio tables (studio_*)
+│   ├── studio_workflows, studio_executions, studio_activity_log
+│   └── studio_agent_memory
+├── game          ← Game runtime (NPC configs, memory, player state)
+│   ├── agent_configs, agent_memory, player_state, api_integrations
+│   └── functions: get_agent_configs_for_map(), update_timestamp()
+└── studio        ← (created by Studio migration 1, mirrors public.studio_* — NOT actively used)
+```
 
-### Setup (required after running migration 009)
+### Which app accesses which schema
 
-1. Go to **Dashboard -> Project Settings -> API (Data API)** and add **`game`** to **Exposed schemas** (keep `public` if needed).
-2. **Persist the schema list** so PostgREST keeps serving `game` after restarts. In the Supabase **SQL Editor** run:
-   ```sql
-   ALTER ROLE authenticator SET pgrst.db_schemas = 'public, game';
-   NOTIFY pgrst, 'reload schema';
-   ```
-   Without this, you may see `Invalid schema: game` after the next PostgREST or game server restart.
+| App | Supabase Key | Default Schema | Also Accesses |
+| --- | --- | --- | --- |
+| **Game Server** (RPGJS) | `service_role` | `game` | — |
+| **Studio** (Lovable/React) | `anon` / `authenticated` | `public` | `game` (via `.schema('game')`) |
 
-The Supabase client in [`src/config/supabase.ts`](../src/config/supabase.ts) is configured with `db: { schema: 'game' }`, so every `.from()` and `.rpc()` call automatically targets the `game` schema without changes at call sites.
+### How cross-schema access works
+
+Both schemas are exposed via PostgREST (set by migration 011):
+```sql
+ALTER ROLE authenticator SET pgrst.db_schemas = 'public, studio, game';
+```
+
+The Studio Supabase client can query game tables by switching schema:
+```typescript
+// Studio's default client — hits public schema (studio_* tables)
+supabase.from('studio_workflows').select('*');
+
+// Switch to game schema for NPC management
+supabase.schema('game').from('agent_configs').select('*');
+supabase.schema('game').from('api_integrations').select('*');
+```
+
+The game server client is configured with `db: { schema: 'game' }` in [`src/config/supabase.ts`](../src/config/supabase.ts), so all `.from()` calls automatically hit the `game` schema.
+
+### Access grants (migration 011)
+
+| Schema.Table | `service_role` | `authenticated` | `anon` |
+| --- | --- | --- | --- |
+| `game.agent_configs` | full | SELECT, INSERT, UPDATE, DELETE | SELECT |
+| `game.api_integrations` | full | SELECT, INSERT, UPDATE, DELETE | SELECT |
+| `game.agent_memory` | full | SELECT | SELECT |
+| `game.player_state` | full | SELECT | — |
+| `public.studio_*` | full | full (permissive RLS) | full (permissive RLS) |
+
+**Migration:** [`supabase/migrations/011_studio_cross_schema_access.sql`](../supabase/migrations/011_studio_cross_schema_access.sql)
 
 ### Legacy `public` tables (001-008)
 
-Migrations 001-008 created tables in the `public` schema. These are **no longer used** by the game server. You can drop them manually or keep them for reference. Data migration from `public` to `game` is not automatic; copy rows manually if needed.
+Migrations 001-008 created game tables in the `public` schema. These are **no longer used** by the game server. You can drop them manually or keep them for reference.
 
 ### Skill architecture
 
 - **Game-world skills** (move, say, look, emote, wait) run in-process on the game server. No edge functions involved.
-- **API-backed skills** (e.g. generate_image, voice, search) will route to Supabase Edge Functions. Flow: game server receives tool call -> HTTP to edge function -> edge calls external API -> result back to game server. API keys and integration logic live on the edge.
+- **API-backed skills** (e.g. generate_image, voice, search) route to Supabase Edge Functions. Flow: game server receives tool call -> HTTP to edge function -> edge calls external API -> result back to game server. API keys and integration logic live on the edge.
+
+### Edge Functions
+
+| Function | Skill | Token | API | Notes |
+| --- | --- | --- | --- | --- |
+| `generate-image` | `generate_image` | `image-gen-token` | Gemini / Imagen (`@google/genai`) | Secret: `GEMINI_API_KEY`. Deploy: `supabase functions deploy generate-image` |
+
+The `generate_image` skill (game server side) invokes the Edge Function via `supabase.functions.invoke('generate-image', ...)` with a 10-second timeout. Results are stored in the player's `PHOTOS` variable. The Gemini API key never reaches the game server.
 
 ---
 
@@ -205,9 +248,72 @@ These tables may be added in later migrations as the system grows:
 
 ---
 
-## Notes for Frontend/Studio Integration
+## Studio ↔ Game Data Flow
 
-- **Agent Artel Studio** (Lovable-built frontend) will eventually read/write `agent_configs` via Supabase client with anon key + RLS policies.
-- RLS policies are **not yet defined** — the game server uses `service_role` which bypasses RLS.
-- When Studio wiring is implemented, add appropriate RLS policies for the `anon` and `authenticated` roles.
-- The Studio can use the column schemas above as the contract for building config UIs.
+The Studio is the **design-time tool** — where you create NPCs, configure integrations, and build workflows. The game is the **runtime** — where those designs come alive. The database is the contract between them.
+
+```
+STUDIO (Design Time)                      DATABASE                     GAME (Runtime)
+────────────────────                      ────────                     ──────────────
+NPC Builder page     ── writes ──►  game.agent_configs   ◄── reads ── AgentNpcEvent.ts
+Integrations page    ── writes ──►  game.api_integrations ◄── reads ── plugins.ts
+Memory Viewer        ◄── reads ───  game.agent_memory    ── writes ── AgentMemory
+Player Dashboard     ◄── reads ───  game.player_state    ── writes ── player.ts
+Workflow Builder     ── writes ──►  public.studio_workflows ── future ── WorkflowRunner
+```
+
+### How Studio queries game tables
+
+Studio's Supabase client defaults to `public` schema. To reach game tables, use `.schema('game')`:
+
+```typescript
+import { supabase } from '@/integrations/supabase/client';
+
+// Read all enabled NPCs
+const { data: agents } = await supabase
+  .schema('game')
+  .from('agent_configs')
+  .select('*')
+  .eq('enabled', true);
+
+// Read available API integrations
+const { data: integrations } = await supabase
+  .schema('game')
+  .from('api_integrations')
+  .select('*')
+  .eq('enabled', true);
+
+// Create a new NPC
+const { error } = await supabase
+  .schema('game')
+  .from('agent_configs')
+  .insert({
+    id: 'merchant',
+    name: 'Merchant',
+    graphic: 'female',
+    personality: 'You are a friendly merchant...',
+    spawn: { map: 'simplemap', x: 200, y: 300 },
+    skills: ['move', 'say', 'look', 'emote', 'wait'],
+  });
+
+// Read NPC conversation history
+const { data: memory } = await supabase
+  .schema('game')
+  .from('agent_memory')
+  .select('*')
+  .eq('agent_id', 'elder-theron')
+  .order('created_at', { ascending: false })
+  .limit(50);
+```
+
+### TypeScript types for game tables
+
+Studio's auto-generated `types.ts` already includes the game tables (`agent_configs`, `api_integrations`, etc.) in the `public` schema section. When using `.schema('game')`, the types still work because the column shapes are identical. For stricter typing, add a `game` schema section to the Database type.
+
+**Studio/Lovable instructions** (task brief and copy-paste prompts) live in the Studio repo under `docs/game-integration/` — see `docs/studio-reference/docs/game-integration/` in this repo for the reference copy.
+
+### Security notes
+
+- Game tables do NOT have RLS enabled — the game server uses `service_role` which bypasses it.
+- Studio accesses game tables via grants (migration 011): authenticated users get read/write on config tables, read-only on runtime tables.
+- If Studio becomes multi-tenant (multiple users), add RLS policies to game config tables.

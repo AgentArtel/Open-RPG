@@ -1,5 +1,4 @@
 import { RpgPlayer, type RpgPlayerHooks, Control, Components, type RpgMap, type RpgEvent } from '@rpgjs/server'
-import { EmotionBubble } from '@rpgjs/plugin-emotion-bubbles'
 import TestNpcEvent from './events/test-npc'
 import GuardEvent from './events/guard'
 import ArtistEvent from './events/artist'
@@ -13,7 +12,6 @@ import AgentNpcEvent from './events/AgentNpcEvent'
 import { agentManager, setAgentNpcEventClass } from '../src/agents/core'
 import { testLLMCall } from '../src/agents/core/llm-test'
 import { createPlayerStateManager } from '../src/persistence'
-import { getSupabaseClient } from '../src/config/supabase'
 
 // ---------------------------------------------------------------------------
 // Builder Dashboard — Scripted NPC Registry
@@ -82,97 +80,10 @@ const NPC_SPAWN_CONFIG = {
     // AI NPCs from Supabase (game.agent_configs) or YAML spawn via agentManager.spawnAgentsOnMap() above
 } as const
 
-/** In-character error messages for photo-request flow (matches generate_image skill). */
-function photoErrorMessage(errorCode: string): string {
-    switch (errorCode) {
-        case 'content_policy':
-            return "I can't develop that image; my lens refuses."
-        case 'no_result':
-            return "The exposure came out blank... the light was wrong."
-        case 'api_unavailable':
-            return 'My darkroom chemicals have gone dry. Try again later.'
-        case 'api_error':
-            return 'Something went wrong in the darkroom. The film was ruined.'
-        default:
-            return "The photograph did not turn out. Perhaps another time."
-    }
-}
-
 const player: RpgPlayerHooks = {
     async onConnected(player: RpgPlayer) {
         player.name = 'YourName'
         player.setComponentsTop(Components.text('{name}'))
-
-        // Photo-request GUI: when player submits from photographer form, run edge function and show result
-        player.gui('photo-request').on('submit', async (data: { prompt: string; style?: string; eventId: string; agentId: string }) => {
-            try {
-                const prompt = typeof data.prompt === 'string' ? data.prompt.trim() : ''
-                if (!prompt) {
-                    await player.showText("I need to know what to photograph. Describe the scene!")
-                    return
-                }
-                const style = (data.style && String(data.style).trim()) || 'vivid'
-                const map = player.getCurrentMap<RpgMap>()
-                if (!map) {
-                    await player.showText("The lens is clouded today... I cannot focus.")
-                    return
-                }
-                const npcEvent = map.getEvent<RpgEvent>(data.eventId)
-                if (npcEvent) {
-                    try {
-                        (npcEvent as any).showEmotionBubble?.(EmotionBubble.ThreeDot)
-                    } catch {
-                        // ignore
-                    }
-                }
-                const supabase = getSupabaseClient()
-                if (!supabase) {
-                    await player.showText("The lens is clouded today... I cannot focus.")
-                    return
-                }
-                const timeoutMs = 10_000
-                const invokePromise = supabase.functions.invoke('generate-image', {
-                    body: { prompt, style, agentId: data.agentId },
-                })
-                const timeoutPromise = new Promise<never>((_, reject) =>
-                    setTimeout(() => reject(new Error('timeout')), timeoutMs)
-                )
-                let response: { data: unknown; error: unknown }
-                try {
-                    response = await Promise.race([invokePromise, timeoutPromise])
-                } catch (raceErr: unknown) {
-                    if (raceErr instanceof Error && raceErr.message === 'timeout') {
-                        await player.showText("The exposure took too long... the film was overexposed.")
-                        return
-                    }
-                    throw raceErr
-                }
-                const edgeData = response.data as { success?: boolean; imageDataUrl?: string; imageUrl?: string; error?: string } | null
-                if (response.error) {
-                    console.warn('[PhotoRequest] Edge invoke error:', response.error)
-                    await player.showText('The darkroom is having troubles. I could not develop the image.')
-                    return
-                }
-                if (edgeData?.success === true && (edgeData.imageDataUrl || edgeData.imageUrl)) {
-                    const photoUrl = edgeData.imageDataUrl || edgeData.imageUrl!
-                    const existing: Array<{ url: string; prompt: string; generatedBy: string; timestamp: number }> = player.getVariable('PHOTOS') || []
-                    const updated = [...existing, { url: photoUrl, prompt, generatedBy: data.agentId, timestamp: Date.now() }]
-                    player.setVariable('PHOTOS', updated)
-                    try {
-                        player.gui('photo-result').open({ imageDataUrl: photoUrl, prompt }, { blockPlayerInput: true })
-                    } catch (e) {
-                        console.warn('[PhotoRequest] Could not open photo-result:', e)
-                    }
-                } else {
-                    const errCode = edgeData?.error ?? 'unknown'
-                    await player.showText(photoErrorMessage(errCode))
-                }
-            } catch (err: unknown) {
-                const msg = err instanceof Error ? err.message : String(err)
-                console.error('[PhotoRequest] Handler error:', msg)
-                await player.showText("Something went wrong with the camera. The photograph was lost.")
-            }
-        })
 
         // TASK-005: LLM feasibility test — fire-and-forget async call.
         // This runs in the background so it doesn't block player connection.

@@ -1,6 +1,6 @@
 # Master Backlog — 2026-02 Studio + Game Alignment
 
-Last updated: 2026-02-14 (revised: foundation gate added)
+Last updated: 2026-02-15 (Wave 1 briefs written)
 
 ---
 
@@ -33,13 +33,13 @@ Last updated: 2026-02-14 (revised: foundation gate added)
 
 | ID | Title | Status | Owner | Game-repo task | Brief |
 |----|-------|--------|-------|---------------|-------|
-| G-0 | Load NPC configs from Supabase | **TODO — FOUNDATION BLOCKER** | Cursor | NEW | Brief TBD (orchestrator to write) |
+| G-0 | Load NPC configs from Supabase | **TODO — FOUNDATION BLOCKER** | Cursor | NEW | [TASK-G-0-supabase-config-loading.md](../../briefs/cursor/2026-02/TASK-G-0-supabase-config-loading.md) |
 | G-1 | Modular Skill Plugin System | TODO | Cursor | TASK-018a | [TASK-G-1-modular-skill-plugin.md](../../briefs/cursor/2026-02/TASK-G-1-modular-skill-plugin.md) |
 | G-2 | Photographer NPC + Gemini Image Generation | HELD (foundation gate) | Cursor | TASK-018 | [TASK-G-2-photographer-npc.md](../../briefs/cursor/2026-02/TASK-G-2-photographer-npc.md) |
 | G-3 | Content Store + Tagging | TODO | Cursor | TASK-019 | Brief TBD (depends on D-5 schema design) |
 | G-4 | Associative Recall + Social Feed | TODO | Cursor | TASK-020 | Brief TBD (depends on G-3) |
-| G-5 | TMX parser + sync logic + CLI script | TODO | Cursor | NEW | Plan approved; depends on D-6 + tmx-enrich |
-| G-6 | Optional auto-sync on server start | TODO | Cursor | NEW | Behind SYNC_TMX_ON_START env var; depends on G-5 |
+| G-5 | TMX parser + sync logic + CLI script | TODO | Cursor | NEW | [TASK-G-5-tmx-parser-sync-cli.md](../../briefs/cursor/2026-02/TASK-G-5-tmx-parser-sync-cli.md) |
+| G-6 | Optional auto-sync on server start | TODO | Cursor | NEW | [TASK-G-6-auto-sync-on-server-start.md](../../briefs/cursor/2026-02/TASK-G-6-auto-sync-on-server-start.md) |
 
 ---
 
@@ -114,13 +114,13 @@ S-1 (NPC Builder)         ──► S-4             (Memory Viewer is a tab insi
 | Track | Tasks | Status |
 |-------|-------|--------|
 | Studio | S-1 (NPC Builder), S-2 (Integrations), S-3 (Dashboard stats) | MERGED — briefs reframed as verify & polish |
-| Game | G-0 (Load configs from Supabase) | **TODO — FOUNDATION BLOCKER** |
+| Game | G-0 (Load configs from Supabase) | **TODO — FOUNDATION BLOCKER** — brief ready |
 | Game | G-1 (Modular Skill Plugins) | TODO — brief ready, can run parallel with G-0 |
-| Game | tmx-enrich (Add seed NPCs to simplemap.tmx) | TODO — no deps |
-| Game | G-5 (TMX parser + sync + CLI) | TODO — after D-6 + tmx-enrich |
-| Game | G-6 (Optional auto-sync on server start) | TODO — after G-5 |
+| Game | tmx-enrich (Add seed NPCs to simplemap.tmx) | TODO — brief ready, no deps |
+| Game | G-5 (TMX parser + sync + CLI) | TODO — brief ready, after D-6 + tmx-enrich |
+| Game | G-6 (Optional auto-sync on server start) | TODO — brief ready, after G-5 |
 | DB | D-4 (Audit seed data + reconcile grants) | TODO |
-| DB | D-6 (Migration 012: map_entities + map_metadata) | TODO — plan approved |
+| DB | D-6 (Migration 012: map_entities + map_metadata) | TODO — brief ready |
 
 ### FOUNDATION GATE — PM verifies pipeline after G-0 + G-5 ship
 
@@ -143,7 +143,7 @@ S-1 (NPC Builder)         ──► S-4             (Memory Viewer is a tab insi
 
 | Task | Brief location | Status |
 |------|---------------|--------|
-| G-0 | `briefs/cursor/2026-02/TASK-G-0-supabase-config-loading.md` | TO WRITE |
+| G-0 | `briefs/cursor/2026-02/TASK-G-0-supabase-config-loading.md` | WRITTEN |
 | G-1 | `briefs/cursor/2026-02/TASK-G-1-modular-skill-plugin.md` | WRITTEN |
 | G-2 | `briefs/cursor/2026-02/TASK-G-2-photographer-npc.md` | WRITTEN |
 | G-3 | TBD (after D-5 schema design) | NOT YET |
@@ -155,6 +155,7 @@ S-1 (NPC Builder)         ──► S-4             (Memory Viewer is a tab insi
 | S-5 | TBD (after G-4) | NOT YET |
 | D-4 | Inline (verification, not a code task) | N/A |
 | D-5 | TBD (schema design brief) | NOT YET |
-| D-6 | Migration reviewed in TMX-to-DB sync plan | PLAN APPROVED |
-| G-5 | Covered by TMX-to-DB sync plan | PLAN APPROVED |
-| G-6 | Covered by TMX-to-DB sync plan | PLAN APPROVED |
+| D-6 | `briefs/cursor/2026-02/TASK-D-6-migration-012-map-entities.md` | WRITTEN |
+| tmx-enrich | `briefs/cursor/2026-02/TASK-tmx-enrich-seed-npcs-in-tmx.md` | WRITTEN |
+| G-5 | `briefs/cursor/2026-02/TASK-G-5-tmx-parser-sync-cli.md` | WRITTEN |
+| G-6 | `briefs/cursor/2026-02/TASK-G-6-auto-sync-on-server-start.md` | WRITTEN |
