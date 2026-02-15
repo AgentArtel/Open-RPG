@@ -16,6 +16,16 @@ const server = {
     } else {
       console.warn('[Server] Express app not available — health check not registered')
     }
+
+    if (process.env.SYNC_TMX_ON_START === 'true') {
+      console.log('[TMX-Sync] Syncing maps on server start...')
+      import('../src/sync/syncMapEntities').then((m) => m.syncAllMaps()).then((results) => {
+        const total = results.reduce((a, r) => a + r.entitiesCreated + r.entitiesUpdated, 0)
+        console.log(`[TMX-Sync] Done. ${total} entities synced across ${results.length} map(s).`)
+      }).catch((err) => {
+        console.error('[TMX-Sync] Non-blocking sync failed:', err instanceof Error ? err.message : String(err))
+      })
+    }
   },
 }
 

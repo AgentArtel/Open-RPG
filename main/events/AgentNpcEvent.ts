@@ -15,12 +15,53 @@ import {
 } from '@rpgjs/server'
 import { getAndClearSpawnContext } from '../../src/agents/core/spawnContext'
 import { bridge } from '../../src/agents/bridge'
+import { getSupabaseClient } from '../../src/config/supabase'
 import type { AgentEvent, RunContext } from '../../src/agents/core/types'
 import type { PerceptionContext } from '../../src/agents/perception/types'
 import type { GameContext, NearbyPlayerInfo } from '../../src/agents/skills/types'
 import type { Position } from '../../src/agents/bridge/types'
+import { EmotionBubble } from '@rpgjs/plugin-emotion-bubbles'
 
 const TILE_SIZE = 32
+
+/** Pending photo state per player (in-memory; keyed by player.id). */
+interface PendingPhoto {
+  status: 'pending' | 'ready' | 'failed'
+  prompt?: string
+  photoUrl?: string
+  permanentUrl?: string
+  errorCode?: string
+}
+
+const pendingPhotosByPlayerId = new Map<string, PendingPhoto>()
+
+/** In-character error messages for photographer (matches generate_image skill). */
+function photoErrorMessage(errorCode: string): string {
+  switch (errorCode) {
+    case 'content_policy':
+      return "I can't develop that image; my lens refuses."
+    case 'no_result':
+      return "The exposure came out blank... the light was wrong."
+    case 'api_unavailable':
+      return 'My darkroom chemicals have gone dry. Try again later.'
+    case 'api_error':
+      return 'Something went wrong in the darkroom. The film was ruined.'
+    case 'timeout':
+      return "The exposure took too long... the film was overexposed."
+    default:
+      return "The photograph did not turn out. Perhaps another time."
+  }
+}
+
+/** Map photo-type choice to prompt for generate-image edge. */
+const CHOICE_TO_PROMPT: Record<string, string> = {
+  nature: 'a beautiful nature scene',
+  portrait: 'a portrait in soft light',
+  urban: 'an urban city scene',
+  action: 'an action or sports moment',
+  wildlife: 'a wildlife scene',
+  architecture: 'striking architecture',
+}
 
 function tileDistance(
   a: { x: number; y: number },
@@ -78,6 +119,159 @@ export default class AgentNpcEvent extends RpgEvent {
       await player.showText('This NPC is not available right now.', { talkWith: this })
       return
     }
+
+    // Photographer: choice-only flow (Codecamp-style) — come back when ready
+    if (agentId === 'photographer') {
+      const pending = pendingPhotosByPlayerId.get(player.id)
+      if (pending?.status === 'ready' && pending.photoUrl && pending.prompt !== undefined) {
+        const seePhoto = await player.showChoices(
+          'Do you want to see your photo?',
+          [
+            { text: 'Yes', value: 'yes' },
+            { text: 'No', value: 'no' },
+          ],
+          { talkWith: this }
+        )
+        if (seePhoto?.value === 'no') {
+          await player.showText("Alright. Come back when you'd like to see it.", { talkWith: this })
+          return
+        }
+        if (seePhoto?.value === 'yes') {
+          await player.showText(
+            "Your photograph is ready. Here you are.",
+            { talkWith: this }
+          )
+          const existing: Array<{ url: string; prompt: string; generatedBy: string; timestamp: number }> =
+            player.getVariable('PHOTOS') || []
+          const updated = [
+            ...existing,
+            {
+              url: pending.photoUrl,
+              prompt: pending.prompt,
+              generatedBy: agentId,
+              timestamp: Date.now(),
+            },
+          ]
+          player.setVariable('PHOTOS', updated)
+          try {
+            player.gui('photo-result').open(
+              {
+                imageDataUrl: pending.photoUrl,
+                permanentUrl: pending.permanentUrl ?? '',
+                prompt: pending.prompt,
+                title: 'Your photograph',
+                description: pending.prompt,
+              },
+              { blockPlayerInput: true }
+            )
+          } catch (e) {
+            console.warn('[Photographer] Could not open photo-result:', e)
+          }
+          pendingPhotosByPlayerId.delete(player.id)
+        }
+        return
+      }
+      if (pending?.status === 'failed') {
+        await player.showText(photoErrorMessage(pending.errorCode ?? 'unknown'), { talkWith: this })
+        pendingPhotosByPlayerId.delete(player.id)
+        return
+      }
+      if (pending?.status === 'pending') {
+        await player.showText("I'm still developing your photograph. Come back in a moment.", { talkWith: this })
+        return
+      }
+
+      const choice = await player.showChoices(
+        'Would you like me to take a photo?',
+        [
+          { text: 'Yes', value: 'yes' },
+          { text: 'No, just chat', value: 'no' },
+        ],
+        { talkWith: this }
+      )
+      if (choice?.value === 'yes') {
+        const styleChoice = await player.showChoices(
+          'What kind of photo?',
+          [
+            { text: 'Nature', value: 'nature' },
+            { text: 'Portrait', value: 'portrait' },
+            { text: 'Urban / City', value: 'urban' },
+            { text: 'Action / Sports', value: 'action' },
+            { text: 'Wildlife', value: 'wildlife' },
+            { text: 'Architecture', value: 'architecture' },
+            { text: 'Cancel', value: 'cancel' },
+          ],
+          { talkWith: this }
+        )
+        if (styleChoice?.value && styleChoice.value !== 'cancel') {
+          const prompt = CHOICE_TO_PROMPT[styleChoice.value] ?? 'a photograph'
+          const style = 'vivid'
+          pendingPhotosByPlayerId.set(player.id, { status: 'pending', prompt })
+          await player.showText("I'll develop it in the darkroom. Come back when it's ready.", { talkWith: this })
+
+          const supabase = getSupabaseClient()
+          if (!supabase) {
+            await player.showText("The lens is clouded today... I cannot focus.", { talkWith: this })
+            pendingPhotosByPlayerId.delete(player.id)
+            return
+          }
+
+          const playerId = player.id
+          const timeoutMs = 60_000
+          const invokePromise = supabase.functions.invoke('generate-image', {
+            body: { prompt, style, agentId },
+          })
+          const timeoutPromise = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('timeout')), timeoutMs)
+          )
+          Promise.race([invokePromise, timeoutPromise])
+            .then((response: { data: unknown; error: unknown }) => {
+              if (response.error) {
+                pendingPhotosByPlayerId.set(playerId, { status: 'failed', errorCode: 'api_error' })
+                console.warn('[Photographer] Edge invoke error:', response.error)
+                return
+              }
+              const edgeData = response.data as {
+                success?: boolean
+                imageDataUrl?: string
+                imageUrl?: string
+                permanentUrl?: string
+                error?: string
+              } | null
+              if (edgeData?.success === true && (edgeData.imageDataUrl || edgeData.imageUrl)) {
+                const photoUrl = edgeData.imageDataUrl || edgeData.imageUrl!
+                pendingPhotosByPlayerId.set(playerId, {
+                  status: 'ready',
+                  prompt,
+                  photoUrl,
+                  permanentUrl: edgeData.permanentUrl,
+                })
+                const event = bridge.getEventByAgentId('photographer')
+                if (event) {
+                  try {
+                    ;(event as any).showEmotionBubble?.(EmotionBubble.Exclamation)
+                  } catch {
+                    // plugin may be missing
+                  }
+                }
+              } else {
+                pendingPhotosByPlayerId.set(playerId, {
+                  status: 'failed',
+                  errorCode: edgeData?.error ?? 'unknown',
+                })
+              }
+            })
+            .catch((err: unknown) => {
+              const code = err instanceof Error && err.message === 'timeout' ? 'timeout' : 'api_error'
+              pendingPhotosByPlayerId.set(playerId, { status: 'failed', errorCode: code })
+              console.warn('[Photographer] Background job failed', err)
+            })
+          return
+        }
+        // Cancel or no value — fall through to normal chat
+      }
+    }
+
     bridge.handlePlayerAction(player, this)
   }
 

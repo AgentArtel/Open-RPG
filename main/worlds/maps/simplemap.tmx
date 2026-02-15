@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.9" tiledversion="1.9.2" orientation="orthogonal" renderorder="right-down" width="25" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="5" nextobjectid="14">
+<map version="1.9" tiledversion="1.9.2" orientation="orthogonal" renderorder="right-down" width="25" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="5" nextobjectid="18">
  <tileset firstgid="1" source="[Base]BaseChip_pipo.tsx"/>
  <tileset firstgid="1001" source="[A]Water_pipo.tsx"/>
  <tileset firstgid="4073" source="[A]Dirt_pipo.tsx"/>
@@ -24,6 +24,40 @@
    <point/>
   </object>
   <object id="12" name="EV-1" x="290.284" y="371.638">
+   <point/>
+  </object>
+  <object id="14" name="elder-theron" x="300" y="250">
+   <properties>
+    <property name="entityType" value="ai-npc"/>
+    <property name="displayName" value="Elder Theron"/>
+    <property name="sprite" value="female"/>
+    <property name="role" value="elder"/>
+   </properties>
+   <point/>
+  </object>
+  <object id="15" name="test-agent" x="450" y="350">
+   <properties>
+    <property name="entityType" value="ai-npc"/>
+    <property name="displayName" value="Test Agent"/>
+    <property name="sprite" value="female"/>
+   </properties>
+   <point/>
+  </object>
+  <object id="16" name="photographer" x="500" y="200">
+   <properties>
+    <property name="entityType" value="ai-npc"/>
+    <property name="displayName" value="Photographer"/>
+    <property name="sprite" value="female"/>
+    <property name="tools" value="generate_image"/>
+   </properties>
+   <point/>
+  </object>
+  <object id="17" name="artist" x="150" y="400">
+   <properties>
+    <property name="entityType" value="ai-npc"/>
+    <property name="displayName" value="Artist"/>
+    <property name="sprite" value="female"/>
+   </properties>
    <point/>
   </object>
  </objectgroup>
