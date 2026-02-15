@@ -1,6 +1,6 @@
 # Cross-Project Status
 
-Last updated: 2026-02-15 (Wave 1 + G-2 shipped; G-7, G-8, S-6 merged from main)
+Last updated: 2026-02-15 (D-5 content store schema DONE; migration 013 designed)
 
 ---
 
@@ -66,19 +66,19 @@ See [master.md](sprints/2026-02-studio-game-alignment/master.md) for full backlo
 | G-5 | TMX parser + sync + CLI | Cursor | Open-RPG | 2026-02-15 |
 | G-6 | Optional auto-sync on server start | Cursor | Open-RPG | 2026-02-15 |
 | G-2 | Photographer NPC + Gemini | Cursor | Open-RPG | 2026-02-15 |
+| D-5 | Content store schema design (migration 013) | Orchestrator | — | 2026-02-15 |
 
 ## Pending (Briefs Not Yet Written)
 
 | ID | Title | Agent | Blocked by |
 |----|-------|-------|------------|
-| G-3 | Content Store + Tagging | Cursor | D-5, G-2, foundation gate |
+| G-3 | Content Store + Tagging | Cursor | ~~D-5~~, ~~G-2~~, ~~foundation gate~~ — **UNBLOCKED** |
 | G-4 | Associative Recall + Social Feed | Cursor | G-3 |
 | S-5 | Lovable Feed Integration | Lovable | G-4 |
 | S-6 | Map Entity Browser | Lovable | D-6 |
 | G-7 | In-game builder save-on-place | Cursor | D-6, G-0 |
 | G-8 | In-game event config form | Cursor | G-7 |
 | D-4 | Audit seed data + reconcile grants | Orchestrator | — |
-| D-5 | Content store schema design | Orchestrator | — |
 
 ---
 
@@ -96,10 +96,10 @@ See [master.md](sprints/2026-02-studio-game-alignment/master.md) for full backlo
 - **Game:** G-2 (Photographer NPC) — DONE
 - **Studio:** S-4 (Memory Viewer, after foundation gate)
 - **Studio:** S-6 (Map Entity Browser, after D-6 — can start pre-gate)
-- **DB:** D-5 (Content store schema design)
+- **DB:** ~~D-5~~ **DONE** — migration 013 designed, ready to apply
 
-### Wave 3 — After Wave 2
-- **Game:** G-3 (Content Store), then G-4 (Social Feed)
+### Wave 3 — UNBLOCKED (D-5 done, G-2 done)
+- **Game:** G-3 (Content Store — apply migration 013, implement ContentStore.ts), then G-4 (Social Feed)
 - **Studio:** S-5 (Feed Integration, after G-4)
 
 ---
@@ -125,4 +125,5 @@ See [master.md](sprints/2026-02-studio-game-alignment/master.md) for full backlo
 - `game` schema: Live, 4 tables, seed data (4 NPCs, 1 integration)
 - Cross-schema grants: Applied (migration 011); Studio's overly-broad migration needs reconciliation (D-4)
 - PostgREST: `public`, `studio`, `game` exposed
-- **Pending: migration 012 (map_entities + map_metadata)** — plan approved, Cursor to implement (D-6)
+- **Applied: migration 012 (map_entities + map_metadata)** — D-6 DONE
+- **Designed: migration 013 (npc_content + content_tags + npc_posts + recall_content RPC)** — D-5 DONE, Cursor to apply with G-3

@@ -1,6 +1,6 @@
 # Master Backlog — 2026-02 Studio + Game Alignment
 
-Last updated: 2026-02-15 (Wave 1 + G-2 shipped; G-7, G-8, S-6 from main merged)
+Last updated: 2026-02-15 (D-5 content store schema DONE; migration 013 designed)
 
 ---
 
@@ -24,7 +24,7 @@ Last updated: 2026-02-15 (Wave 1 + G-2 shipped; G-7, G-8, S-6 from main merged)
 | D-2 | Cross-schema grants (migration 011) | DONE | Game repo | Studio roles can read/write config tables, read runtime tables |
 | D-3 | Verify PostgREST exposes `game` schema | DONE | Game repo | `pgrst.db_schemas = 'public, studio, game'` |
 | D-4 | Audit seed data + reconcile grants | TODO | Orchestrator | Verify seed data visible from Studio; also reconcile Studio's overly-broad grant migration with game repo's 011 (see alignment-rules.md §9) |
-| D-5 | Plan content store schema (for G-3) | TODO | Orchestrator | New table(s) in `game` schema for NPC-generated content; design as migration 013+ when G-3 is ready |
+| D-5 | Content store schema (migration 013) | **DONE** | Orchestrator | 3 tables (`npc_content`, `content_tags`, `npc_posts`) + `recall_content` RPC; [design doc](../../briefs/cursor/2026-02/D-5-content-store-schema.md) |
 | D-6 | Migration 012: map_entities + map_metadata | DONE | Orchestrator (review) → Cursor | Two new game tables for TMX-synced entities; 011-aligned grants; orphan-behavior documented |
 
 ---
@@ -36,7 +36,7 @@ Last updated: 2026-02-15 (Wave 1 + G-2 shipped; G-7, G-8, S-6 from main merged)
 | G-0 | Load NPC configs from Supabase | DONE | Cursor | NEW | [TASK-G-0-supabase-config-loading.md](../../briefs/cursor/2026-02/TASK-G-0-supabase-config-loading.md) |
 | G-1 | Modular Skill Plugin System | TODO | Cursor | TASK-018a | [TASK-G-1-modular-skill-plugin.md](../../briefs/cursor/2026-02/TASK-G-1-modular-skill-plugin.md) |
 | G-2 | Photographer NPC + Gemini Image Generation | DONE | Cursor | TASK-018 | [TASK-G-2-photographer-npc.md](../../briefs/cursor/2026-02/TASK-G-2-photographer-npc.md) |
-| G-3 | Content Store + Tagging | TODO | Cursor | TASK-019 | Brief TBD (depends on D-5 schema design) |
+| G-3 | Content Store + Tagging | TODO | Cursor | TASK-019 | D-5 schema DONE; G-2 DONE; **UNBLOCKED** — apply migration 013 + implement ContentStore |
 | G-4 | Associative Recall + Social Feed | TODO | Cursor | TASK-020 | Brief TBD (depends on G-3) |
 | G-5 | TMX parser + sync logic + CLI script | DONE | Cursor | NEW | [TASK-G-5-tmx-parser-sync-cli.md](../../briefs/cursor/2026-02/TASK-G-5-tmx-parser-sync-cli.md) |
 | G-6 | Optional auto-sync on server start | DONE | Cursor | NEW | [TASK-G-6-auto-sync-on-server-start.md](../../briefs/cursor/2026-02/TASK-G-6-auto-sync-on-server-start.md) |
@@ -145,12 +145,12 @@ D-6 (map_entities schema) ──► S-6             (Studio reads map_entities �
 | Game | G-2 (Photographer NPC + Gemini) | DONE |
 | Studio | S-4 (NPC Memory Viewer) | HELD — needs foundation gate |
 | Studio | S-6 (Map Entity Browser) | TODO — after D-6 (can start pre-gate) |
-| DB | D-5 (Design content store schema) | TODO |
+| DB | D-5 (Content store schema) | **DONE** — migration 013 ready |
 
-### Wave 3 (after Wave 2)
+### Wave 3 — UNBLOCKED (D-5 done, G-2 done)
 | Track | Tasks |
 |-------|-------|
-| Game | G-3 (Content Store), then G-4 (Social Feed) |
+| Game | G-3 (Content Store — apply migration 013 + ContentStore.ts), then G-4 (Social Feed) |
 | Studio | S-5 (Lovable Feed Integration, after G-4) |
 
 ---
@@ -162,7 +162,7 @@ D-6 (map_entities schema) ──► S-6             (Studio reads map_entities �
 | G-0 | `briefs/cursor/2026-02/TASK-G-0-supabase-config-loading.md` | WRITTEN |
 | G-1 | `briefs/cursor/2026-02/TASK-G-1-modular-skill-plugin.md` | WRITTEN |
 | G-2 | `briefs/cursor/2026-02/TASK-G-2-photographer-npc.md` | WRITTEN |
-| G-3 | TBD (after D-5 schema design) | NOT YET |
+| G-3 | `briefs/cursor/2026-02/TASK-G-3-content-store.md` | TO WRITE (D-5 schema done, **UNBLOCKED**) |
 | G-4 | TBD (after G-3) | NOT YET |
 | S-1 | `briefs/lovable/2026-02/TASK-S-1-npc-builder-ui.md` | REWRITTEN — verify & polish (code merged) |
 | S-2 | `briefs/lovable/2026-02/TASK-S-2-integrations-page.md` | REWRITTEN — verify & polish (code merged) |
@@ -173,7 +173,7 @@ D-6 (map_entities schema) ──► S-6             (Studio reads map_entities �
 | G-7 | `briefs/cursor/2026-02/TASK-G-7-builder-persistence.md` | TO WRITE |
 | G-8 | `briefs/cursor/2026-02/TASK-G-8-event-config-form.md` | TO WRITE |
 | D-4 | Inline (verification, not a code task) | N/A |
-| D-5 | TBD (schema design brief) | NOT YET |
+| D-5 | `briefs/cursor/2026-02/D-5-content-store-schema.md` + `migrations/013_content_store.sql` | **DONE** |
 | D-6 | `briefs/cursor/2026-02/TASK-D-6-migration-012-map-entities.md` | WRITTEN |
 | tmx-enrich | `briefs/cursor/2026-02/TASK-tmx-enrich-seed-npcs-in-tmx.md` | WRITTEN |
 | G-5 | `briefs/cursor/2026-02/TASK-G-5-tmx-parser-sync-cli.md` | WRITTEN |

@@ -14,7 +14,7 @@
 | D-2 | Cross-schema grants (migration 011) | DONE | Studio can query `game.*` |
 | D-3 | PostgREST exposes game schema | DONE | `pgrst.db_schemas` updated |
 | D-4 | Audit seed data accessible from Studio | TODO | Verify with a test query |
-| D-5 | Plan content store schema (migration 013+) | TODO | Design new table(s) for NPC-generated content |
+| D-5 | Content store schema (migration 013) | **DONE** | 3 tables + recall RPC; see [design doc](../../briefs/cursor/2026-02/D-5-content-store-schema.md), SQL at [migrations/013](../../migrations/013_content_store.sql) |
 | D-6 | Migration 012: map_entities + map_metadata | DONE | [Brief](../../briefs/cursor/2026-02/TASK-D-6-migration-012-map-entities.md); 011-aligned grants |
 
 ## Game Tasks
@@ -29,7 +29,7 @@
 | G-7 | In-game builder save-on-place persistence | TODO | NEW | Save placements to `game.map_entities` + skeleton `agent_configs`; depends D-6 + G-0 |
 | G-8 | In-game event config form | TODO | NEW | Post-placement Vue form: type, name, role, sprite; depends G-7 |
 | G-2 | Photographer NPC + Gemini | DONE | TASK-018 | [Brief](../../briefs/cursor/2026-02/TASK-G-2-photographer-npc.md) |
-| G-3 | Content Store + Tagging | HELD (foundation gate) | TASK-019 | Brief TBD |
+| G-3 | Content Store + Tagging | **UNBLOCKED** | TASK-019 | D-5 schema DONE; apply migration 013 + implement ContentStore.ts |
 | G-4 | Associative Recall + Social Feed | HELD (foundation gate) | TASK-020 | Brief TBD |
 
 ## Order
@@ -44,8 +44,8 @@
 8. **G-8** after G-7 — post-placement config form (type, name, role, sprite)
 9. **FOUNDATION GATE** — PM verifies the full pipeline (Tiled → DB → Game) after G-0 + G-5 ship
 10. **G-2** after G-1 + foundation gate — Photographer NPC uses the plugin architecture
-11. **D-5** in parallel with G-2 — design content store schema
-12. **G-3** after D-5 + G-2 — content store implementation
+11. **D-5** ~~in parallel with G-2~~ **DONE** — migration 013 designed and ready
+12. **G-3** **UNBLOCKED** (D-5 done, G-2 done) — apply migration 013 + implement ContentStore.ts
 13. **G-4** after G-3 — social feed reads from content store
 
 ## Key Constraints
@@ -63,3 +63,9 @@
 - Builder persistence is save-on-place — every click-to-place immediately upserts to DB.
 - Builder never overwrites Studio edits to `agent_configs` (personality, skills, model, behavior, enabled).
 - G-8 config form is lightweight scaffold only — deep config happens in Studio.
+- Content store tables: `game.npc_content`, `game.content_tags`, `game.npc_posts` (migration 013).
+- Content store grants: SELECT auto-granted (011 default privileges), authenticated gets UPDATE+DELETE on npc_posts only.
+- No FK on `agent_id` in content tables (content outlives config changes, matches `agent_memory` pattern).
+- Tags are free-form lowercase strings — no controlled vocabulary, no pgvector embeddings for MVP.
+- `recall_content()` RPC does server-side tag-overlap query ranked by relevance then recency.
+- ContentStore follows SupabaseAgentMemory pattern: write-behind flush, graceful degradation, batch inserts.
