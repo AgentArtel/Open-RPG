@@ -1,4 +1,5 @@
 import { RpgPlayer, type RpgPlayerHooks, Control, Components, type RpgMap, type RpgEvent } from '@rpgjs/server'
+import { EmotionBubble } from '@rpgjs/plugin-emotion-bubbles'
 import TestNpcEvent from './events/test-npc'
 import GuardEvent from './events/guard'
 import ArtistEvent from './events/artist'
@@ -12,6 +13,7 @@ import AgentNpcEvent from './events/AgentNpcEvent'
 import { agentManager, setAgentNpcEventClass } from '../src/agents/core'
 import { testLLMCall } from '../src/agents/core/llm-test'
 import { createPlayerStateManager } from '../src/persistence'
+import { getSupabaseClient } from '../src/config/supabase'
 
 // ---------------------------------------------------------------------------
 // Builder Dashboard — Scripted NPC Registry
@@ -65,11 +67,11 @@ const npcSpawnedOnMap: Set<string> = new Set()
 const playerStateManager = createPlayerStateManager()
 
 /**
- * Toggle which NPCs spawn on the map. Set to false to disable and reduce clutter.
+ * Toggle which scripted NPCs spawn on the map. Set all to false to see only AI NPCs loaded from DB (game.agent_configs).
  */
 const NPC_SPAWN_CONFIG = {
-    TestNPC: true,
-    Guard: true,
+    TestNPC: false,
+    Guard: false,
     Artist: false,
     Photographer: false,
     Vendor: false,
@@ -77,13 +79,100 @@ const NPC_SPAWN_CONFIG = {
     CatDad: false,
     PerceptionTestNPC: false,
     SkillTestNPC: false,
-    // AI NPCs from YAML (elder-theron, test-agent) spawn via agentManager below
+    // AI NPCs from Supabase (game.agent_configs) or YAML spawn via agentManager.spawnAgentsOnMap() above
 } as const
+
+/** In-character error messages for photo-request flow (matches generate_image skill). */
+function photoErrorMessage(errorCode: string): string {
+    switch (errorCode) {
+        case 'content_policy':
+            return "I can't develop that image; my lens refuses."
+        case 'no_result':
+            return "The exposure came out blank... the light was wrong."
+        case 'api_unavailable':
+            return 'My darkroom chemicals have gone dry. Try again later.'
+        case 'api_error':
+            return 'Something went wrong in the darkroom. The film was ruined.'
+        default:
+            return "The photograph did not turn out. Perhaps another time."
+    }
+}
 
 const player: RpgPlayerHooks = {
     async onConnected(player: RpgPlayer) {
         player.name = 'YourName'
         player.setComponentsTop(Components.text('{name}'))
+
+        // Photo-request GUI: when player submits from photographer form, run edge function and show result
+        player.gui('photo-request').on('submit', async (data: { prompt: string; style?: string; eventId: string; agentId: string }) => {
+            try {
+                const prompt = typeof data.prompt === 'string' ? data.prompt.trim() : ''
+                if (!prompt) {
+                    await player.showText("I need to know what to photograph. Describe the scene!")
+                    return
+                }
+                const style = (data.style && String(data.style).trim()) || 'vivid'
+                const map = player.getCurrentMap<RpgMap>()
+                if (!map) {
+                    await player.showText("The lens is clouded today... I cannot focus.")
+                    return
+                }
+                const npcEvent = map.getEvent<RpgEvent>(data.eventId)
+                if (npcEvent) {
+                    try {
+                        (npcEvent as any).showEmotionBubble?.(EmotionBubble.ThreeDot)
+                    } catch {
+                        // ignore
+                    }
+                }
+                const supabase = getSupabaseClient()
+                if (!supabase) {
+                    await player.showText("The lens is clouded today... I cannot focus.")
+                    return
+                }
+                const timeoutMs = 10_000
+                const invokePromise = supabase.functions.invoke('generate-image', {
+                    body: { prompt, style, agentId: data.agentId },
+                })
+                const timeoutPromise = new Promise<never>((_, reject) =>
+                    setTimeout(() => reject(new Error('timeout')), timeoutMs)
+                )
+                let response: { data: unknown; error: unknown }
+                try {
+                    response = await Promise.race([invokePromise, timeoutPromise])
+                } catch (raceErr: unknown) {
+                    if (raceErr instanceof Error && raceErr.message === 'timeout') {
+                        await player.showText("The exposure took too long... the film was overexposed.")
+                        return
+                    }
+                    throw raceErr
+                }
+                const edgeData = response.data as { success?: boolean; imageDataUrl?: string; imageUrl?: string; error?: string } | null
+                if (response.error) {
+                    console.warn('[PhotoRequest] Edge invoke error:', response.error)
+                    await player.showText('The darkroom is having troubles. I could not develop the image.')
+                    return
+                }
+                if (edgeData?.success === true && (edgeData.imageDataUrl || edgeData.imageUrl)) {
+                    const photoUrl = edgeData.imageDataUrl || edgeData.imageUrl!
+                    const existing: Array<{ url: string; prompt: string; generatedBy: string; timestamp: number }> = player.getVariable('PHOTOS') || []
+                    const updated = [...existing, { url: photoUrl, prompt, generatedBy: data.agentId, timestamp: Date.now() }]
+                    player.setVariable('PHOTOS', updated)
+                    try {
+                        player.gui('photo-result').open({ imageDataUrl: photoUrl, prompt }, { blockPlayerInput: true })
+                    } catch (e) {
+                        console.warn('[PhotoRequest] Could not open photo-result:', e)
+                    }
+                } else {
+                    const errCode = edgeData?.error ?? 'unknown'
+                    await player.showText(photoErrorMessage(errCode))
+                }
+            } catch (err: unknown) {
+                const msg = err instanceof Error ? err.message : String(err)
+                console.error('[PhotoRequest] Handler error:', msg)
+                await player.showText("Something went wrong with the camera. The photograph was lost.")
+            }
+        })
 
         // TASK-005: LLM feasibility test — fire-and-forget async call.
         // This runs in the background so it doesn't block player connection.
@@ -239,44 +328,45 @@ const player: RpgPlayerHooks = {
         // We use map.createDynamicEvent() which creates Shared-mode events,
         // so all players on the map will see the same NPCs.
         const map = player.getCurrentMap<RpgMap>()
-        if (map && map.id === 'simplemap' && !npcSpawnedOnMap.has(map.id)) {
+        if (map && !npcSpawnedOnMap.has(map.id)) {
             try {
-                // Spawn AI NPCs from YAML configs (src/config/agents/*.yaml)
+                // Spawn AI NPCs (Supabase or YAML) for this map
                 await agentManager.spawnAgentsOnMap(map)
 
-                if (NPC_SPAWN_CONFIG.TestNPC) {
+                // Scripted NPCs (hardcoded positions) only on simplemap
+                if (map.id === 'simplemap' && NPC_SPAWN_CONFIG.TestNPC) {
                     map.createDynamicEvent({ x: 200, y: 200, event: TestNpcEvent })
                     console.log('[TestNPC] Spawned on map:', map.id)
                 }
-                if (NPC_SPAWN_CONFIG.Guard) {
+                if (map.id === 'simplemap' && NPC_SPAWN_CONFIG.Guard) {
                     map.createDynamicEvent({ x: 400, y: 300, event: GuardEvent })
                     console.log('[Guard] Spawned on map:', map.id)
                 }
-                if (NPC_SPAWN_CONFIG.Artist) {
+                if (map.id === 'simplemap' && NPC_SPAWN_CONFIG.Artist) {
                     map.createDynamicEvent({ x: 150, y: 400, event: ArtistEvent })
                     console.log('[Artist] Spawned on map:', map.id)
                 }
-                if (NPC_SPAWN_CONFIG.Photographer) {
+                if (map.id === 'simplemap' && NPC_SPAWN_CONFIG.Photographer) {
                     map.createDynamicEvent({ x: 500, y: 200, event: PhotographerEvent })
                     console.log('[Photographer] Spawned on map:', map.id)
                 }
-                if (NPC_SPAWN_CONFIG.Vendor) {
+                if (map.id === 'simplemap' && NPC_SPAWN_CONFIG.Vendor) {
                     map.createDynamicEvent({ x: 300, y: 500, event: VendorEvent })
                     console.log('[Vendor] Spawned on map:', map.id)
                 }
-                if (NPC_SPAWN_CONFIG.Missionary) {
+                if (map.id === 'simplemap' && NPC_SPAWN_CONFIG.Missionary) {
                     map.createDynamicEvent({ x: 600, y: 400, event: MissionaryEvent })
                     console.log('[Missionary] Spawned on map:', map.id)
                 }
-                if (NPC_SPAWN_CONFIG.CatDad) {
+                if (map.id === 'simplemap' && NPC_SPAWN_CONFIG.CatDad) {
                     map.createDynamicEvent({ x: 100, y: 300, event: CatDadEvent })
                     console.log('[CatDad] Spawned on map:', map.id)
                 }
-                if (NPC_SPAWN_CONFIG.PerceptionTestNPC) {
+                if (map.id === 'simplemap' && NPC_SPAWN_CONFIG.PerceptionTestNPC) {
                     map.createDynamicEvent({ x: 350, y: 350, event: PerceptionTestNpcEvent })
                     console.log('[PerceptionTestNPC] Spawned on map:', map.id)
                 }
-                if (NPC_SPAWN_CONFIG.SkillTestNPC) {
+                if (map.id === 'simplemap' && NPC_SPAWN_CONFIG.SkillTestNPC) {
                     map.createDynamicEvent({ x: 250, y: 300, event: SkillTestNpcEvent })
                     console.log('[SkillTestNPC] Spawned on map:', map.id)
                 }
@@ -297,6 +387,17 @@ const player: RpgPlayerHooks = {
     },
 
     // -----------------------------------------------------------------
+    // NPC Reload: clear spawn state when last player leaves so NPCs respawn on return/refresh
+    // -----------------------------------------------------------------
+    onLeaveMap(player: RpgPlayer, map: RpgMap) {
+        if (map && (map as RpgMap & { nbPlayers?: number }).nbPlayers <= 1) {
+            console.log(`[NPC Reload] Last player left ${map.id} — clearing spawn state`)
+            npcSpawnedOnMap.delete(map.id)
+            agentManager.clearMapSpawnState(map.id)
+        }
+    },
+
+    // -----------------------------------------------------------------
     // TASK-013: Save player state on disconnect
     // Fire-and-forget — we don't await so disconnect isn't blocked.
     // If Supabase is unavailable the manager no-ops silently.
@@ -305,6 +406,12 @@ const player: RpgPlayerHooks = {
         try {
             const map = player.getCurrentMap<RpgMap>()
             const mapId = map?.id ?? 'simplemap'
+
+            if (map && (map as RpgMap & { nbPlayers?: number }).nbPlayers <= 1) {
+                console.log(`[NPC Reload] Last player disconnecting from ${map.id} — clearing spawn state`)
+                npcSpawnedOnMap.delete(mapId)
+                agentManager.clearMapSpawnState(mapId)
+            }
 
             playerStateManager
                 .savePlayer({

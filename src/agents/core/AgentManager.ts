@@ -496,6 +496,17 @@ export class AgentManager implements IAgentManager {
     return true
   }
 
+  /**
+   * Clear spawn tracking for a map so agents can be re-spawned on next join.
+   * Does NOT remove agent registrations or dispose adapters — just allows
+   * spawnAgentsOnMap() to run again for this map. Use from onLeaveMap/onDisconnected
+   * when the last player leaves (RPGJS destroys the map and events; we only clear the guard).
+   */
+  clearMapSpawnState(mapId: string): void {
+    this.spawnedMaps.delete(mapId)
+    console.log(`${LOG_PREFIX} Cleared spawn state for map: ${mapId}`)
+  }
+
   async dispose(): Promise<void> {
     for (const agentId of Array.from(this.agents.keys())) {
       await this.removeAgent(agentId)
