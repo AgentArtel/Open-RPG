@@ -1,6 +1,6 @@
 # Cross-Project Status
 
-Last updated: 2026-02-15 (Wave 1 briefs written)
+Last updated: 2026-02-15 (Wave 1 + G-2 shipped; G-7, G-8, S-6 merged from main)
 
 ---
 
@@ -34,23 +34,22 @@ See [master.md](sprints/2026-02-studio-game-alignment/master.md) for full backlo
 | S-1 | NPC Builder Page | Lovable | Agent-Artel-studio | MERGED — needs verify & polish | [Brief](briefs/lovable/2026-02/TASK-S-1-npc-builder-ui.md) |
 | S-2 | Integrations Page | Lovable | Agent-Artel-studio | MERGED — needs verify & polish | [Brief](briefs/lovable/2026-02/TASK-S-2-integrations-page.md) |
 | S-3 | Dashboard Game Stats | Lovable | Agent-Artel-studio | MERGED — needs verify & polish | [Brief](briefs/lovable/2026-02/TASK-S-3-dashboard-game-stats.md) |
-| G-0 | Load NPC configs from Supabase | Cursor | Open-RPG | **TODO — FOUNDATION BLOCKER** | [Brief](briefs/cursor/2026-02/TASK-G-0-supabase-config-loading.md) |
+| G-0 | Load NPC configs from Supabase | Cursor | Open-RPG | DONE | [Brief](briefs/cursor/2026-02/TASK-G-0-supabase-config-loading.md) |
 
 ## Approved (May Proceed)
 
 | ID | Title | Agent | Repo | Brief |
 |----|-------|-------|------|-------|
 | G-1 | Modular Skill Plugin System | Cursor | Open-RPG | [Brief](briefs/cursor/2026-02/TASK-G-1-modular-skill-plugin.md) |
-| D-6 | Migration 012: map_entities + map_metadata | Cursor | Open-RPG | [Brief](briefs/cursor/2026-02/TASK-D-6-migration-012-map-entities.md) |
-| tmx-enrich | Add seed NPCs to simplemap.tmx | Cursor | Open-RPG | [Brief](briefs/cursor/2026-02/TASK-tmx-enrich-seed-npcs-in-tmx.md) |
-| G-5 | TMX parser + sync logic + CLI | Cursor | Open-RPG | [Brief](briefs/cursor/2026-02/TASK-G-5-tmx-parser-sync-cli.md) (after D-6 + tmx-enrich) |
-| G-6 | Optional auto-sync on server start | Cursor | Open-RPG | [Brief](briefs/cursor/2026-02/TASK-G-6-auto-sync-on-server-start.md) (after G-5) |
+| D-6 | Migration 012: map_entities + map_metadata | Cursor | Open-RPG | DONE | [Brief](briefs/cursor/2026-02/TASK-D-6-migration-012-map-entities.md) |
+| tmx-enrich | Add seed NPCs to simplemap.tmx | Cursor | Open-RPG | DONE | [Brief](briefs/cursor/2026-02/TASK-tmx-enrich-seed-npcs-in-tmx.md) |
+| G-5 | TMX parser + sync logic + CLI | Cursor | Open-RPG | DONE | [Brief](briefs/cursor/2026-02/TASK-G-5-tmx-parser-sync-cli.md) (after D-6 + tmx-enrich) |
+| G-6 | Optional auto-sync on server start | Cursor | Open-RPG | DONE | [Brief](briefs/cursor/2026-02/TASK-G-6-auto-sync-on-server-start.md) (after G-5) |
 
 ## Held (Foundation Gate)
 
 | ID | Title | Agent | Repo | Brief | Blocked by |
 |----|-------|-------|------|-------|------------|
-| G-2 | Photographer NPC + Gemini | Cursor | Open-RPG | [Brief](briefs/cursor/2026-02/TASK-G-2-photographer-npc.md) | G-1 + Foundation gate |
 | S-4 | NPC Memory Viewer | Lovable | Agent-Artel-studio | [Brief](briefs/lovable/2026-02/TASK-S-4-npc-memory-viewer.md) | Foundation gate |
 
 ## Done
@@ -60,6 +59,13 @@ See [master.md](sprints/2026-02-studio-game-alignment/master.md) for full backlo
 | D-1 | Game schema + seed data (migration 009) | Cursor | Open-RPG | 2026-02-14 |
 | D-2 | Cross-schema grants (migration 011) | Cursor | Open-RPG | 2026-02-14 |
 | D-3 | PostgREST schema exposure | Cursor | Open-RPG | 2026-02-14 |
+| D-6 | Migration 012: map_entities + map_metadata | Cursor | Open-RPG | 2026-02-15 |
+| G-0 | Load NPC configs from Supabase | Cursor | Open-RPG | 2026-02-15 |
+| G-1 | Modular Skill Plugin System | Cursor | Open-RPG | 2026-02-15 |
+| tmx-enrich | Add seed NPCs to simplemap.tmx | Cursor | Open-RPG | 2026-02-15 |
+| G-5 | TMX parser + sync + CLI | Cursor | Open-RPG | 2026-02-15 |
+| G-6 | Optional auto-sync on server start | Cursor | Open-RPG | 2026-02-15 |
+| G-2 | Photographer NPC + Gemini | Cursor | Open-RPG | 2026-02-15 |
 
 ## Pending (Briefs Not Yet Written)
 
@@ -68,6 +74,9 @@ See [master.md](sprints/2026-02-studio-game-alignment/master.md) for full backlo
 | G-3 | Content Store + Tagging | Cursor | D-5, G-2, foundation gate |
 | G-4 | Associative Recall + Social Feed | Cursor | G-3 |
 | S-5 | Lovable Feed Integration | Lovable | G-4 |
+| S-6 | Map Entity Browser | Lovable | D-6 |
+| G-7 | In-game builder save-on-place | Cursor | D-6, G-0 |
+| G-8 | In-game event config form | Cursor | G-7 |
 | D-4 | Audit seed data + reconcile grants | Orchestrator | — |
 | D-5 | Content store schema design | Orchestrator | — |
 
@@ -75,18 +84,18 @@ See [master.md](sprints/2026-02-studio-game-alignment/master.md) for full backlo
 
 ## Execution Waves
 
-### Wave 1 — In Progress (all briefs ready)
+### Wave 1 — DONE
 - **Studio (Lovable):** S-1, S-2, S-3 — CODE MERGED, briefs reframed as verify & polish
-- **Game (Cursor):** G-0 (Load configs from Supabase) — **FOUNDATION BLOCKER**, brief ready
-- **Game (Cursor):** G-1 (Modular Skill Plugin System) — TODO, brief ready, can run parallel with G-0
-- **Game (Cursor):** D-6 → tmx-enrich → G-5 → G-6 (TMX-to-DB sync pipeline) — all briefs ready
+- **Game (Cursor):** G-0, G-1, D-6, tmx-enrich, G-5, G-6 — DONE
+- **Game (Cursor):** G-7 → G-8 (In-game builder persistence + config form) — after D-6 + G-0, briefs to write
 - **DB (Orchestrator):** D-4 (Audit seed data + reconcile grants) — TODO
 
-### FOUNDATION GATE — PM verifies the pipeline after G-0 + G-5 ship
+### FOUNDATION GATE — PM verified; Wave 2 unblocked
 
-### Wave 2 — After Foundation Gate
-- **Game:** G-2 (Photographer NPC, after G-1 + foundation gate)
+### Wave 2 — In Progress
+- **Game:** G-2 (Photographer NPC) — DONE
 - **Studio:** S-4 (Memory Viewer, after foundation gate)
+- **Studio:** S-6 (Map Entity Browser, after D-6 — can start pre-gate)
 - **DB:** D-5 (Content store schema design)
 
 ### Wave 3 — After Wave 2

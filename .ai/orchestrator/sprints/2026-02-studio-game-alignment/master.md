@@ -1,6 +1,6 @@
 # Master Backlog — 2026-02 Studio + Game Alignment
 
-Last updated: 2026-02-15 (Wave 1 briefs written)
+Last updated: 2026-02-15 (Wave 1 + G-2 shipped; G-7, G-8, S-6 from main merged)
 
 ---
 
@@ -25,7 +25,7 @@ Last updated: 2026-02-15 (Wave 1 briefs written)
 | D-3 | Verify PostgREST exposes `game` schema | DONE | Game repo | `pgrst.db_schemas = 'public, studio, game'` |
 | D-4 | Audit seed data + reconcile grants | TODO | Orchestrator | Verify seed data visible from Studio; also reconcile Studio's overly-broad grant migration with game repo's 011 (see alignment-rules.md §9) |
 | D-5 | Plan content store schema (for G-3) | TODO | Orchestrator | New table(s) in `game` schema for NPC-generated content; design as migration 013+ when G-3 is ready |
-| D-6 | Migration 012: map_entities + map_metadata | TODO | Orchestrator (review) → Cursor | Two new game tables for TMX-synced entities; 011-aligned grants; orphan-behavior documented |
+| D-6 | Migration 012: map_entities + map_metadata | DONE | Orchestrator (review) → Cursor | Two new game tables for TMX-synced entities; 011-aligned grants; orphan-behavior documented |
 
 ---
 
@@ -33,13 +33,15 @@ Last updated: 2026-02-15 (Wave 1 briefs written)
 
 | ID | Title | Status | Owner | Game-repo task | Brief |
 |----|-------|--------|-------|---------------|-------|
-| G-0 | Load NPC configs from Supabase | **TODO — FOUNDATION BLOCKER** | Cursor | NEW | [TASK-G-0-supabase-config-loading.md](../../briefs/cursor/2026-02/TASK-G-0-supabase-config-loading.md) |
+| G-0 | Load NPC configs from Supabase | DONE | Cursor | NEW | [TASK-G-0-supabase-config-loading.md](../../briefs/cursor/2026-02/TASK-G-0-supabase-config-loading.md) |
 | G-1 | Modular Skill Plugin System | TODO | Cursor | TASK-018a | [TASK-G-1-modular-skill-plugin.md](../../briefs/cursor/2026-02/TASK-G-1-modular-skill-plugin.md) |
-| G-2 | Photographer NPC + Gemini Image Generation | HELD (foundation gate) | Cursor | TASK-018 | [TASK-G-2-photographer-npc.md](../../briefs/cursor/2026-02/TASK-G-2-photographer-npc.md) |
+| G-2 | Photographer NPC + Gemini Image Generation | DONE | Cursor | TASK-018 | [TASK-G-2-photographer-npc.md](../../briefs/cursor/2026-02/TASK-G-2-photographer-npc.md) |
 | G-3 | Content Store + Tagging | TODO | Cursor | TASK-019 | Brief TBD (depends on D-5 schema design) |
 | G-4 | Associative Recall + Social Feed | TODO | Cursor | TASK-020 | Brief TBD (depends on G-3) |
-| G-5 | TMX parser + sync logic + CLI script | TODO | Cursor | NEW | [TASK-G-5-tmx-parser-sync-cli.md](../../briefs/cursor/2026-02/TASK-G-5-tmx-parser-sync-cli.md) |
-| G-6 | Optional auto-sync on server start | TODO | Cursor | NEW | [TASK-G-6-auto-sync-on-server-start.md](../../briefs/cursor/2026-02/TASK-G-6-auto-sync-on-server-start.md) |
+| G-5 | TMX parser + sync logic + CLI script | DONE | Cursor | NEW | [TASK-G-5-tmx-parser-sync-cli.md](../../briefs/cursor/2026-02/TASK-G-5-tmx-parser-sync-cli.md) |
+| G-6 | Optional auto-sync on server start | DONE | Cursor | NEW | [TASK-G-6-auto-sync-on-server-start.md](../../briefs/cursor/2026-02/TASK-G-6-auto-sync-on-server-start.md) |
+| G-7 | In-game builder save-on-place persistence | TODO | Cursor | NEW | Save every placement to `game.map_entities` + skeleton `agent_configs`; depends on D-6 + G-0 |
+| G-8 | In-game event config form | TODO | Cursor | NEW | Post-placement Vue form: type, name, role, sprite; depends on G-7 |
 
 ---
 
@@ -52,6 +54,7 @@ Last updated: 2026-02-15 (Wave 1 briefs written)
 | S-3 | Dashboard Game Stats | MERGED — verify & polish | Lovable | [TASK-S-3-dashboard-game-stats.md](../../briefs/lovable/2026-02/TASK-S-3-dashboard-game-stats.md) |
 | S-4 | NPC Memory Viewer | TODO | Lovable | [TASK-S-4-npc-memory-viewer.md](../../briefs/lovable/2026-02/TASK-S-4-npc-memory-viewer.md) |
 | S-5 | Lovable Feed Integration (social feed UI) | TODO | Lovable | TASK-021; Brief TBD (depends on G-4) |
+| S-6 | Studio Map Entity Browser | TODO | Lovable | Browse `game.map_entities` per map, link ai-npc rows to NPC Builder; depends on D-6 |
 
 ---
 
@@ -77,6 +80,11 @@ G-4 (social feed)         ──► S-5             (Lovable feed UI renders gam
 D-5 (content store schema)──► G-3             (schema design must precede implementation)
 
 S-1 (NPC Builder)         ──► S-4             (Memory Viewer is a tab inside the NPC detail view)
+
+D-6 (map_entities schema) ──► G-7             (builder writes to map_entities — table must exist)
+G-0 (DB config loading)   ──► G-7             (builder creates skeleton agent_configs — runtime must read from DB)
+G-7 (builder persistence) ──► G-8             (config form fires after placement is persisted)
+D-6 (map_entities schema) ──► S-6             (Studio reads map_entities — table must exist)
 ```
 
 ### Dependency summary — what can start now
@@ -92,6 +100,11 @@ S-1 (NPC Builder)         ──► S-4             (Memory Viewer is a tab insi
 **After D-6 + tmx-enrich:**
 - **G-5** — TMX parser + sync logic + CLI
 - **G-6** — Optional auto-sync on server start (after G-5)
+
+**After D-6 + G-0:**
+- **G-7** — In-game builder save-on-place persistence
+- **G-8** — In-game event config form (after G-7)
+- **S-6** — Studio map entity browser (after D-6 only)
 
 **After FOUNDATION GATE passes (G-0 + G-5 done + PM verification):**
 - **G-2** — Photographer NPC (also needs G-1)
@@ -114,21 +127,24 @@ S-1 (NPC Builder)         ──► S-4             (Memory Viewer is a tab insi
 | Track | Tasks | Status |
 |-------|-------|--------|
 | Studio | S-1 (NPC Builder), S-2 (Integrations), S-3 (Dashboard stats) | MERGED — briefs reframed as verify & polish |
-| Game | G-0 (Load configs from Supabase) | **TODO — FOUNDATION BLOCKER** — brief ready |
-| Game | G-1 (Modular Skill Plugins) | TODO — brief ready, can run parallel with G-0 |
-| Game | tmx-enrich (Add seed NPCs to simplemap.tmx) | TODO — brief ready, no deps |
-| Game | G-5 (TMX parser + sync + CLI) | TODO — brief ready, after D-6 + tmx-enrich |
-| Game | G-6 (Optional auto-sync on server start) | TODO — brief ready, after G-5 |
+| Game | G-0 (Load configs from Supabase) | DONE |
+| Game | G-1 (Modular Skill Plugins) | DONE |
+| Game | tmx-enrich (Add seed NPCs to simplemap.tmx) | DONE |
+| Game | G-5 (TMX parser + sync + CLI) | DONE |
+| Game | G-6 (Optional auto-sync on server start) | DONE |
+| Game | G-7 (In-game builder save-on-place persistence) | TODO — after D-6 + G-0 |
+| Game | G-8 (In-game event config form) | TODO — after G-7 |
 | DB | D-4 (Audit seed data + reconcile grants) | TODO |
-| DB | D-6 (Migration 012: map_entities + map_metadata) | TODO — brief ready |
+| DB | D-6 (Migration 012: map_entities + map_metadata) | DONE |
 
 ### FOUNDATION GATE — PM verifies pipeline after G-0 + G-5 ship
 
 ### Wave 2 (after foundation gate passes)
 | Track | Tasks | Status |
 |-------|-------|--------|
-| Game | G-2 (Photographer NPC + Gemini) | HELD — needs G-1 + foundation gate |
+| Game | G-2 (Photographer NPC + Gemini) | DONE |
 | Studio | S-4 (NPC Memory Viewer) | HELD — needs foundation gate |
+| Studio | S-6 (Map Entity Browser) | TODO — after D-6 (can start pre-gate) |
 | DB | D-5 (Design content store schema) | TODO |
 
 ### Wave 3 (after Wave 2)
@@ -153,6 +169,9 @@ S-1 (NPC Builder)         ──► S-4             (Memory Viewer is a tab insi
 | S-3 | `briefs/lovable/2026-02/TASK-S-3-dashboard-game-stats.md` | REWRITTEN — verify & polish (code merged) |
 | S-4 | `briefs/lovable/2026-02/TASK-S-4-npc-memory-viewer.md` | WRITTEN |
 | S-5 | TBD (after G-4) | NOT YET |
+| S-6 | `briefs/lovable/2026-02/TASK-S-6-map-entity-browser.md` | TO WRITE |
+| G-7 | `briefs/cursor/2026-02/TASK-G-7-builder-persistence.md` | TO WRITE |
+| G-8 | `briefs/cursor/2026-02/TASK-G-8-event-config-form.md` | TO WRITE |
 | D-4 | Inline (verification, not a code task) | N/A |
 | D-5 | TBD (schema design brief) | NOT YET |
 | D-6 | `briefs/cursor/2026-02/TASK-D-6-migration-012-map-entities.md` | WRITTEN |
