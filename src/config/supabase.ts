@@ -47,6 +47,10 @@ export function getSupabaseClient(): SupabaseClient | null {
 
   try {
     client = createClient(url, key, {
+      db: {
+        // All game data lives in the `game` schema (see docs/supabase-schema.md)
+        schema: 'game',
+      },
       auth: {
         // Service role key doesn't need auth state management
         autoRefreshToken: false,
